@@ -67,12 +67,38 @@ def test_a1_nota_baja_consecuencia():
 
 # D2c
 def test_d2c_nota_regla_confidence_presente():
+    """Contrato: la regla de FLOW_CONFIDENCE esta declarada en el render.
+
+    Verifica por tokens semanticos, no por texto exacto:
+      - la palabra "Regla:" (regla declarada),
+      - thresholds ALTA/MEDIA (por nombre, no por frase),
+      - banda neutral (0.1),
+      - capas listadas por su etiqueta canonica,
+      - nota de no-sumabilidad.
+
+    Asi el test sobrevive a reformulaciones del texto sin perder
+    cobertura del contrato.
+    """
+    from src.report.flows_international import FLOW_SYNTHESIS_LABELS
     flow_synth = {'flow_proxy_sign': 0.5, 'etf_primary_flow_sign': 0.4,
                   'cftc_flow_sign': 0.2, 'european_flow_sign': 0.1,
                   'confidence': 'ALTA'}
-    out = render_flujo_sintesis(flow_synth)
-    body = "".join(out)
-    assert "Regla: ALTA si 3 o mas capas" in body
+    body = "".join(render_flujo_sintesis(flow_synth))
+    # Hay una regla declarada
+    assert "Regla:" in body, "render no declara 'Regla:'"
+    # Thresholds y banda neutral
+    assert "ALTA" in body and "MEDIA" in body and "BAJA" in body
+    assert "0.1" in body, "banda neutral (0.1) no declarada"
+    # Capas por su etiqueta canonica
+    for key in flow_synth:
+        if not key.endswith("_sign"):
+            continue
+        label = FLOW_SYNTHESIS_LABELS[key]
+        assert label in body, f"capa {label!r} no listada en la nota"
+    # Nota de no-sumabilidad
+    assert "fenomeno distinto" in body or "No son sumables" in body, (
+        "nota de no-sumabilidad no presente"
+    )
 
 
 def test_d2c_fix_pos_4_da_alta():

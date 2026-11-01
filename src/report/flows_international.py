@@ -9,6 +9,21 @@ import pandas as pd
 
 from src.report.helpers import _fmt_num, _fmt_signed
 
+# C.2 (2026-11-01): etiquetas canonicas de las capas de flujo.
+# Fuente unica de los nombres que el render muestra. Un dict
+# explicito (no .title() automatico) para que 'etf_primary_flow_sign'
+# se publique como 'ETF Primary Flow' (mayusculas correctas) y
+# 'european_flow_sign' como 'Europa Primary Flow' (nombre legible).
+# Si manana se anade una capa nueva al productor, anadir aqui su
+# label; el test tests/test_flows_confirmation_contract.py verifica
+# que este dict cubre todas las claves _sign del schema.
+FLOW_SYNTHESIS_LABELS = {
+    'flow_proxy_sign': 'Flow Proxy',
+    'etf_primary_flow_sign': 'ETF Primary Flow',
+    'cftc_flow_sign': 'CFTC Position Flow',
+    'european_flow_sign': 'Europa Primary Flow',
+}
+
 
 def render_flujos_internacionales_agregados(
         blackrock_dax_flow, blackrock_isf_flow,
@@ -378,12 +393,29 @@ def render_flujo_sintesis(flow_synthesis):
         out.append(f"| CFTC Position Flow | {_fmt_signed(flow_synthesis.get('cftc_flow_sign'), '{:+.2f}', '{:.2f}')} |\n")
         out.append(f"| Europa Primary Flow | {_fmt_signed(flow_synthesis.get('european_flow_sign', 0), '{:+.2f}', '{:.2f}')} |\n")
         out.append(f"\n**FLOW_CONFIDENCE:** {flow_synthesis.get('confidence', 'N/A')}\n")
-        out.append("*Regla: ALTA si 3 o mas capas comparten signo (> +/-0.1); MEDIA si 2 comparten signo; BAJA en otro caso. Capas evaluadas: Flow Proxy, ETF Primary Flow, CFTC Position Flow, Europa Primary Flow.*\n")
+        # C.2 (2026-11-01): capas derivadas del dict, no literal.
+        _cap_keys = [k for k in flow_synthesis.keys() if k.endswith("_sign")]
+        _n_cap = len(_cap_keys)
+        _cap_labels = [FLOW_SYNTHESIS_LABELS.get(k, k.replace("_sign", "").replace("_", " ").title())
+                       for k in _cap_keys]
+        out.append(f"*Regla: ALTA si 3 o mas capas comparten signo (> +/-0.1); "
+                   f"MEDIA si 2; BAJA en otro caso. Capas evaluadas ({_n_cap}): "
+                   f"{chr(44).join(_cap_labels)}.*\n")
         # M2 (dictamen auditor externo 2026-10-16): explicitar el caso
         # de empate real 2-2. La regla actual da MEDIA si pos>=2 o neg>=2;
         # en empate 2-2 ambos se cumplen y el resultado es MEDIA sin
         # direccion dominante. La nota lo declara.
         out.append("*Banda neutral: valores con |s| <= 0.1 cuentan como neutrales, no como capa positiva o negativa. Empate real 2-2 (dos capas positivas y dos negativas): MEDIA - MIXED / SIN DIRECCION DOMINANTE.*\n")
         out.append("*Nota Europa: la cifra es la media simple de los z-scores de los fondos Europeos del pipeline, no ponderada por AUM. Los flujos tipicos estan por debajo del umbral de materialidad; la media puede estar dominada por un solo fondo. Leer como direccion de z-scores, no como flujo agregado.*\n\n")
-        out.append("\n*Interpretación descriptiva: concordancia de signos entre capas. No es señal predictiva.*\n\n")
+        # C.2 (2026-11-01): no-sumabilidad derivada de len(keys).
+        # Cada capa mide un fenomeno distinto. No se suman ni se leen
+        # como confirmaciones independientes entre si.
+        out.append("\n*Interpretacion descriptiva: concordancia de "
+                   "signos entre las "
+                   f"{_n_cap} capas listadas arriba. Cada capa mide un "
+                   "fenomeno distinto (creacion/reembolso de "
+                   "participaciones ETF, posiciones en futuros CFTC, "
+                   "flujos declarados, proxy de flujo). No son sumables "
+                   "ni constituyen confirmacion independiente entre si. "
+                   "No es senal predictiva.*\n\n")
     return out

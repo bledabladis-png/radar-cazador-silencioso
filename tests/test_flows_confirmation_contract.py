@@ -196,3 +196,25 @@ def test_render_alerts_lee_ratios():
         "alerta Financial Stress vs Credit (HYG/LQD z-score). Si es "
         "intencional, borrar este test con justificacion."
     )
+
+def test_labels_cubren_todas_las_capas_del_schema():
+    """FLOW_SYNTHESIS_LABELS debe cubrir todas las claves _sign del schema.
+
+    Si el productor anade una capa nueva, el render la pinta con el
+    fallback (.title() del key). Este test falla si no se anade el
+    label explicito al dict, forzando la decision de producto: 'como
+    se llama esta capa en el reporte'.
+    """
+    from src.report.flows_international import FLOW_SYNTHESIS_LABELS
+    capas = {k for k in FLOW_SYNTHESIS_SCHEMA if k.endswith("_sign")}
+    faltan = capas - set(FLOW_SYNTHESIS_LABELS.keys())
+    sobra = set(FLOW_SYNTHESIS_LABELS.keys()) - capas
+    assert not faltan, (
+        f"FLOW_SYNTHESIS_LABELS no cubre: {sorted(faltan)}. "
+        f"Anadir label explicito en flows_international.py."
+    )
+    assert not sobra, (
+        f"FLOW_SYNTHESIS_LABELS tiene claves fuera del schema: "
+        f"{sorted(sobra)}. Retirar o anadir al productor."
+    )
+

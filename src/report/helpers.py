@@ -231,3 +231,30 @@ def _fmt_ihr_bands():
         segmentos.append(f"<{min_thr:g} {IHR_LABELS[cats_fallback[0]]}")
     segmentos.reverse()
     return ", ".join(segmentos)
+
+def _shared_vars_note(module):
+    """Nota sobre variables compartidas entre modulos (C.3, 2026-11-01).
+
+    Lee config.shared_inputs.SHARED_INPUTS y devuelve un texto corto
+    listando las variables que este modulo comparte con otros. Sin
+    literal: si el registro cambia, la nota cambia sola.
+
+    Si el modulo no aparece en el registro, devuelve "" (sin ruido).
+    """
+    try:
+        from config.shared_inputs import variables_in, SHARED_INPUTS
+    except ImportError:
+        return ""
+    vars_mod = variables_in(module)
+    if not vars_mod:
+        return ""
+    partes = []
+    for var in vars_mod:
+        otros = [m for m in SHARED_INPUTS[var] if m != module]
+        if otros:
+            partes.append(f"{var} (compartida con {', '.join(otros)})")
+    if not partes:
+        return ""
+    return ("*Independencia estadistica: " + "; ".join(partes) +
+            ". No son confirmaciones independientes.*\n\n")
+

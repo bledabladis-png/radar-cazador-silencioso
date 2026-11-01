@@ -7,7 +7,7 @@ Extraidas de src/report_generator.py (refactor C1, fase C1-6b).
 import pandas as pd
 
 from config.settings import MIN_SECTOR_COVERAGE
-from src.report.helpers import _fmt_num, _fmt_ad_net
+from src.report.helpers import _fmt_num, _fmt_ad_net, _shared_vars_note
 
 
 def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None):
@@ -114,6 +114,13 @@ def render_sector_concentration(sector_concentration_data):
            "descargados / peso total del ETF. Ambas se recalculan "
            "cada run desde el df, sin constante en el codigo.*\n\n")
         out.append("*Top N = fraccion del retorno positivo total del sector que aportan los N tickers con mayor retorno 20d. Con menos de N positivos, la celda se muestra como N/D (no se calcula sobre menos elementos). Top1=100% con Top3=N/D indica que solo hay 1 ticker con retorno positivo en el sector.*\n\n")
+        # C.3 (2026-11-01): nota de variables compartidas derivada de
+        # config.shared_inputs.SHARED_INPUTS. Si rs_mom o flow_proxy_z
+        # dejan de estar en el registro (o se anaden otros), la nota
+        # se recalcula sola. Sin literal.
+        _svn = _shared_vars_note("sector_concentration")
+        if _svn:
+            out.append(_svn)
     return out
 
 
