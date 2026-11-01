@@ -6288,10 +6288,10 @@ items:
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
   estado: FIXED
-  commit: 'f884d061'
+  commit: '3d21264a'
   test: tests/test_confirmation_ratios_parity.py
   evidencia: |
-    Fix aplicado en f884d061. RATIO_LABELS en indicators/cross_asset.py
+    Fix aplicado en 3d21264a. RATIO_LABELS en indicators/cross_asset.py
     como fuente unica de los 12 labels; src/report/confirmation.py
     importa del productor y elimina el dict local ratio_names. Test
     reescrito valida paridad labels<->ratios en productor, wiring del
