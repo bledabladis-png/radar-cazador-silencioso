@@ -6492,39 +6492,56 @@ items:
     '
 - id: B6-FLOWS-CURRENCY-COLUMN-NAME
   tipo: deuda_tecnica
-  ciclo: 2026-10-31
-  estado: OPEN
+  ciclo: '2026-10-31'
+  estado: WONT_FIX
   descripcion: 'data/providers/_blackrock_base.py:227 escribe estimated_flow_eur
-
     = shares_change * nav. Para ISF.L el NAV esta en GBP (URL
-
-    FTSE-100-UCITS-ETF-INC-GBP), para IWM en USD. Columna con
-
-    3 monedas etiquetada como eur. Render etiqueta correctamente
-
+    FTSE-100-UCITS-ETF-INC-GBP), para IWM en USD. Columna con 3
+    monedas etiquetada como eur. Render etiqueta correctamente
     (GBP/USD segun fondo). Bug cosmetico de mantenimiento.
-
     '
-  siguiente_accion: 'B5: renombrar a estimated_flow_native o anadir columna currency.
-
+  razon: 'Cosmetico confirmado. El render src/report/flows_international.py
+    etiqueta cada fondo con su moneda real en 6 sitios (L35 DAXEX EUR,
+    L47 ISF.L GBP, L55 LYXI EUR, L100 IWM USD, L146 DAXEX EUR,
+    L162 ISF.L GBP). El valor de la columna es correcto (shares_change
+    * nav); solo el nombre de columna dice eur para ISF.L (GBP). El
+    item lo reconoce como cosmetico. Renombrar exige migracion de
+    schema de blackrock_dax_primary_flow.csv y
+    blackrock_isf_primary_flow.csv (2 CSVs historicos, ~540 filas)
+    + adaptar 2 tests (test_provider_blackrock_base,
+    test_flows_primary_preserve_history) + adaptar el render. Sin
+    impacto funcional. ROI < 1. Si en el futuro se rehace el sistema
+    de flujos internacionales, el nombre debe ser currency-neutral
+    (estimated_flow_native) o llevar columna currency_code. No se
+    justifica un cambio aislado hoy.
     '
 - id: B6-FLOWS-REGISTRY-COVERAGE
   tipo: deuda_tecnica
-  ciclo: 2026-10-31
-  estado: OPEN
-  descripcion: '7 outputs internacionales (blackrock_dax/isf/iwm, amundi_lyxi,
-
-    qqq_sec_primary_flow, nport_position_change_quarterly) no estan
-
-    en output_registry.py (25 OutputSpec). Se escriben via
-
+  ciclo: '2026-10-31'
+  estado: WONT_FIX
+  descripcion: '7 outputs internacionales (blackrock_dax/isf/iwm,
+    amundi_lyxi, qqq_sec_primary_flow, nport_position_change_quarterly)
+    no estan en output_registry.py (25 OutputSpec). Se escriben via
     flows_primary.py::persist() o to_csv() directo. Receipt y schema
-
     validation no los cubren.
-
     '
-  siguiente_accion: 'B5: extender output_registry con los 7 outputs.
-
+  razon: 'Cambio de diseno, no de B5. Razon 1: registrar los 7 outputs
+    en output_registry sin que los providers emitan receipt
+    (persist()) es cosmetico: validation_gate check 11 solo compara
+    .schema version, no valida receipt; post_receipt_audit detecta
+    MISSING = receipt con written=True y CSV sin fila, no el inverso.
+    Registrar sin wiring no mejora coverage real. Razon 2: el fix
+    real (providers -> persist()) es bloque B2 (pipelines descarga):
+    los 7 outputs son de data/providers/*. Razon 3: ARRANQUE seccion 2
+    ya excluye explicitamente CSVs de proveedores con calendario
+    no-NYSE del contrato de writers (excepcion 2026-10-20). Los 7
+    outputs son exactamente ese caso. Razon 4: output_writer.py:4-5
+    declara "Toda escritura a outputs/history/ pasa por persist()".
+    Los providers no escriben a outputs/history/ durante el run del
+    pipeline NYSE: escriben antes (fase descarga, calendario del
+    proveedor). La regla no les aplica por diseno. WONT_FIX razonado.
+    Si en el futuro se rehace el pipeline de descarga (B2), coordinar
+    registro + wiring + receipt en un solo frente.
     '
 - id: B4-PROPIA-1-CENSO
   tipo: auditoria

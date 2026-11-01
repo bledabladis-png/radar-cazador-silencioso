@@ -20,11 +20,8 @@ Gobernanza: docs/gobernanza/REGISTRO.yaml, 250 items. Validador reforzado.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 
-B6 (auditoria reporte) CERRADA con 20 FIXED y 2 OPEN heredados a B4/B5
-(RATIO-NAMES cerrado en B4 sesion 24: 3d21264a; MTE-CLS-INF cerrado en B4 sesion 24: ba1f2eac; ILOC-BARRIDO cerrado en B4 sesion 24: b661a0d6; MTE-INF-NO-FINITE cerrado en B4 sesion 24: ac0a607e).
-Los 2 OPEN de B6 son de otros bloques y no bloquean pipeline:
-  - B6-FLOWS-CURRENCY-COLUMN-NAME (B5, _blackrock_base estimated_flow_eur)
-  - B6-FLOWS-REGISTRY-COVERAGE (B5, 7 outputs fuera de output_registry)
+B6 (auditoria reporte) CERRADA con 20 FIXED y 0 OPEN heredados a B4/B5
+(RATIO-NAMES, MTE-CLS-INF, ILOC-BARRIDO, MTE-INF-NO-FINITE cerrados como FIXED en B4 sesion 24; FLOWS-CURRENCY y FLOWS-REGISTRY cerrados como WONT_FIX razonado en B5 sesion 24).
 
 Sistema Wyckoff: holdings-based + snapshot PIT append-only REAL.
 structure_ratio: continuo en sector_regime_matrix v2. DESCRIPTIVO.
@@ -54,7 +51,7 @@ Detalle de la sesion 23 en seccion 2.
 
 **Hecho:**
 - 21 modulos de `src/report/*` auditados (18 con hallazgos o cierre).
-- 20 items B6 FIXED, 2 OPEN heredados a otros bloques (3 cerrados en B4 sesion 24: RATIO-NAMES, MTE-CLS-INF, MTE-INF-NO-FINITE).
+- 20 items B6 FIXED, 0 OPEN heredados (4 FIXED en B4 sesion 24: RATIO-NAMES, MTE-CLS-INF, ILOC-BARRIDO, MTE-INF-NO-FINITE; 2 WONT_FIX razonados en B5 sesion 24: FLOWS-CURRENCY, FLOWS-REGISTRY).
 - 1 item B3 nuevo (`WYCKOFF-RENDERS-HUERFANOS`) por el refactor
   Wyckoff sesion 3 (`4bc45fd3`): 2 renders con productor retirado.
 
@@ -162,13 +159,6 @@ Registrado como `WYCKOFF-RENDERS-HUERFANOS` (OPEN, B3).
 
 ### 3.4. Items OPEN heredados de B6 a otros bloques (2)
 
-- **B6-FLOWS-CURRENCY-COLUMN-NAME** (B5): `estimated_flow_eur` con
-  GBP/USD segun fondo en `data/providers/_blackrock_base.py:227`.
-- **B6-FLOWS-REGISTRY-COVERAGE** (B5): 7 outputs internacionales
-  (`blackrock_*_primary_flow`, `amundi_lyxi_primary_flow`,
-  `qqq_sec_primary_flow`, `nport_position_change_quarterly`) no
-  estan en `output_registry.py`. Receipt + schema validation no los
-  cubren.
 
 ### 3.5. Items OPEN heredados del refactor Wyckoff sesion 3 (1)
 
@@ -203,8 +193,9 @@ Plan original: 8 bloques (B1-B8) con los 13 patrones de
   5 BAJA: except Exception outer con WARN + observabilidad cubierta
   en caller/test). Sin OPEN heredados tecnicos.
 - **B5 (outputs/persistencia)**: cerrado con fixes puntuales, NO
-  checklist completo. Los 2 OPEN heredados de B6 viven aqui.
-- **B6 (reporte)**: CERRADO sesion 23. 20 FIXED, 2 OPEN heredados.
+  checklist completo. FLOWS-CURRENCY y FLOWS-REGISTRY cerrados
+  WONT_FIX razonado (B5 sesion 24).
+- **B6 (reporte)**: CERRADO sesion 23. 20 FIXED, 0 OPEN heredados (4 FIXED + 2 WONT_FIX en B4/B5 sesion 24).
 - **B7 (IAE)**: sin auditar.
 - **B8 (scripts audit)**: sin auditar. Afectan CI.
 
