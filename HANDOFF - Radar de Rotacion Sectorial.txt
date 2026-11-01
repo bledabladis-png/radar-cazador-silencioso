@@ -53,7 +53,8 @@ Detalle de la sesion 23 en seccion 2.
 - 21 modulos de `src/report/*` auditados (18 con hallazgos o cierre).
 - 20 items B6 FIXED, 0 OPEN heredados (4 FIXED en B4 sesion 24: RATIO-NAMES, MTE-CLS-INF, ILOC-BARRIDO, MTE-INF-NO-FINITE; 2 WONT_FIX razonados en B5 sesion 24: FLOWS-CURRENCY, FLOWS-REGISTRY).
 - 1 item B3 nuevo (`WYCKOFF-RENDERS-HUERFANOS`) por el refactor
-  Wyckoff sesion 3 (`4bc45fd3`): 2 renders con productor retirado.
+  Wyckoff sesion 3 (`4bc45fd3`): 2 renders con productor retirado
+  (cerrado en B3 sesion 24: 3a516268).
 
 **Hallazgos FIXED (H1-H13):**
 - H1 `regimes/macro_regime.py` (`22bef269`): guards contra input
@@ -162,12 +163,6 @@ Registrado como `WYCKOFF-RENDERS-HUERFANOS` (OPEN, B3).
 
 ### 3.5. Items OPEN heredados del refactor Wyckoff sesion 3 (1)
 
-- **WYCKOFF-RENDERS-HUERFANOS** (B3): `render_representatividad_lider`
-  y `render_divergencia_sector_lideres` en `sector_context.py`. Los
-  productores (`indicators/leader_representativeness.py` y
-  `indicators/sector_leader_divergence.py`) se retiraron en
-  `4bc45fd3` (C4.3). Los renders sobreviven sin cablear. Fix:
-  eliminar los 2 renders + tests asociados.
 
 ### 3.6. Decision de producto (1)
 
@@ -184,7 +179,8 @@ Plan original: 8 bloques (B1-B8) con los 13 patrones de
 - **B1 (temporal)**: cerrado con fixes puntuales, NO checklist 18
   patrones completo.
 - **B2 (pipelines descarga)**: sin auditar.
-- **B3 (Wyckoff)**: sin auditar formalmente (1 OPEN heredado).
+- **B3 (Wyckoff)**: sin auditar formalmente. WYCKOFF-RENDERS-HUERFANOS
+  cerrado en B3 sesion 24 (3a516268). Sin OPEN heredados.
 - **B4 (motores/regimen)**: auditados (B4-propia-1 + B4-propia-2,
   2026-11-01). Modulos: engines, sector_regime_matrix, sector_regime
   (compute_sector_rank_score), macro_regime, evidence_matrix,

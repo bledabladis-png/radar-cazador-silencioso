@@ -6346,43 +6346,29 @@ items:
 - id: WYCKOFF-RENDERS-HUERFANOS
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: 'Dos renders de src/report/sector_context.py quedaron huerfanos
-
-    tras el refactor Wyckoff sesion 3 (commit 4bc45fd3, C4.3):
-
-    - render_representatividad_lider
-
-    - render_divergencia_sector_lideres
-
-    Sus productores (indicators/leader_representativeness.py y
-
-    indicators/sector_leader_divergence.py) fueron retirados en
-
-    ese mismo commit. Los renders sobreviven en sector_context.py,
-
-    con tests propios, pero report_generator.py no los importa ni
-
-    invoca. No estan rompiendo produccion (nadie los llama), pero
-
-    son dead code funcional: si alguien los cablea pensando que
-
-    siguen siendo validos, reciben None/DataFrame vacio y degradan
-
-    silenciosamente. Detectado al auditar sector_context.py en B6.
-
-    '
-  siguiente_accion: 'Eliminar en B3 (Wyckoff): los 2 renders + sus tests asociados.
-
-    Los tests que los cubren (test_sector_context.py si existe,
-
-    test_report_leaders_* restantes, etc.) se eliminan o adaptan
-
-    segun corresponda. No re-cablear: la funcionalidad se retiro
-
-    conscientemente en sesion 3.
-
-    '
+  estado: FIXED
+  commit: '3a516268'
+  test: tests/test_render_modules_low_coverage_d29.py
+  evidencia: |
+    Eliminado en 3a516268 (B3 sesion 24, 2026-11-01). Gate 0:
+    grep en todo el repo confirma que los 2 renders solo aparecen
+    en sector_context.py y sus 2 tests. Ningun modulo productivo
+    los invoca. Los 4 productores retirados en 4bc45fd3
+    (leader_representativeness, sector_leader_divergence,
+    stock_leader, leaders) no existen.
+    - sector_context.py: eliminadas render_representatividad_lider
+      (L46-67) y render_divergencia_sector_lideres (L142-163).
+      Quedan las 3 vivas: render_matriz_regimen,
+      render_wyckoff_sectorial, render_momentum_amplitud.
+    - tests/test_render_representatividad_lider.py eliminado (69
+      lineas).
+    - tests/test_render_divergencia_sector_lideres.py eliminado (65
+      lineas).
+    - tests/test_render_modules_low_coverage_d29.py: docstring
+      adaptado (ya no menciona test_render_representatividad_lider).
+    Verificacion: 57 focalizados verdes; full suite 4267 passed + 2
+    skipped (delta -8 por tests borrados); pyflakes/compileall
+    silencio.
 - id: B6-H11-FRESHNESS-SIDECHANNEL
   tipo: bug
   ciclo: 2026-10-31
