@@ -6552,3 +6552,31 @@ items:
     testeado. Anadir traceback.print_exc() seria ruido sin cambio de
     comportamiento. WONT_FIX razonado por diseno.
     '
+- id: B4-PROPIA-2-CENSO
+  tipo: auditoria
+  ciclo: '2026-11-01'
+  estado: WONT_FIX
+  descripcion: 'Auditoria por bloques B4-propia-2 (2026-11-01). Modulos
+    revisados linea a linea con los 13+5 patrones de 01b_PATRONES.md:
+    regimes/liquidity_v2.py (484 lineas), regimes/tactical_engine.py
+    (76), regimes/volatility_regime.py (33). Resultado: 0 ALTA, 0 MEDIA,
+    3 BAJA razonadas. Los 3 hallazgos estan en liquidity_v2: (a) return
+    None,None,None,None en L324 con input vacio, (b) mismo return en L334
+    con df_valid vacio, (c) except Exception L328. Los tres tienen
+    observabilidad cubierta en el caller.
+    '
+  razon: 'Observabilidad de los 3 hallazgos esta cubierta en
+    src/pipeline/regimes.py:135-137: si real_liq_score is None ->
+    real_liq_regime = N/A + print("Liquidez real: no disponible (sin
+    datos FRED)"). Anadir otro WARN en el modulo duplica senal, no la
+    mejora. Patron OBSERVABILIDAD-SILENCIOSA (sesion 22) no aplica:
+    hay WARN explicito, solo que en el caller, donde se puede leer con
+    el resto del contexto. El except Exception L328 ya emite
+    "[WARN] compute_liquidity_score_v2: {e}" antes de devolver None.
+    Acotarlo exige diseno de contrato (que excepciones son esperadas
+    del dominio FRED vs bugs de evaluar_serie), no cambio quirurgico.
+    Sin evidencia de ocurrencia en produccion. ROI < 1. WONT_FIX
+    razonado por diseno. tactical_engine y volatility_regime: 0
+    hallazgos (los hits del regex son falsos positivos: guards
+    explicitos, returns tuplas consistentes, guard z.empty).
+    '
