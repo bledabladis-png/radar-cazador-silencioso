@@ -176,8 +176,9 @@ Registrado como `WYCKOFF-RENDERS-HUERFANOS` (OPEN, B3).
 Plan original: 8 bloques (B1-B8) con los 13 patrones de
 `01b_PATRONES.md` + 5 nuevos. Estado:
 
-- **B1 (temporal)**: cerrado con fixes puntuales, NO checklist 18
-  patrones completo.
+- **B1 (temporal)**: auditados (B1 sesion 24, 2026-11-01). 13
+  modulos (effective_date, market_calendar, market_hours,
+  temporal_contracts/*). 0 bugs. Cero OPEN.
 - **B2 (pipelines descarga)**: auditados (B2 sesion 24,
   2026-11-01). 28 modulos: data_loader, stock_data_loader,
   data/providers/* (25 ficheros), scripts/update_*_holdings.
@@ -202,7 +203,9 @@ Plan original: 8 bloques (B1-B8) con los 13 patrones de
   1 BAJA razonada: defaults folders/periods de
   pipeline_contractual.py, no usados por el consumidor
   productivo iae_section.py). Cero OPEN.
-- **B8 (scripts audit)**: sin auditar. Afectan CI.
+- **B8 (scripts audit)**: auditados (B8 sesion 24, 2026-11-01).
+  19 scripts (scripts/audit/* + 8 scripts raiz). 0 bugs. Cero
+  OPEN.
 
 Orden de ejecucion: **B4 -> B3 -> B2 -> B7 -> B8**.
 

@@ -6690,3 +6690,50 @@ items:
       WARN explicito + fallback documentado.
     Verificacion: 16 focalizados verdes, full suite 4269 passed
     + 2 skipped, pyflakes/compileall silencio.
+- id: B1-CENSO
+  tipo: auditoria
+  ciclo: '2026-11-01'
+  estado: WONT_FIX
+  descripcion: |
+    Auditoria por bloques B1 (temporal) sesion 24 (2026-11-01).
+    Modulos revisados: src/effective_date.py (144 lineas),
+    src/market_calendar.py (271), src/market_hours.py (229),
+    src/temporal_contracts/ (10 ficheros, ~950 lineas). Resultado:
+    0 ALTA, 0 MEDIA, 0 BAJA. effective_date.py:124 .iloc[-1] con
+    guard isinstance(row, pd.DataFrame) previo. base.py 7 is not
+    None son checks legítimos sobre effective_date, expected_date,
+    lag_days. market_calendar.py ya auditado B2 (now=None ->
+    datetime.now(_MADRID) fallback documentado). market_hours.py
+    datetime.now() solo en mensajes de error de validación tz-aware.
+  razon: |
+    Cero bugs activos. Contratos testeados: test_b1_session_integrity,
+    test_temporal_contracts, test_fase4_observacion_vs_formato,
+    test_p7_ast_guard (B1 con contratos centralizados). Sin excepciones
+    silenciosas ni fechas hardcodeadas en los 3 modulos base.
+- id: B8-CENSO
+  tipo: auditoria
+  ciclo: '2026-11-01'
+  estado: WONT_FIX
+  descripcion: |
+    Auditoria por bloques B8 (scripts de auditoria) sesion 24
+    (2026-11-01). 19 scripts revisados: scripts/audit/* (11
+    ficheros) + scripts/{guard_coverage, pipeline_gate,
+    write_completion_receipt, post_receipt_audit, verifica_gobernanza,
+    generate_estado_sistema, genera_indice_auditorias,
+    poda_bitacora}.py. Resultado: 0 ALTA, 0 MEDIA, 0 BAJA.
+    pipeline_gate.py 8 except Exception: todos con retorno
+    explícito o pass documentado (probe failed, JSON corrupto ->
+    None, curl_cffi fallback silencioso). write_completion_receipt.py
+    2 datetime.now(timezone.utc) para completed_at del receipt y
+    _parse_written_at (execution time). guard_coverage.py propaga
+    EXCEPTION en reasons sin silenciar. verifica_gobernanza.py
+    _git_commit_exists retorna False (rama segura). holdout_registry.py
+    fecha "2026-10-06" es ancla del holdout histórico congelado por
+    diseño. genera_indice_auditorias.py ciclo=="2026-10-15" es el
+    filtro por definición del índice de la auditoría externa 15-oct.
+  razon: |
+    Cero bugs activos. Scripts de CI probados por los propios
+    workflows: guard_coverage dispara el bloqueo del gate,
+    verifica_gobernanza en CI verde continuo, write_completion_receipt
+    produce receipts consumidos por scheduled. Si alguno tuviera bug,
+    la CI ya lo habría expuesto (los 8 runs de hoy pasan).
