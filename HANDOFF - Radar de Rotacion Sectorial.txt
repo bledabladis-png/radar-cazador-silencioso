@@ -197,7 +197,11 @@ Plan original: 8 bloques (B1-B8) con los 13 patrones de
   checklist completo. FLOWS-CURRENCY y FLOWS-REGISTRY cerrados
   WONT_FIX razonado (B5 sesion 24).
 - **B6 (reporte)**: CERRADO sesion 23. 20 FIXED, 0 OPEN heredados (4 FIXED + 2 WONT_FIX en B4/B5 sesion 24).
-- **B7 (IAE)**: sin auditar.
+- **B7 (IAE)**: auditados (B7 sesion 24, 2026-11-01). 36 modulos
+  en src/institutional_accumulation/. 0 bugs (0 ALTA, 0 MEDIA,
+  1 BAJA razonada: defaults folders/periods de
+  pipeline_contractual.py, no usados por el consumidor
+  productivo iae_section.py). Cero OPEN.
 - **B8 (scripts audit)**: sin auditar. Afectan CI.
 
 Orden de ejecucion: **B4 -> B3 -> B2 -> B7 -> B8**.

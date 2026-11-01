@@ -6618,3 +6618,32 @@ items:
     bme/xetra HTTP (fuera del scope de carga de mercado),
     scripts/update_*_holdings.py >50 lineas cada uno (dependen de
     parse SSGA/Xetra concretos, cubiertos por tests propios).
+- id: B7-CENSO
+  tipo: auditoria
+  ciclo: '2026-11-01'
+  estado: WONT_FIX
+  descripcion: |
+    Auditoria por bloques B7 (IAE) sesion 24 (2026-11-01). 36 modulos
+    revisados en src/institutional_accumulation/ con los 13+5
+    patrones de 01b_PATRONES.md. Resultado: 0 ALTA, 0 MEDIA, 1 BAJA
+    razonada. Los datetime.now() del subsistema (13 apariciones)
+    estan en docstrings ("NO usan datetime.now()") o en manifest.py
+    (generation timestamp). Los except Exception (3) estan en
+    security_identity (try/except math.isnan -> pass defensivo),
+    openfigi_client (fallo de red por chunk -> ok=False, error
+    propagado) y temporal_filter (pandas Timestamp parse -> ValueError
+    con mensaje). Todos con manejo explicito.
+  razon: |
+    Cero bugs activos. Unico hallazgo BAJA: pipeline_contractual.py
+    tiene defaults folders=("2025Q4","2026Q1") y
+    periods=("2025-12-31","2026-03-31") en run_contractual_nipc.
+    Verificado que el consumidor productivo (src/pipeline/iae_section.py
+    L133-145) SIEMPRE calcula quarters[-2]/quarters[-1] del catalogo y
+    pasa folders=/periods= explicitos. Los defaults solo los usa
+    scripts/iae_contractual_nipc_e2e.py, que tambien pasa explicitos
+    (verificado en scripts/iae_contractual_nipc_e2e.py L98-102). Los
+    defaults son configuracion documentada del script e2e, no bug
+    latente. Si en el futuro se anade un caller sin pasar periods, la
+    firma lo permite, pero el contrato del pipeline esta testeado
+    (test_iae_section.py, 13 tests que mockean run_contractual_nipc
+    verificando que se llama con folders/periods). WONT_FIX razonado.
