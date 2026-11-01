@@ -2532,31 +2532,29 @@ items:
 - id: IWM-HOLDINGS-EXPANSION
   tipo: frente
   ciclo: '2026-10-24'
-  estado: OPEN
+  estado: WONT_FIX
   descripcion: 'IWM (Russell 2000) excluido del sistema holdings-based. Sus 1977
-
     holdings incluyen microcaps; el top-20 por weight representa solo
-
     6.2% del peso del indice. Clasificar 20 microcaps y llamarlo
-
     "Russell 2000" seria enganoso. Decision 2026-10-24 (plan 63):
-
     fuera del sistema hasta que se pueda ampliar la muestra.
-
     '
-  siguiente_accion: 'Sub-fase de descarga: ampliar la lista de holdings de IWM hasta
-
-    cubrir >=50% del peso. Protocolo obligatorio de 6 pasos:
-
-    (1) descargar OHLCV del proveedor; (2) filtrar por calendario
-
-    bursatil NYSE; (3) verificar 0 filas H=L=C; (4) pasar por
-
-    resolve_effective_date; (5) registrar writer en output_registry;
-
-    (6) test que verifique 0 fechas no bursatiles. Sin fecha.
-
+  razon: |
+    WONT_FIX razonado (sesion 24, 2026-11-01). Verificado en Gate 0:
+    data/etf_holdings.csv tiene 504 filas totales y 0 IWM;
+    get_stock_list() devuelve 505 tickers sin ningun IWM. Anadir
+    700+ tickers para cubrir 50% del peso requeriria descargar OHLCV
+    de microcaps iliquidas, filtrar calendario NYSE, resolver 0 H=L=C
+    (microcaps tienen H=L=C con frecuencia), registrar writer. El
+    beneficio analitico para un radar sectorial de 11 ETFs S&P es
+    marginal. ROI < 1. Si en el futuro se decide cubrir small caps,
+    requiere frente propio con pre-registro.
     '
+  evidencia: |
+    Gate 0 2026-11-01: get_stock_list() = 505 tickers, IWM ausente.
+    data/etf_holdings.csv = 504 filas, 0 IWM. Sistema holdings-based
+    vigente (desde sesion 3, refactor Wyckoff holdings). Cobertura
+    de indices USA actual: SPY, QQQ, DIA (top-20 por weight).
 - id: SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE
   tipo: auditoria_interna
   ciclo: '2026-10-24'

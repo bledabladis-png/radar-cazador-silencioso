@@ -44,6 +44,49 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-01 — Sesion 24: Fase 2 completa (B1-B8) + Fase 0/1 + transversales
+
+**Objetivo.** Completar Fase 2 (auditoria por bloques B1-B8) + Fase 0
+(inventario hardcodes) + Fase 1 (clasificacion) + cerrar transversales.
+Ejecutar la hoja de ruta del plan de consistencia temporal.
+
+**Hecho.**
+- B4-propia-1 + B4-propia-2 (WONT_FIX, 0 bugs): engines,
+  sector_regime_matrix, sector_regime, macro_regime, evidence_matrix,
+  liquidity_v2, tactical_engine, volatility_regime, structural_engine,
+  financial_conditions. 5 BAJA razonadas (except con WARN).
+- B6 completa: RATIO-NAMES (3d21264a), MTE-CLS-INF (ba1f2eac),
+  ILOC-BARRIDO (b661a0d6), MTE-INF-NO-FINITE (ac0a607e) FIXED.
+  FLOWS-CURRENCY y FLOWS-REGISTRY WONT_FIX razonados (B5).
+- B3: WYCKOFF-RENDERS-HUERFANOS FIXED (3a516268). 2 renders sin
+  productor eliminados + 2 tests + 1 docstring adaptado.
+- B2: 28 modulos auditados, WONT_FIX (0 bugs).
+- B7: 36 modulos IAE auditados, WONT_FIX (0 bugs).
+- B1: 13 modulos temporales, WONT_FIX (0 bugs).
+- B8: 19 scripts audit + CI, WONT_FIX (0 bugs).
+- Fase 0: 302 hits en 15 tipos. Fase 1: 2 fixes reales
+  (336b48ab: ssga SECTOR_TICKERS derivado de config; 00_ARRANQUE
+  8->11 pares). Resto NO_BUG razonado (FASE1-CENSO FIXED).
+- Docs: 01_METODO dividido (5675d720, secciones 6/6bis/6ter/7 ->
+  01d_POWERSHELL_AUDITORIA.md, METODO <20KB). README bloque Fuentes
+  sin OilPriceAPI ni cifras caducas (6cf37a56).
+- Transversales: FASE2-BARRIDO-CONSUMIDORES-ROTOS FIXED (39df77b0,
+  test_ci_entrypoints_import 27 entry points); FASE0-BARRIDO-SCRIPTS
+  WONT_FIX razonado; DT-NOW-HELPER-HUERFANO FALSE_POSITIVE;
+  IWM-HOLDINGS-EXPANSION WONT_FIX razonado.
+
+**Commits (32).** Rango: b69c17fe..9c4fe3dd (+ cierre 24 en este
+commit). Cada item FIXED con su par (codigo+gobernanza); WONT_FIX y
+FALSE_POSITIVE con 1 commit.
+
+**Pendiente.**
+- 4 observacionales con fecha (10-nov x2, 17-nov, 20-nov).
+- 2 BLOCKED_EXTERNAL: C2-920, WYCKOFF-5BX.
+- 2 OPEN DICT3: TOP20-COBERTURA, H04-INTERVALS.
+
+**Proximo paso sugerido.** Observacionales auto-resuelven en fecha.
+DICT3-TOP20-COBERTURA espera respuesta del auditor.
+
 ### 2026-10-31 — Sesion 22: diagnostico de estado + cierre PCR-CONTRACT
 
 **Objetivo.** Verificar el estado real del sistema tras el commit
@@ -1694,93 +1737,6 @@ fd9e202d, c073f2a5, 10cf8ea5.
 **Pendiente.** Auditoria externa #4 (nueva, 22 oct).
 
 **Proximo paso sugerido.** Recibir auditoria #4 y atenderla.
-
-### 2026-10-20 (tarde) - Dos auditorias externas + FLS
-
-**Objetivo.** Atender dos auditorias externas del reporte 2026-10-19.
-La primera: 14 items (4 criticas, 10 sospechosas). La segunda: 7 items
-(Flow Proxy, trazabilidad temporal, sintesis credito).
-
-**Hecho.**
-- 14 commits. 11 items FIXED con test. 7 falsos positivos documentados
-  en REVIEW-EXTERNAL.
-- B1/B3/B4 (0aec4ce5): sintesis credito sin atribuir HIGH_STRESS al
-  credito. Nota Flow Proxy vs Flujo Primario. Struct -> Struct Score.
-- B2 (41b1c8bf): veto por variables materiales en evidence_matrix.
-  XLC con price<0 y breadth<0 ya no sale FAVORABLE.
-- A2 (47071a51): health_check no da WARN en trimestrales con dispatch OK
-  dentro de max_days.
-- A1 (9f6afa26): post_receipt_audit status LAGGED cuando receipt.date
-  != target_session. Primer LAGGED real sera en run 2026-10-20.
-- P1 (eaed52a7): nota Flow Proxy tabla (composite ETF) vs matriz
-  (mediana componentes). Son metricas distintas y pueden discrepar.
-- P2 (68e4e40c): nota temporal en provenance, recuento votos P/N/0 en
-  matriz, nota regla Wyckoff.
-- C8 (7475108f): nota FLS saturacion por nivel. Item FLS-COMPONENT-DESIGN
-  OPEN.
-- C10 (33a12a10): ratio |Z| extremo destacado en Cross-Asset.
-- C6 (878ad4fc): nota materialidad Europa (media simple, no AUM).
-- FLS (38f17674): SOFR como spread SOFR-IORB, no nivel. Diagnostico:
-  |z|>5 17.7% de sesiones con nivel, 5.7% con spread. FLS 79 -> 63.
-  stressed 3/5 -> 2/5.
-- Falsos positivos: C1 (Wyckoff +1), C2 (Flow Proxy 30% WLS),
-  C3 (SLPM NO_LEADERS), C4 (datos desfasados), C5 (NIPC 13F),
-  C7 (spread 10Y-3M), C9 (IPI).
-
-**Commits.** 0aec4ce5, 41b1c8bf, 47071a51, 7f329d07, af0be35d,
-9f6afa26, 7475108f, 33a12a10, 878ad4fc, eaed52a7, 2ddc7488,
-68e4e40c, ec641043, 38f17674.
-
-**Pendiente.**
-- Cerrar REVIEW-EXTERNAL tras run 2026-10-20 verde.
-- Diagnostico WALCL/CP (FLS-COMPONENT-DESIGN).
-- RECEIPT-AUDIT-LAG (observacion 4 semanas).
-- CRON-SLOTS-OBS y SCHEDULER-DELAYS (2026-11-10).
-
-**Proximo paso.** Run 23:17 UTC (target 2026-10-20). Verificar
-run-system success, receipt, receipt_audit con primer LAGGED real.
-
-### 2026-10-20 - Contaminacion fechas + certificacion prod
-
-**Objetivo.** Revisar el scheduled del lunes 19-10. Diagnosticar el fallo
-del health check semanal (FAIL cron_slots). Auditar contaminacion de
-fechas en outputs/history/*.csv.
-
-**Hecho.**
-- Health check (f3efa062): regla cron_slots 3+missing -> 1-4 WARN, 5/5
-  FAIL. Issue #6 cerrado.
-- Auditoria de fechas: 4 bugs reales + 7 falsos positivos.
-  - european_coverage (6d2278c3 + migracion da093a05): _ref_to_date
-    delegaba en run_date. 459 filas contaminadas. 1734 -> 1326 tras
-    migracion.
-  - data_quality rama europea (f02cebd8): age contra now, no contra
-    sesion. El fix del 18-10 solo cubrio rama general.
-  - monitor_double_counting (14838307 + migracion 5f464729): date=
-    datetime.now().isoformat(). 225 -> 123 tras migracion con
-    run_timestamp.
-  - slpm_history (5ebe1c62): fosil desde 2026-07-17, sin writer activo.
-    CSV eliminado + artifact retirado + metrica structural_vs_breadth
-    eliminada del monitor.
-- Certificacion prod: target 2026-10-19 cubierto por run 39355608824
-  (20-10 01:50 UTC, delay 2h33m). Pipeline completo. Receipt emitido.
-  receipt_audit: 18 OK + 1 NO_DATE_CHECK, 0 MISSING. data_quality con
-  date=sesion (sin findes).
-
-**Commits.** f3efa062, 6d2278c3, da093a05, f02cebd8, 14838307,
-5f464729, 5ebe1c62, c98c55f4, 2ba73626.
-
-**Pendiente.**
-- Health check lunes 26-10: primera lectura de check_receipt_audit y
-  primera aplicacion de la regla nueva de cron_slots.
-- Delays del scheduler GitHub (2-7h): observar 2-3 semanas antes de
-  considerar mitigaciones (repository_dispatch externo, cambiar cron).
-- 3 WARN trimestrales (update_sector_holdings/index/european, fallo
-  1-oct): investigacion separada.
-
-**Proximo paso sugerido.** Observar el scheduled del martes 20-10 (ya
-cubierto por run 39355608824) y el del miercoles 21-10 con todos los
-fixes activos. Confirmar 0 MISSING en receipt_audit y 0 filas no
-bursatiles en los 4 CSVs del pipeline.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 

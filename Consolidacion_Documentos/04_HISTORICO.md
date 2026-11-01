@@ -2804,3 +2804,47 @@ Wyckoff.
 **Commits.** 9d8d8cf9, 3d8c9689, 37e1f02e, e7b12feb, caa176d1,
 a226f556, 22392813.
 
+## Resumen bitacora podada 2026-11-01 (2 sesiones 2026-10-20)
+
+Dos sesiones de 2026-10-20 retiradas de `05_BITACORA.md` (regla de
+retencion: 10 sesiones). Resumen:
+
+### 2026-10-20 (tarde) - Dos auditorias externas + FLS
+
+**Objetivo.** Atender dos auditorias externas del reporte 2026-10-19
+(14 items + 7 items).
+
+**Hecho.** 14 commits. 11 FIXED con test, 7 falsos positivos
+documentados en REVIEW-EXTERNAL. Fixes: sintesis credito sin
+atribuir HIGH_STRESS (`0aec4ce5`), veto por variables materiales en
+evidence_matrix (`41b1c8bf`), health_check trimestrales (`47071a51`),
+post_receipt_audit LAGGED (`9f6afa26`), nota Flow Proxy tabla vs
+matriz (`eaed52a7`), notas P2 provenance + recuento votos + regla
+Wyckoff (`68e4e40c`), nota FLS saturacion por nivel (`7475108f`),
+ratio |Z| extremo Cross-Asset (`33a12a10`), nota materialidad
+Europa (`878ad4fc`), FLS como spread SOFR-IORB no nivel
+(`38f17674`; |z|>5 17.7% con nivel -> 5.7% con spread; FLS 79->63).
+Pendiente residual (vivo hoy): RECEIPT-AUDIT-LAG, CRON-SLOTS-OBS,
+SCHEDULER-DELAYS.
+
+### 2026-10-20 - Contaminacion fechas + certificacion prod
+
+**Objetivo.** Revisar scheduled 19-10, diagnosticar health check
+semanal (cron_slots), auditar contaminacion de fechas en
+outputs/history/*.csv.
+
+**Hecho.** Health check cron_slots (`f3efa062`, issue #6 cerrado;
+regla 3+missing -> 1-4 WARN, 5/5 FAIL). 4 bugs de fechas + 7 falsos
+positivos: european_coverage `_ref_to_date` delegaba en run_date
+(`6d2278c3` + migracion `da093a05`, 459 filas contaminadas,
+1734->1326), data_quality rama europea age contra now
+(`f02cebd8`), monitor_double_counting `date=datetime.now()
+.isoformat()` (`14838307` + migracion `5f464729`, 225->123),
+slpm_history fosil eliminado (`5ebe1c62`). Certificacion prod:
+target 2026-10-19 cubierto por run 39355608824 (20-10 01:50 UTC,
+delay 2h33m), pipeline completo, receipt emitido, 0 MISSING.
+
+**Recuperable.** git log --oneline | grep -E
+'0aec4ce5|41b1c8bf|f3efa062|6d2278c3|14838307' devuelve los
+commits completos con mensaje y diff.
+
