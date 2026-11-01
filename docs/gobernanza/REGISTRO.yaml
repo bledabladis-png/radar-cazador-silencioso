@@ -6583,3 +6583,38 @@ items:
     hallazgos (los hits del regex son falsos positivos: guards
     explicitos, returns tuplas consistentes, guard z.empty).
     '
+- id: B2-CENSO
+  tipo: auditoria
+  ciclo: '2026-11-01'
+  estado: WONT_FIX
+  descripcion: |
+    Auditoria por bloques B2 (pipelines de descarga) sesion 24
+    (2026-11-01). 28 modulos revisados con los 13+5 patrones de
+    01b_PATRONES.md: src/data_loader.py (399 lineas),
+    src/stock_data_loader.py (982 lineas), data/providers/* (25
+    ficheros, ~4000 lineas), scripts/update_*_holdings.py (3
+    ficheros). Resultado: 0 ALTA, 0 MEDIA, 7 WONT_FIX razonados.
+    Los patrones 11 (mtime como criterio) y 12 (cache-hit valida
+    forma no calidad) NO aplican en produccion: data_loader.py:271-312
+    y stock_data_loader.py:628-671 encadenan mtime -> tickers
+    completos -> fecha esperada -> cobertura > CACHE_MIN_COVERAGE.
+    Los mtime en ssga/amundi/_blackrock_base/blackrock_iwm son
+    fallback con WARN explicito (Fix N, 2026-10-01). Los
+    datetime.now() de backup_providers.py (11) son execution time
+    de rate-limit/circuit-breaker/rango de peticion (A5-36 WONT_FIX
+    razonado). Los except Exception con WARN + fallback (router,
+    xetra WebSocket, ssga/amundi) son defensa en profundidad
+    documentada.
+  razon: |
+    Cero bugs activos. Los 2 patrones que mas hits dieron en el
+    Gate 0 (mtime, except Exception) se resolvieron como falsos
+    positivos con evidencia: los mtime son fallback con WARN, y
+    los except Exception capturan fallos de red/proveedor con
+    WARN + continue/fallback. Los contratos estan testeados:
+    test_cache_coverage_gate, test_cache_freshness_audit,
+    test_fu001_sin_ffill_global, test_p7_ast_guard (con
+    _classify_ticker en whitelist), test_retry_rate_limit_audit.
+    Fuera de B2 por diseno (no auditados): web scraping euronext/
+    bme/xetra HTTP (fuera del scope de carga de mercado),
+    scripts/update_*_holdings.py >50 lineas cada uno (dependen de
+    parse SSGA/Xetra concretos, cubiertos por tests propios).

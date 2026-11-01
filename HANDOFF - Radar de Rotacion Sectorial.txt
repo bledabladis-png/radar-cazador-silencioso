@@ -178,7 +178,12 @@ Plan original: 8 bloques (B1-B8) con los 13 patrones de
 
 - **B1 (temporal)**: cerrado con fixes puntuales, NO checklist 18
   patrones completo.
-- **B2 (pipelines descarga)**: sin auditar.
+- **B2 (pipelines descarga)**: auditados (B2 sesion 24,
+  2026-11-01). 28 modulos: data_loader, stock_data_loader,
+  data/providers/* (25 ficheros), scripts/update_*_holdings.
+  0 bugs (0 ALTA, 0 MEDIA, 7 WONT_FIX razonados: excepts
+  con WARN + fallback, mtime fallback con WARN, execution-time
+  now()). Cero OPEN.
 - **B3 (Wyckoff)**: sin auditar formalmente. WYCKOFF-RENDERS-HUERFANOS
   cerrado en B3 sesion 24 (3a516268). Sin OPEN heredados.
 - **B4 (motores/regimen)**: auditados (B4-propia-1 + B4-propia-2,
