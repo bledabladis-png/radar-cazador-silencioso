@@ -203,8 +203,13 @@ Plan original: 8 bloques (B1-B8) con los 13 patrones de
   patrones completo.
 - **B2 (pipelines descarga)**: sin auditar.
 - **B3 (Wyckoff)**: sin auditar formalmente (1 OPEN heredado).
-- **B4 (motores/regimen)**: sin auditar. Prioridad alta: 1 de los 3
-  OPEN de B6 viven aqui.
+- **B4 (motores/regimen)**: parcialmente auditados (B4-propia-1,
+  2026-11-01): engines, sector_regime_matrix, sector_regime
+  (compute_sector_rank_score), macro_regime, evidence_matrix. 0 bugs
+  (0 ALTA, 2 BAJA: except Exception outer con WARN + contrato de
+  degradacion testeado). Pendiente B4-propia-2: liquidity_v2,
+  tactical_engine, volatility_regime, structural_engine,
+  financial_conditions. 1 OPEN heredado: B6-MTE-INF-NO-FINITE-RESTANTES.
 - **B5 (outputs/persistencia)**: cerrado con fixes puntuales, NO
   checklist completo. 2 de los 3 OPEN de B6 viven aqui.
 - **B6 (reporte)**: CERRADO sesion 23. 20 FIXED, 3 OPEN heredados.

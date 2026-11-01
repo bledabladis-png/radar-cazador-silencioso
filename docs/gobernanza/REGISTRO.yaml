@@ -6526,3 +6526,29 @@ items:
   siguiente_accion: 'B5: extender output_registry con los 7 outputs.
 
     '
+- id: B4-PROPIA-1-CENSO
+  tipo: auditoria
+  ciclo: '2026-11-01'
+  estado: WONT_FIX
+  descripcion: 'Auditoria por bloques B4-propia-1 (2026-11-01). Modulos
+    revisados linea a linea con los 18 patrones de 01b_PATRONES.md:
+    src/pipeline/engines.py, indicators/sector_regime_matrix.py,
+    regimes/sector_regime.py (compute_sector_rank_score),
+    regimes/macro_regime.py (compute_macro_score + compute_macro_regime),
+    indicators/evidence_matrix.py. Resultado: 0 hallazgos ALTA, 0 MEDIA,
+    2 BAJA razonadas (ambas except Exception outer con WARN explicito,
+    contrato cubierto por test_tactical_structural_degradacion_sin_df y
+    por el flujo feliz de sector_regime). Sin codigo patched: auditoria
+    sin bugs. Faltan por auditar en B4: liquidity_v2.py, tactical_engine.py,
+    volatility_regime.py, structural_engine.py, financial_conditions.py.
+    '
+  razon: 'Los 2 except Exception outer (engines.py:35, engines.py:55) NO
+    son deuda silenciosa: capturan ImportError del import lazy (no
+    NameError/AttributeError de runtime) y el test
+    test_tactical_structural_degradacion_sin_df verifica el contrato
+    documentado (engines subyacentes fallan -> cada sector a 0.0). El
+    except de sector_regime.py:55 emite [FU-020][WARN] antes de degradar.
+    Patron 1 de 01b_PATRONES (silencioso) no aplica: hay WARN + contrato
+    testeado. Anadir traceback.print_exc() seria ruido sin cambio de
+    comportamiento. WONT_FIX razonado por diseno.
+    '
