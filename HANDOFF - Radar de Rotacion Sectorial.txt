@@ -116,7 +116,9 @@ FALSE_POSITIVE con 1 commit.
 - **FASE-A-IAE-PER-TICKER**: FIXED (2026-11-01). Agregacion 13F
   por ticker con filtros de anomalia por ratio (IPO/spin-off).
   Ranking por consenso de gestores. Render en src/report/iae.py.
-- **FASE-A-AMPLIAR-UNIVERSO-PESO**: OPEN, pre-registro pendiente
+- **FASE-A-AMPLIAR-UNIVERSO-PESO**: FIXED (2026-11-01, opcion 90%).
+  25 tickers en universe_expansions.yaml. Universo 505 -> 530.
+  WBD documentado en YAML y filtrado. Cobertura >=90% por ETF.
   con el analista. Subir de 85% a 95-100% del peso del ETF
   (~250-300 tickers adicionales). Pendiente decidir alcance.
 

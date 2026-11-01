@@ -6721,34 +6721,27 @@ items:
 - id: FASE-A-AMPLIAR-UNIVERSO-PESO
   tipo: frente
   ciclo: '2026-11-01'
-  estado: OPEN
-  descripcion: |
-    Tras FASE-A-COBERTURA-DUAL (cobertura derivada de datos), el
-    cuello de botella real es el universo de descarga: 34/76 tickers
-    de XLF, 26/60 XLV, 39/74 XLK. Las expansiones de sesion 18 y O2
-    cubren el 85% del peso (objetivo A.2c). Subir a 95-100% del
-    peso requiere ~250-300 tickers adicionales en etf_holdings,
-    con impacto medido: parquet de 505 a ~750-800 tickers, tiempo
-    de run (14 min -> estimado 25-30 min), microcaps con H=L=C
-    frecuentes, TRUNCATED_IPO. Pre-registro obligatorio antes de
-    implementar: alcance, metricas de aceptacion, impacto en rate
-    limits (Yahoo/SSGE/Euronext), cobertura efectiva esperada por
-    ETF. No se toca sin pre-registro firmado.
-  siguiente_accion: |
-    Pre-registro con el analista. Preguntar: (a) 95% o 100% de peso;
-    (b) acepta microcaps iliquidas con H=L=C frecuentes; (c) acepta
-    duplicar tiempo de run; (d) criterio de "dato valido" para
-    microcaps (>=60 barras sigue siendo el minimo). Si pre-registro
-    aprueba: anadir a etf_holdings y a get_stock_list() los tickers
-    por debajo del top-85% de peso, medir impacto en primer run,
-    decidir si se mantiene o se revierte.
+  estado: FIXED
+  commit: 'bcd31652574e0126d13d8bd8244d1d8ae50713fc'
+  test: tests/test_universe_expansions_eligibility.py
   evidencia: |
-    Gate 0 2026-11-01: XLF falta 42 de 76 tickers (58% del peso
-    restante), XLV falta 34 de 60, XLK falta 35 de 74, XLY falta
-    25 de 47, XLI falta 33 de 83, XLP falta 12 de 33. Total
-    ~250-300 tickers por debajo del corte A.2c. No es bug: es
-    decision de producto. WONT_FIX hasta que el analista confirme
-    que necesita cobertura real (no solo metrico).
+    Fix en bcd31652574e0126d13d8bd8244d1d8ae50713fc (opcion B aprobada 2026-11-01). Analisis del
+    reporte 30-oct: cobertura de peso actual entre 85.3% (XLF/XLV)
+    y 99.2% (XLE). Gap entre "cobertura de tickers" (45-95%) y
+    "cobertura de peso" (85-99%) resuelto en FASE-A-COBERTURA-DUAL.
+    Subida a 90% de peso: 8 bloques *_90 nuevos en
+    universe_expansions.yaml, 25 tickers, todos con cobertura
+    efectiva >=90%. WBD declarado en XLC como caso documentado
+    (DELISTED 2026-10-06, Paramount Skydance). filter_eligible en
+    get_stock_list() lo descarta. Universo: 505 -> 530 tickers.
+    Run: 14 -> 14.5 min estimado. Sin riesgo de rate limit ni
+    H=L=C (nuevos: banca mediana, pagos, farma grande; ningun
+    microcap problematico). Test centinela: 4 tests (AST filter,
+    foto universo, WBD en YAML no en universo, cobertura >=90% por
+    ETF). Los 2 tests genericos de test_universe_expansions.py se
+    adaptan para excluir DELISTED declarados (WBD documentado).
+    Verificacion: 92 focalizados + full suite 4358 passed + 2
+    skipped.
 - id: FASE-A-FLUJOS-CAPAS-DERIVADAS
   tipo: frente
   ciclo: '2026-11-01'
