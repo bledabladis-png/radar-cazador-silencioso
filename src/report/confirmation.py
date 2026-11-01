@@ -6,6 +6,7 @@ Extraido de src/report_generator.py (refactor C1, fase C1-6d4c2).
 
 import pandas as pd
 from src.report.helpers import _fmt_num, _fmt_signed
+from indicators.cross_asset import RATIO_LABELS
 
 
 def render_confirmation(confirmation_data):
@@ -109,21 +110,7 @@ def render_confirmation(confirmation_data):
             out.append("\n### Cross-Asset Ratios\n")
             out.append("| Ratio | Valor | Delta 20d | Z-Score (60d) |\n")
             out.append("|-------|-------|-----------|---------------|\n")
-            ratio_names = {
-                'copper_gold': 'Copper/Gold',
-                'tlt_ief': 'TLT/IEF',
-                'tip_ief': 'TIP/IEF',
-                'dxy_em': 'DXY/EEM',
-                'hyg_lqd': 'HYG/LQD',
-                'kre_spy': 'KRE/SPY',
-                'sox_spy': 'SMH/SPY',
-                'iyt_spy': 'IYT/SPY',
-                'xle_spy': 'XLE/SPY',
-                'xlu_spy': 'XLU/SPY',
-                'xlv_spy': 'XLV/SPY',
-                'xlp_spy': 'XLP/SPY',
-            }
-            for key, label in ratio_names.items():
+            for key, label in RATIO_LABELS.items():
                 if key in ratios and ratios[key] is not None:
                     val = ratios[key]
                     delta_key = f'{key}_delta20'
@@ -137,7 +124,7 @@ def render_confirmation(confirmation_data):
             # REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL (C10, 2026-10-20):
             # destacar el ratio con |Z| mas extremo de la tabla.
             _zs = [(label, ratios.get(f'{k}_zscore'))
-                   for k, label in ratio_names.items()
+                   for k, label in RATIO_LABELS.items()
                    if k in ratios and ratios[k] is not None
                    and ratios.get(f'{k}_zscore') is not None
                    and pd.notna(ratios.get(f'{k}_zscore'))]

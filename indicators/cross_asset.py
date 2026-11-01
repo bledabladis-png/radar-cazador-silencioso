@@ -3,6 +3,23 @@ import pandas as pd
 import numpy as np
 from src.utils import get_col, robust_zscore
 
+
+RATIO_LABELS = {
+    'copper_gold': 'Copper/Gold',
+    'tlt_ief': 'TLT/IEF',
+    'tip_ief': 'TIP/IEF',
+    'dxy_em': 'DXY/EEM',
+    'hyg_lqd': 'HYG/LQD',
+    'kre_spy': 'KRE/SPY',
+    'sox_spy': 'SMH/SPY',
+    'iyt_spy': 'IYT/SPY',
+    'xle_spy': 'XLE/SPY',
+    'xlu_spy': 'XLU/SPY',
+    'xlv_spy': 'XLV/SPY',
+    'xlp_spy': 'XLP/SPY',
+}
+
+
 def compute_cross_asset_ratios(df_market, temporal_meta=None):
     """
     Calcula los 12 ratios cross-asset institucionales.
