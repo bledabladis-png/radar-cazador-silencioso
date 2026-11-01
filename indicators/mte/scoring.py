@@ -489,7 +489,7 @@ SCENARIO_RULES = {
             {"cond": [("cls", ">", 0.7)], "bonus": 3, "finite": ["cls"]},
             {"cond": [("shs", ">", 0.3)], "bonus_ref": "SHS", "finite": ["cls"]},
             {"cond": [("srs", ">", 0.3)], "bonus_ref": "SRS", "finite": ["cls"]},
-            {"cond": [("cls", ">", 0.85)], "bonus": 3},
+            {"cond": [("cls", ">", 0.85)], "bonus": 3, "finite": ["cls"]},
         ],
     },
     "RECESSION": {

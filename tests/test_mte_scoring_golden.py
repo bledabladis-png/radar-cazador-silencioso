@@ -1,9 +1,9 @@
 ﻿# -*- coding: utf-8 -*-
 # Golden de score_scenarios ANTES del refactor a SCENARIO_RULES (B6-H7).
 # Captura el comportamiento EXACTO actual. Si el refactor cambia un
-# solo digito, este test falla. Incluye bug latente cls=inf -> -996
-# (el +3 de cls>0.85 se suma tras el early-exit -999), que se
-# preserva hasta que se arregle como item separado.
+# solo digito, este test falla. Bug latente cls=+inf -> -996 fue
+# corregido en B6-MTE-CLS-INF-LATENTE (B4, 2026-11-01): ahora
+# cls=+inf -> -999 (regla cls>0.85 con finite=["cls"]).
 
 import pytest
 from indicators.mte.scoring import score_scenarios
@@ -38,6 +38,17 @@ def test_cls_nan_bloquea_crisis():
 
 def test_cls_neg_inf_bloquea_crisis():
     got = score_scenarios(0.0, 0.0, float("-inf"), 0.0)
+    assert got["CRISIS"] == -999
+
+
+def test_cls_pos_inf_bloquea_crisis():
+    """cls=+inf -> crisis=-999. Fix B6-MTE-CLS-INF-LATENTE (B4, 2026-11-01).
+
+    Antes del fix: cls=inf disparaba la regla cls>0.85 sin finite,
+    sumando +3 sobre pre_invalid=-999 -> -996. Tras el fix, la regla
+    tiene finite=["cls"], se salta, y el resultado es -999.
+    """
+    got = score_scenarios(0.0, 0.0, float("inf"), 0.0)
     assert got["CRISIS"] == -999
 
 
