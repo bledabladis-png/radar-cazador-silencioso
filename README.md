@@ -77,17 +77,19 @@ Salida: `outputs/report/reporte_diario.md`.
 
 ## Fuentes de datos (resumen)
 
-| Fuente | Tickers | Metodo |
-|---|:---:|---|
-| Yahoo | 262 | yfinance |
-| Euronext | 13 | API AJAX publica (AES-256-CBC) |
-| Xetra | 19 | WebSocket MDS + JWT |
-| BME | 19 | API REST publica (JSON) |
-| LSE | 20 | Scraper privado (Refinitiv Widgets) |
-| OilPriceAPI | 3 | Spot GC/HG/NG |
-| CBOE | - | Opciones diarias + ^VIX3M |
-| FRED | - | Liquidez y yields |
-| CFTC / FINRA / SEC | - | Position flow / Dark pools / 13F + N-PORT |
+Conteos autoritativos: `Consolidacion_Documentos/ESTADO_SISTEMA.md`.
+Aqui solo se listan las fuentes y su metodo, sin cifras que caduquen.
+
+| Fuente | Metodo |
+|---|---|
+| Yahoo | yfinance (indices, sectores, commodities via futuros BZ/CL/GC/HG/NG) |
+| Euronext | API AJAX publica (AES-256-CBC) |
+| Xetra | WebSocket MDS + JWT |
+| BME | API REST publica (JSON) |
+| LSE | Scraper privado (Refinitiv Widgets) |
+| CBOE | Opciones diarias + ^VIX3M |
+| FRED | Liquidez y yields |
+| CFTC / FINRA / SEC | Position flow / Dark pools / 13F + N-PORT |
 
 ---
 
