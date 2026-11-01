@@ -89,6 +89,12 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
         # en N2 afecta solo a LIS (slpm_v12.py::compute_leader_integrity),
         # no al WLS. Verificado: NVDA con split 10:1 simulado produce
         # rs_mom identico (diferencia < 1e-12).
+        # B6-ILOC-SIN-GUARD-BARRIDO (2026-11-01): rs_last extraido con
+        # guard. Antes 'rs': rs.iloc[-1] en el dict final crasheaba con
+        # IndexError si price_etf era todo NaN (ETF presente en df_market
+        # pero sin datos validos). El IndexError lo capturaba
+        # compute_all_stock_metrics y se perdia el sector entero.
+        rs_last = float(rs.iloc[-1]) if len(rs) > 0 else np.nan
         rs_mom = np.log(rs).diff(20).iloc[-1] if len(rs) >= 21 else np.nan
 
         # P1.1 (2026-10-13): retorno relativo 20d (correcto para
@@ -175,7 +181,7 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
             'effective_date': _eff_meta.get('effective_date'),
             'expected_date': _eff_meta.get('expected_date'),
             'coverage': _eff_meta.get('coverage'),
-            'rs': rs.iloc[-1],
+            'rs': rs_last,
             'rs_mom': rs_mom,
             'rs_ratio_20d': rs_ratio_20d,
             'flow_proxy_z': flow_signal,

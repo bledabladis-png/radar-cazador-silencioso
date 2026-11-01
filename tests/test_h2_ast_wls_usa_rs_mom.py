@@ -60,7 +60,12 @@ def test_rs_mom_es_log_return():
 def test_columna_rs_informativa_existe():
     """La columna rs nominal sigue publicandose (informativa)."""
     src = _source_of_fn("compute_stock_metrics")
-    # 'rs': rs.iloc[-1] debe aparecer en el dict de results
-    assert "'rs': rs.iloc[-1]" in src, (
+    # B6-ILOC-SIN-GUARD-BARRIDO (2026-11-01): la columna se publica
+    # desde rs_last, calculado con guard (rs vacio -> NaN). El contrato
+    # que se mantiene es 'la columna rs existe y viene de rs'.
+    assert "'rs': rs_last" in src, (
         "la columna rs nominal debe seguir publicandose como informativa"
+    )
+    assert "rs_last = float(rs.iloc[-1]) if len(rs) > 0 else np.nan" in src, (
+        "falta el guard de rs vacio introducido por B6-ILOC"
     )

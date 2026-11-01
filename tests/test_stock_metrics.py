@@ -208,3 +208,37 @@ def test_compute_all_stock_metrics_normaliza_tickers():
         f"BRK.B de holdings no se normalizo a BRK-B. "
         f"Tickers en out: {sorted(set(out['ticker']))}"
     )
+
+# === B6-ILOC-SIN-GUARD-BARRIDO (2026-11-01) ===
+# Bug latente: si price_etf (ETF) tiene todos los Close NaN (presente en
+# df_market pero sin datos validos), rs = (close/price_etf).dropna()
+# quedaba vacio y rs.iloc[-1] lanzaba IndexError no capturado por
+# compute_stock_metrics. Solo lo capturaba compute_all_stock_metrics
+# (L306) -> todo el sector se perdia silenciosamente. Fix: rs_last con
+# guard (NaN si rs vacio), sin crashear.
+
+def test_compute_stock_metrics_price_etf_todo_nan_no_crashea():
+    """price_etf con todos NaN -> rs=NaN, sin IndexError."""
+    df_stocks = _make_stock_df(["AAA"])
+    df_market = _make_market_df("XLK")
+    df_market[("Close", "XLK")] = float("nan")
+    out = compute_stock_metrics(df_market, df_stocks, "XLK", ["AAA"])
+    assert not out.empty
+    assert len(out) == 1
+    assert out.iloc[0]["ticker"] == "AAA"
+    assert pd.isna(out.iloc[0]["rs"])
+
+
+def test_compute_stock_metrics_rs_correcto_con_datos():
+    """Regresion: con price_etf valido, rs = close/price_etf en la ultima fecha."""
+    df_stocks = _make_stock_df(["AAA"])
+    df_market = _make_market_df("XLK")
+    out = compute_stock_metrics(df_market, df_stocks, "XLK", ["AAA"])
+    assert len(out) == 1
+    close = df_stocks[("Close", "AAA")].dropna()
+    price_etf = df_market[("Close", "XLK")].dropna()
+    common = close.index.intersection(price_etf.index)
+    expected = float(close.loc[common[-1]] / price_etf.loc[common[-1]])
+    got = float(out.iloc[0]["rs"])
+    assert abs(got - expected) < 1e-9
+
