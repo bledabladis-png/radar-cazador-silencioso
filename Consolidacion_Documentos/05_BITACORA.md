@@ -44,6 +44,56 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-01 — Sesion 25: FASE-A (analisis economico 30-oct)
+
+**Objetivo.** Ejecutar los 5 puntos tecnicos del analista del reporte
+30-oct. Prioritaria (a) del analista (bloque macro oficial) no
+abierta: decision de producto.
+
+**Hecho.**
+- FASE-A-COBERTURA-DUAL (50ab0e1f): cobertura dual derivada de datos
+  (n_descargados, coverage_rs_sobre_descarga, peso_total_etf,
+  coverage_peso). Sin constantes de porcentaje. Render: 2 columnas +
+  nota derivada. Test de header pasa a validar por NOMBRE de columna,
+  no por count("|").
+- FASE-A-FLUJOS-CAPAS-DERIVADAS (180f0ad6): FLOW_SYNTHESIS_LABELS dict
+  como fuente unica. Regla y nota de no-sumabilidad derivadas de
+  flow_synthesis.keys(). Test centinela falla si productor anade
+  capa sin label.
+- FASE-A-INDEPENDENCIA-ESTADISTICA (180f0ad6): config/shared_inputs.py
+  con SHARED_INPUTS (6 variables verificadas por Gate 0). Helper
+  _shared_vars_note en helpers. 13 tests fuerzan coherencia registro-
+  codigo.
+- FASE-A-IAE-PER-TICKER (c0f2a204): agregacion 13F por ticker. Gate 0:
+  243 tickers del radar con datos, densidad alta (min 353 gestores,
+  mediana 1919). Filtros de anomalia por ratio (pct_new, pct_exit,
+  pct_increase) capturan IPO SPCX (12-jun-2026) y spin-offs HON/SOLS
+  (oct-2025), DD/Qnity (nov-2025) sin lista de tickers. Ranking por
+  consenso de gestores. Render en src/report/iae.py: Top 20
+  acumulando/distribuyendo + nota de exclusiones.
+- FASE-A-AMPLIAR-UNIVERSO-PESO (bcd31652, opcion 90%): 25 tickers en
+  universe_expansions.yaml (8 bloques *_90). WBD declarado en XLC y
+  filtrado. Universo: 505 -> 530. Test centinela: 4 tests (AST filter,
+  foto universo, WBD en YAML no en universo, cobertura >=90% por ETF).
+  Tests genericos de test_universe_expansions.py adaptados para excluir
+  DELISTED declarados.
+- Otros trabajos del dia: B6 completa (4 FIXED + 2 WONT_FIX), B3
+  (1 FIXED), B2/B7/B1/B8 WONT_FIX. Fase 0/1 (2 fixes). 01_METODO
+  dividido. README sin cifras caducas. Transversales cerrados.
+
+**Commits (41).** Desde b69c17fe hasta bdfb74bb. Detalle en git log.
+
+**Pendiente.**
+- 4 observacionales con fecha (CRON-SLOTS-OBS y SCHEDULER-DELAYS
+  10-nov; RECEIPT-AUDIT-LAG 17-nov; H5.3 20-nov).
+- 2 BLOCKED_EXTERNAL: C2-920, WYCKOFF-5BX (~2027).
+- 2 OPEN DICT3: DICT3-TOP20-COBERTURA, DICT3-H04-INTERVALS.
+- FASE-A-REGIMEN-ECONOMIA-REAL: no abierta. Decision de producto.
+
+**Proximo paso sugerido.** Observacionales auto-resuelven. Prioritaria
+(a) del analista (bloque macro oficial separado) pendiente de decision
+de producto.
+
 ### 2026-11-01 — Sesion 24: Fase 2 completa (B1-B8) + Fase 0/1 + transversales
 
 **Objetivo.** Completar Fase 2 (auditoria por bloques B1-B8) + Fase 0

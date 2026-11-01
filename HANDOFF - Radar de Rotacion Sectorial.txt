@@ -7,16 +7,16 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-11-01, sesion 24)
+## 1. ESTADO AL CIERRE (2026-11-01, sesion 25)
 
-HEAD: `9c4fe3dd` (consultar `git log --oneline -1` para el actual).
+HEAD: `bdfb74bb` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2.
-       Al cierre sesion 24: 4297 passed, 2 skipped.
+       Al cierre sesion 25: 4358 passed, 2 skipped.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 258 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 263 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 
@@ -31,59 +31,94 @@ Fase 2 (auditoria por bloques): COMPLETA. B1-B8 auditados.
   - B8 (scripts audit): WONT_FIX, 0 bugs (19 scripts).
 
 Fase 0 (inventario hardcodes) + Fase 1 (clasificacion): COMPLETAS.
-  302 hits / 15 tipos. 2 fixes reales (336b48ab: ssga SECTOR_TICKERS,
-  arranque 8->11 pares). Resto NO_BUG (FASE1-CENSO FIXED).
+  302 hits / 15 tipos. 2 fixes reales (336b48ab). Resto NO_BUG.
 
 Transversales: cerrados.
   - FASE0-BARRIDO-SCRIPTS: WONT_FIX razonado.
-  - FASE2-BARRIDO-CONSUMIDORES-ROTOS: FIXED (39df77b0, centinela
-    27 entry points CI).
+  - FASE2-BARRIDO-CONSUMIDORES-ROTOS: FIXED (39df77b0, 27 entry points CI).
   - DT-NOW-HELPER-HUERFANO: FALSE_POSITIVE.
   - IWM-HOLDINGS-EXPANSION: WONT_FIX razonado.
 
-Docs: 01_METODO dividido (01d_POWERSHELL_AUDITORIA.md, METODO <20KB).
-README bloque Fuentes sin OilPriceAPI ni cifras caducas.
+Analisis economico 30-oct (FASE-A): 5 items cerrados.
+  - FASE-A-COBERTURA-DUAL: FIXED (50ab0e1f). Cobertura dual derivada.
+  - FASE-A-FLUJOS-CAPAS-DERIVADAS: FIXED (180f0ad6).
+  - FASE-A-INDEPENDENCIA-ESTADISTICA: FIXED (180f0ad6).
+  - FASE-A-IAE-PER-TICKER: FIXED (c0f2a204). 13F por ticker.
+  - FASE-A-AMPLIAR-UNIVERSO-PESO: FIXED (bcd31652, opcion 90%).
+
+Docs: 01_METODO dividido (01d_POWERSHELL_AUDITORIA.md). README sin
+cifras caducas.
 
 Pendientes vivos: 4 observacionales con fecha + 2 BLOCKED_EXTERNAL
-+ 2 OPEN DICT3. Ver seccion 3.
++ 2 OPEN DICT3 + prioritaria (a) analista (no abierta). Ver seccion 3.
 
 ---
-## 2. SESION 2026-11-01 (sesion 24): detalle
+## 2. SESION 2026-11-01 (sesion 25): detalle
 
-**Objetivo inicial.** Completar Fase 2 (auditoria por bloques B1-B8)
-+ Fase 0 (inventario hardcodes) + Fase 1 (clasificacion) + cerrar
-transversales. Ejecutar la hoja de ruta del plan de consistencia
-temporal.
+**Objetivo inicial.** Ejecutar los 5 puntos tecnicos del analista del
+reporte 30-oct (analisis economico integral). Prioridad (a) del
+analista (bloque macro oficial separado) no abierta: decision de
+producto.
 
-**Hecho.**
-- B4-propia-1: engines, sector_regime_matrix, sector_regime,
-  macro_regime, evidence_matrix. 0 bugs, 2 BAJA razonadas.
-- B4-propia-2: liquidity_v2, tactical_engine, volatility_regime,
-  structural_engine, financial_conditions. 0 bugs, 3 BAJA razonadas.
-- B6: RATIO-NAMES (3d21264a) + MTE-CLS-INF (ba1f2eac) +
-  ILOC-BARRIDO (b661a0d6) + MTE-INF-NO-FINITE (ac0a607e) FIXED.
+**Hecho (41 commits, 5 items FASE-A FIXED).**
+
+1. **FASE-A-COBERTURA-DUAL** (`50ab0e1f`): el analista pide "cobertura
+   sectorial dual". Diagnostico: `n_total` es universo completo del ETF
+   (76 XLF), no universo descargado (34). Fix: `n_descargados`,
+   `coverage_rs_sobre_descarga`, `peso_total_etf`, `coverage_peso`
+   derivados del df. Sin constante de porcentaje. Render: 2 columnas
+   nuevas + nota derivada. Tests: 2 nuevos + adaptacion del test de
+   header (por NOMBRE de columna, no por count("|")).
+
+2. **FASE-A-FLUJOS-CAPAS-DERIVADAS** (`180f0ad6`): el analista pide
+   separar capas de flujos. Fix: `FLOW_SYNTHESIS_LABELS` dict como
+   fuente unica. La regla de FLOW_CONFIDENCE lista capas derivadas
+   de `flow_synthesis.keys()`, no literal "4 capas". Nota de no-
+   sumabilidad con `N = len(_sign keys)`. Test centinela que falla si
+   productor anade capa sin label.
+
+3. **FASE-A-INDEPENDENCIA-ESTADISTICA** (`180f0ad6`): el analista
+   marca dependencia entre modulos. Fix: `config/shared_inputs.py` con
+   `SHARED_INPUTS` (6 variables verificadas por Gate 0). `_shared_vars_note`
+   en helpers lee el registro y genera nota en runtime. Aplicada en
+   `render_sector_concentration`. 13 tests fuerzan coherencia registro-
+   codigo.
+
+4. **FASE-A-IAE-PER-TICKER** (`c0f2a204`): el analista pide identificar
+   tickers acumulando, no solo numero global. Gate 0: 243 tickers del
+   radar con datos 13F. Densidad alta (min 353 gestores, mediana 1919).
+   Nuevo modulo `aggregation/per_ticker.py` con filtros de anomalia por
+   ratio (pct_new, pct_exit, pct_increase) que capturan IPO (SPCX
+   ipo 12-jun-2026) y spin-offs (HON/SOLS oct-2025, DD/Qnity nov-2025)
+   sin lista de tickers. Ranking por consenso de gestores. Render:
+   `### Cambio neto por ticker (13F)` con Top 20 acumulando/distribuyendo
+   + nota de exclusiones derivada.
+
+5. **FASE-A-AMPLIAR-UNIVERSO-PESO** (`bcd31652`): el analista pide
+   ampliar cobertura. Opcion B aprobada: 90% de peso. 25 tickers en
+   `universe_expansions.yaml` (8 bloques *_90). WBD declarado en XLC
+   como caso documentado (DELISTED 2026-10-06, Paramount Skydance).
+   Universo: 505 -> 530 tickers. Test centinela: 4 tests (AST filter,
+   foto universo, WBD en YAML no en universo, cobertura >=90% por ETF).
+
+**Otros trabajos:**
+- B6 completa: RATIO-NAMES (`3d21264a`) + MTE-CLS-INF (`ba1f2eac`) +
+  ILOC-BARRIDO (`b661a0d6`) + MTE-INF-NO-FINITE (`ac0a607e`) FIXED.
   FLOWS-CURRENCY y FLOWS-REGISTRY WONT_FIX (B5).
-- B3: WYCKOFF-RENDERS-HUERFANOS FIXED (3a516268).
-- B2: 28 modulos, WONT_FIX. B7: 36 modulos, WONT_FIX. B1: 13
-  modulos, WONT_FIX. B8: 19 scripts, WONT_FIX.
-- Fase 0: 302 hits / 15 tipos. Fase 1: 2 fixes (336b48ab).
+- B3: WYCKOFF-RENDERS-HUERFANOS FIXED (`3a516268`).
+- B2, B7, B1, B8: WONT_FIX (0 bugs).
+- Fase 0/1: 302 hits. 2 fixes (`336b48ab`). FASE1-CENSO FIXED.
 - Docs: 01_METODO dividido (5675d720), README (6cf37a56).
-- Transversales: FASE2 (39df77b0) + FASE0 (WONT_FIX) + DT-NOW
-  (FALSE_POSITIVE) + IWM (WONT_FIX).
-
-**Commits (32).** Rango: b69c17fe..9c4fe3dd + commit de cierre 24.
-Cada item FIXED con su par (codigo+gobernanza); WONT_FIX y
-FALSE_POSITIVE con 1 commit.
+- Transversales: FASE2 (`39df77b0`), FASE0 (WONT_FIX), DT-NOW (FALSE_POSITIVE).
 
 **Verificacion.**
-- Suite completa al cierre: 4297 passed, 2 skipped.
+- Suite completa al cierre: 4358 passed, 2 skipped.
 - pyflakes/compileall silencio.
-- CI verde en los 8+ runs del dia.
+- CI verde en los 12+ runs del dia.
 - Verifica_gobernanza [OK] tras cada commit.
 - D38 aplicado en los 4 FIXED de codigo.
 
 ---
-
 ## 3. PENDIENTES VIVOS
 
 ### 3.1. Bloqueados por auditor externo (2)
@@ -102,36 +137,25 @@ FALSE_POSITIVE con 1 commit.
   del rechazo del IC95 inferencial (dictamen H-04 2026-10-26).
   Se mantiene OPEN como evidencia.
 
-### 3.2.bis. Frentes del analista (FASE-A)
-
-- **FASE-A-COBERTURA-DUAL**: FIXED (2026-11-01). n_descargados +
-  coverage_rs_sobre_descarga + peso_total_etf + coverage_peso en
-  sector_concentration. Cero constantes de porcentaje.
-- **FASE-A-FLUJOS-CAPAS-DERIVADAS**: FIXED (2026-11-01). Nota
-  de capas derivada del dict; FLOW_SYNTHESIS_LABELS como fuente
-  unica. Test centinela falla si productor anade capa sin label.
-- **FASE-A-INDEPENDENCIA-ESTADISTICA**: FIXED (2026-11-01).
-  config/shared_inputs.py con 6 variables verificadas. 13 tests
-  fuerzan coherencia registro-codigo.
-- **FASE-A-IAE-PER-TICKER**: FIXED (2026-11-01). Agregacion 13F
-  por ticker con filtros de anomalia por ratio (IPO/spin-off).
-  Ranking por consenso de gestores. Render en src/report/iae.py.
-- **FASE-A-AMPLIAR-UNIVERSO-PESO**: FIXED (2026-11-01, opcion 90%).
-  25 tickers en universe_expansions.yaml. Universo 505 -> 530.
-  WBD documentado en YAML y filtrado. Cobertura >=90% por ETF.
-  con el analista. Subir de 85% a 95-100% del peso del ETF
-  (~250-300 tickers adicionales). Pendiente decidir alcance.
-
 ### 3.3. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |
 |---|---|---|
-| H5.3 | 2026-11-20 | Verificar cron trimestral 13F |
-| RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
 | CRON-SLOTS-OBS | 2026-11-10 | Revision runs 20-10 a 10-11 |
 | SCHEDULER-DELAYS | 2026-11-10 | p95 delays |
+| RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
+| H5.3 | 2026-11-20 | Verificar cron trimestral 13F |
+
+### 3.4. Prioritaria analista 30-oct no abierta (decision producto)
+
+- **FASE-A-REGIMEN-ECONOMIA-REAL** (no abierta como item): el analista
+  pide bloque macro con datos oficiales (BEA PIB/PCE/renta, BLS IPC/
+  empleo/salarios reales, Fed tipos nominales y reales) separado del
+  regimen de mercado. Dos etiquetas independientes. Estimacion: 3-5
+  sesiones. Decision de producto.
 
 ---
+
 ## 4. COMO ARRANCAR
 
     Set-Location D:\Macro_Sectorial
@@ -164,29 +188,29 @@ Esperado:
   + py fichero.py. Nunca py -c con strings > ~2KB.
 - **No anidar here-strings de PowerShell con scripts Python**:
   un bloque @'..'@ que contiene codigo Python con triple-comilla
-  adentro rompe el parser. Para HANDOFF / BITACORA / docs: escribir
-  el texto con [IO.File]::WriteAllText desde PowerShell @'..'@
-  directo, sin pasar por Python.
+  adentro rompe el parser.
 - **Ruta absoluta SIEMPRE con [IO.File]::* en PowerShell**: el CWD
-  de .NET puede ser C:\WINDOWS\system32 (no D:\Macro_Sectorial).
-  WriteAllText con ruta relativa escribe donde .NET resuelva, no
-  donde PS resuelva. Usar `$absPath = (Resolve-Path ...).Path` antes
-  de cualquier [IO.File]::WriteAllText / AppendAllText / ReadAllBytes.
-  Sintoma: el fichero no se modifica y no hay excepcion. Pisado 2
-  veces el 2026-11-01 (HANDOFF).
+  de .NET puede ser C:\WINDOWS\system32 (no D:\Macro_Sectorial). Usar
+  `$absPath = (Resolve-Path ...).Path` antes de cualquier
+  [IO.File]::WriteAllText/AppendAllText/ReadAllBytes.
 - **Here-strings de PowerShell >10KB se truncan silenciosamente**.
   Escribir en chunks de <= 2KB con WriteAllText (primer chunk) +
   AppendAllText (resto). Verificar tamano tras cada chunk.
-- BOM UTF-8 presente en varios ficheros. Leer con utf-8-sig,
+- **PS parsea `"$var: ..."` como drive-variable**. Usar `-f` para
+  formatear: `Write-Host ("linea {0}: {1}" -f $i, $ln)`.
+- **YAML: indentacion top-level = 0 en `universe_expansions.yaml`,
+  no 2**. Los bloques nuevos deben copiar el nivel exacto del
+  original (cabecera a col 0, campos a 2, guiones a 2).
+- **BOM UTF-8** presente en varios ficheros. Leer con utf-8-sig,
   escribir preservando BOM.
-- CRLF en ficheros: 05_BITACORA.md y 01_METODO.md en CRLF;
+- **CRLF en ficheros**: 05_BITACORA.md, 01_METODO.md en CRLF;
   00_ARRANQUE.md, HANDOFF en LF. Detectar antes de patch.
 - python sin ruta resuelve a Microsoft Store. Usar py o ruta real.
+
 ### 5.2. Git
 
 - git push SIEMPRE con if ($LASTEXITCODE -ne 0) que haga fetch +
-  pull --rebase + push. Sin eso, falsos positivos si el bot
-  pushea concurrentemente.
+  pull --rebase + push. Sin esto, falsos positivos si el bot pushea.
 - Tras push rechazado: git fetch + git pull --rebase origin main
   y re-verificar gobernanza ANTES del segundo push (leccion
   4dd66ce8).
@@ -197,8 +221,7 @@ Esperado:
 
 ### 5.3. Workflow_dispatch
 
-- force=true NO entre 13:30-20:00 UTC (US market open). Verificar
-  con (Get-Date).ToUniversalTime() antes.
+- force=true NO entre 13:30-20:00 UTC (US market open).
 - Slots seguros: pre-13:30 UTC o post-23:00 UTC.
 - Scheduled slots: 17 23, 17 3, 17 5, 17 7, 17 11 (UTC).
 
@@ -217,13 +240,17 @@ Esperado:
 - normalize_yahoo_ticker antes de lookup en parquet (BRK.B -> BRK-B).
 - daily_run con gate.should_run=false (finde/festivo): runs de 1 min.
 - EU_INDEX_ETFS_NO_CAP en stock_data_loader: FEZ/DAXEX/ISF.L/LYXI.
-- parse_ssga_fez.py valida contra Yahoo. NDA-FI.HE excludo por D11.
+- **Universo de descarga**: 530 tickers tras FASE-A-AMPLIAR-UNIVERSO-PESO
+  (505 previos + 25 nuevos; WBD filtrado por ticker_health).
+- **Ticker DELISTED en YAML**: declarar es correcto (documenta caso).
+  filter_eligible en get_stock_list() lo descarta. Tests genericos de
+  universe_expansions excluyen DELISTED de redundancia y presencia.
 
 ### 5.5. Autonomia
 
-- El sistema corre en GitHub (daily_run.yml, 5 slots/dia).
-  Cualquier cambio en get_stock_list() o universe_expansions.yaml
-  se aplica en proximo run.
+- El sistema corre en GitHub (daily_run.yml, 5 slots/dia). Cualquier
+  cambio en get_stock_list() o universe_expansions.yaml se aplica
+  en proximo run.
 - Retry 3x backoff en SSGA/BlackRock/Invesco/Amundi.
 - health_check holdings: stale/ausentes/incompletos -> FAIL -> issue.
 
@@ -240,8 +267,8 @@ Contrato del gate: docs/auditoria/daily_run_gate_contrato_v1.md +
 Expediente Wyckoff (docs/auditoria/wyckoff/): 35+ ficheros.
 
 Fase 1 (consistencia temporal): item FASE1-CENSO en REGISTRO.
-Fase 2 (auditoria por bloques): items B1-CENSO a B8-CENSO en
-  REGISTRO.
+Fase 2 (auditoria por bloques): items B1-CENSO a B8-CENSO en REGISTRO.
+FASE-A (analisis economico 30-oct): items FASE-A-* en REGISTRO.
 
 ---
 
