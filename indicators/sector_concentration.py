@@ -95,6 +95,24 @@ def compute_sector_concentration(df_stocks, holdings_df, full_metrics_df,
 
         n_total = len(tickers)
         n_valid_rs = sector_full['rs'].notna().sum() if 'rs' in sector_full.columns else 0
+        # FASE-A (2026-11-01): cobertura dual derivada de datos. n_total
+        # es el universo completo del ETF. n_descargados = holdings del
+        # ETF que pasaron el filtro de compute_stock_metrics (>=60
+        # barras). peso_total_etf y coverage_peso se calculan sobre
+        # etf_holdings. Ninguna metrica usa constante: si el universo de
+        # descarga se amplia, se recalculan solas.
+        _sector_norms = set(sector_full['ticker'].astype(str).tolist()) if 'ticker' in sector_full.columns else set()
+        n_descargados = int(len(_sector_norms))
+        coverage_rs_sobre_descarga = (n_valid_rs / n_descargados * 100.0) if n_descargados else float('nan')
+        peso_total_etf = float(pd.to_numeric(_sh['weight'], errors='coerce').sum()) if 'weight' in _sh.columns else float('nan')
+        if pd.notna(peso_total_etf) and peso_total_etf > 0 and 'weight' in _sh.columns:
+            _sh_weights = dict(zip(_sh['ticker_norm'].astype(str).tolist(),
+                                   pd.to_numeric(_sh['weight'], errors='coerce').tolist()))
+            _peso_desc = sum(w for tn, w in _sh_weights.items()
+                             if tn in _sector_norms and pd.notna(w))
+            coverage_peso = float(_peso_desc / peso_total_etf * 100.0)
+        else:
+            coverage_peso = float('nan')
         # B8 (2026-10-13): n_total es el universo COMPLETO del ETF sectorial
         # (20-83 tickers por sector). No coincide con el universo de
         # rs_internal.csv (top-20/22 por sector). Ejemplo XLF:
@@ -132,6 +150,10 @@ def compute_sector_concentration(df_stocks, holdings_df, full_metrics_df,
             'date': obs_date,
             'sector': sector_etf,
             'n_total': n_total,
+            'n_descargados': n_descargados,
+            'coverage_rs_sobre_descarga': coverage_rs_sobre_descarga,
+            'peso_total_etf': peso_total_etf,
+            'coverage_peso': coverage_peso,
             'n_valid_return20': len(ret_df),
             'n_positive_return20': len(positive),
             # F6-03 (2026-09-28): WONT FIX razonado.

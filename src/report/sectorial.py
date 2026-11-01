@@ -81,10 +81,10 @@ def render_sector_concentration(sector_concentration_data):
         latest_date = pd.to_datetime(sector_concentration_data['date']).max()
         conc_latest = sector_concentration_data[pd.to_datetime(sector_concentration_data['date']) == latest_date]
         out.append("## Concentración del liderazgo\n")
-        out.append("| Sector | Top1 | Top3 | Top5 | RS med | Mom med | Flow med | Wyckoff med | WLS med | Líder | Ret Líder | N valid | Cob RS | Cob Mom | Cob Flow | Cob Wyckoff | Cob WLS |\n")
-        out.append("|--------|------|------|------|--------|---------|----------|-------------|---------|-------|----------|---------|--------|---------|----------|-------------|---------|\n")
+        out.append("| Sector | Top1 | Top3 | Top5 | RS med | Mom med | Flow med | Wyckoff med | WLS med | Líder | Ret Líder | N valid | Cob RS | Cob Mom | Cob Flow | Cob Wyckoff | Cob WLS | Cob descarga | Cob peso |\n")
+        out.append("|--------|------|------|------|--------|---------|----------|-------------|---------|-------|----------|---------|--------|---------|----------|-------------|---------|-------------|---------|\n")
         for _, row in conc_latest.iterrows():
-            out.append(f"| {row['sector']} | {_fmt_num(row['top1_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top3_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top5_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['rs_median'], '{:.4f}')} | {_fmt_num(row['momentum_median'], '{:.2%}')} | {_fmt_num(row['flow_median'], '{:.2f}')} | {_fmt_num(row['wyckoff_median'], '{:.2f}')} | {_fmt_num(row['wls_median'], '{:.2f}')} | {row['leader_ticker']} | {_fmt_num(row['leader_return20'], '{:.2%}')} | {int(row['n_valid_rs']) if pd.notna(row.get('n_valid_rs')) else 'N/D'} | {_fmt_num(row['coverage_rs'], '{:.0f}%')} | {_fmt_num(row['coverage_momentum'], '{:.0f}%')} | {_fmt_num(row['coverage_flow'], '{:.0f}%')} | {_fmt_num(row['coverage_wyckoff'], '{:.0f}%')} | {_fmt_num(row['coverage_wls'], '{:.0f}%')} |\n")
+            out.append(f"| {row['sector']} | {_fmt_num(row['top1_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top3_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top5_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['rs_median'], '{:.4f}')} | {_fmt_num(row['momentum_median'], '{:.2%}')} | {_fmt_num(row['flow_median'], '{:.2f}')} | {_fmt_num(row['wyckoff_median'], '{:.2f}')} | {_fmt_num(row['wls_median'], '{:.2f}')} | {row['leader_ticker']} | {_fmt_num(row['leader_return20'], '{:.2%}')} | {int(row['n_valid_rs']) if pd.notna(row.get('n_valid_rs')) else 'N/D'} | {_fmt_num(row['coverage_rs'], '{:.0f}%')} | {_fmt_num(row['coverage_momentum'], '{:.0f}%')} | {_fmt_num(row['coverage_flow'], '{:.0f}%')} | {_fmt_num(row['coverage_wyckoff'], '{:.0f}%')} | {_fmt_num(row['coverage_wls'], '{:.0f}%')} | {_fmt_num(row.get('coverage_rs_sobre_descarga'), '{:.0f}%')} | {_fmt_num(row.get('coverage_peso'), '{:.0f}%')} |\n")
         out.append("\n")
         out.append("*Criterio 'Lider': ticker con mayor retorno 20d. Universo: top-20 por weight del ETF sectorial. Coincide con la primera fila de Liderazgo interno (mismo criterio). No coincide con Representatividad, que ordena por WLS.*\n\n")
         out.append("*N valid = numero de tickers del universo del ETF con datos "
@@ -107,6 +107,12 @@ def render_sector_concentration(sector_concentration_data):
                    "todas las metricas disponibles (dropna comun). No miden "
                    "cobertura individual por variable, sino el universo "
                    "comun analizado. Fuente: sector_concentration.py.*\n\n")
+        # FASE-A (2026-11-01): cobertura dual, derivada de datos.
+        # Sin literal de porcentaje: los valores vienen del df.
+        out.append("*Cob descarga = tickers descargados con metricas "
+           "validas / total descargados. Cob peso = peso de los "
+           "descargados / peso total del ETF. Ambas se recalculan "
+           "cada run desde el df, sin constante en el codigo.*\n\n")
         out.append("*Top N = fraccion del retorno positivo total del sector que aportan los N tickers con mayor retorno 20d. Con menos de N positivos, la celda se muestra como N/D (no se calcula sobre menos elementos). Top1=100% con Top3=N/D indica que solo hay 1 ticker con retorno positivo en el sector.*\n\n")
     return out
 

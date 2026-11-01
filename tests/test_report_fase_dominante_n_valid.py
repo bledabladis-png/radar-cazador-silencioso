@@ -84,11 +84,41 @@ def _conc_df(with_n_valid=True):
 
 
 def test_concentracion_header_con_n_valid():
+    """Contrato de columnas de la tabla Concentracion.
+
+    Verifica por NOMBRE de columna, no por conteo de pipes: el
+    conteo es un magic number que caduca al anadir/retirar columnas.
+    Normaliza tildes para no acoplar el test a como este escrito
+    "Lider" en el render. Si se anade/retira/renombra/reordena una
+    columna, este test falla con mensaje claro del diff.
+    """
+    import unicodedata
+    def _norm(s):
+        return "".join(
+            c for c in unicodedata.normalize("NFD", s)
+            if unicodedata.category(c) != "Mn"
+        )
     out = "".join(render_sector_concentration(_conc_df()))
     assert "N valid" in out
-    # Cabecera: 17 columnas (antes 16)
+
+    EXPECTED = [
+        "Sector", "Top1", "Top3", "Top5",
+        "RS med", "Mom med", "Flow med", "Wyckoff med", "WLS med",
+        "Lider", "Ret Lider", "N valid",
+        "Cob RS", "Cob Mom", "Cob Flow", "Cob Wyckoff", "Cob WLS",
+        "Cob descarga", "Cob peso",
+    ]
     header_line = [ln for ln in out.split("\n") if ln.startswith("| Sector |")][0]
-    assert header_line.count("|") == 18  # 17 columnas -> 18 pipes
+    actual = [_norm(h.strip()) for h in header_line.strip("|").split("|")]
+    expected = [_norm(h) for h in EXPECTED]
+
+    solo_test = [h for h in expected if h not in actual]
+    solo_render = [h for h in actual if h not in expected]
+    assert actual == expected, (
+        "Header de Concentracion cambio. "
+        "Solo en test (esperado, no esta en render): " + str(solo_test) + ". "
+        "Solo en render (presente, no esperado): " + str(solo_render) + "."
+    )
 
 
 def test_concentracion_n_valid_valor():
