@@ -20,11 +20,11 @@ Gobernanza: docs/gobernanza/REGISTRO.yaml, 250 items. Validador reforzado.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 
-B6 (auditoria reporte) CERRADA con 20 FIXED y 5 OPEN heredados a B4/B5.
-Los 5 OPEN de B6 son de otros bloques y no bloquean pipeline:
+B6 (auditoria reporte) CERRADA con 20 FIXED y 4 OPEN heredados a B4/B5
+(RATIO-NAMES cerrado en B4 sesion 24: f884d061).
+Los 4 OPEN de B6 son de otros bloques y no bloquean pipeline:
   - B6-ILOC-SIN-GUARD-BARRIDO (B4, ~50 hits en regimes/ e indicators/)
   - B6-MTE-CLS-INF-LATENTE (B4, indicators/mte/scoring.py cls=inf -> -996)
-  - B6-RATIO-NAMES-FUENTE-DUPLICADA (B4, indicators/cross_asset.py)
   - B6-FLOWS-CURRENCY-COLUMN-NAME (B5, _blackrock_base estimated_flow_eur)
   - B6-FLOWS-REGISTRY-COVERAGE (B5, 7 outputs fuera de output_registry)
 
@@ -39,7 +39,7 @@ Ticker health: registro canonico en data/mappings/ticker_health.yaml
   WBD DELISTED 2026-10-06. get_stock_list filtra DELISTED.
 
 Fase 2 - Auditoria por bloques (estado):
-  - B6 (reporte): CERRADO, 20 FIXED + 5 OPEN heredados.
+  - B6 (reporte): CERRADO, 20 FIXED + 4 OPEN heredados.
   - B1 (temporal): cerrado con fixes puntuales, NO checklist 18 patrones.
   - B5 (outputs/persistencia): cerrado con fixes puntuales, NO checklist.
   - B2, B3, B4, B7, B8: sin auditar.
@@ -56,7 +56,7 @@ Detalle de la sesion 23 en seccion 2.
 
 **Hecho:**
 - 21 modulos de `src/report/*` auditados (18 con hallazgos o cierre).
-- 20 items B6 FIXED, 5 OPEN heredados a otros bloques.
+- 20 items B6 FIXED, 5 OPEN heredados a otros bloques (1 cerrado en B4 sesion 24: RATIO-NAMES).
 - 1 item B3 nuevo (`WYCKOFF-RENDERS-HUERFANOS`) por el refactor
   Wyckoff sesion 3 (`4bc45fd3`): 2 renders con productor retirado.
 
@@ -172,16 +172,13 @@ Registrado como `WYCKOFF-RENDERS-HUERFANOS` (OPEN, B3).
 | CRON-SLOTS-OBS | 2026-11-10 | Revision runs 20-10 a 10-11 |
 | SCHEDULER-DELAYS | 2026-11-10 | p95 delays |
 
-### 3.4. Items OPEN heredados de B6 a otros bloques (5)
+### 3.4. Items OPEN heredados de B6 a otros bloques (4)
 
 - **B6-ILOC-SIN-GUARD-BARRIDO** (B4): ~50 hits `.iloc[-1]` en
   `regimes/` e `indicators/`. Bugs latentes si la serie llega vacia.
 - **B6-MTE-CLS-INF-LATENTE** (B4): `cls=inf` en `score_scenarios`
   da `CRISIS=-996`. Preservado en refactor H7. Fix: mover +3 dentro
   del bloque `finite` o bloqueo temprano.
-- **B6-RATIO-NAMES-FUENTE-DUPLICADA** (B4): `ratio_names` en
-  `confirmation.py` duplica `cross_asset.py`. Fix: mover al productor
-  como `RATIO_LABELS`.
 - **B6-FLOWS-CURRENCY-COLUMN-NAME** (B5): `estimated_flow_eur` con
   GBP/USD segun fondo en `data/providers/_blackrock_base.py:227`.
 - **B6-FLOWS-REGISTRY-COVERAGE** (B5): 7 outputs internacionales
@@ -218,8 +215,8 @@ Plan original: 8 bloques (B1-B8) con los 13 patrones de
 - **B4 (motores/regimen)**: sin auditar. Prioridad alta: 3 de los 5
   OPEN de B6 viven aqui.
 - **B5 (outputs/persistencia)**: cerrado con fixes puntuales, NO
-  checklist completo. 2 de los 5 OPEN de B6 viven aqui.
-- **B6 (reporte)**: CERRADO sesion 23. 20 FIXED, 5 OPEN heredados.
+  checklist completo. 2 de los 4 OPEN de B6 viven aqui.
+- **B6 (reporte)**: CERRADO sesion 23. 20 FIXED, 4 OPEN heredados.
 - **B7 (IAE)**: sin auditar.
 - **B8 (scripts audit)**: sin auditar. Afectan CI.
 

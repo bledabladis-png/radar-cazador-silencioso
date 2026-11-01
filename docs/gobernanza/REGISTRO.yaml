@@ -6287,25 +6287,17 @@ items:
 - id: B6-RATIO-NAMES-FUENTE-DUPLICADA
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: 'Dict ratio_names en src/report/confirmation.py duplica las
-
-    12 claves del dict ratios de indicators/cross_asset.py::
-
-    compute_cross_asset_ratios. Si el productor anade o retira
-
-    uno, el render lo ignora silenciosamente. Alineados hoy
-
-    (12=12). Vigilado por test_confirmation_ratios_parity.py.
-
-    '
-  siguiente_accion: 'Fix completo: mover ratio_names al productor (cross_asset.py)
-
-    como RATIO_LABELS y que render importe del productor. Elimina
-
-    la duplicacion. Preservado hasta B4 (donde vive cross_asset).
-
-    '
+  estado: FIXED
+  commit: 'f884d061'
+  test: tests/test_confirmation_ratios_parity.py
+  evidencia: |
+    Fix aplicado en f884d061. RATIO_LABELS en indicators/cross_asset.py
+    como fuente unica de los 12 labels; src/report/confirmation.py
+    importa del productor y elimina el dict local ratio_names. Test
+    reescrito valida paridad labels<->ratios en productor, wiring del
+    render al productor, y ausencia de dict local (anti-regresion).
+    Verificacion: 4239 passed + 2 skipped; D38 rojo sin fix; probe de
+    identidad byte-a-byte en 3 fixtures (12 ratios, vacio, parcial).
 - id: B6-H9-ALERTS-NONE-GUARDS
   tipo: bug
   ciclo: '2026-10-31'
