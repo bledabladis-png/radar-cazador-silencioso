@@ -6806,3 +6806,49 @@ items:
     Verificacion: 78 focalizados + full suite 4322 passed + 2
     skipped. Los 3 excluidos (SPCX/HON/DD) con filter_reason
     trazable.
+
+- id: GUARD-COVERAGE-TEST-CONTAMINA-STATE
+  tipo: bug
+  ciclo: '2026-11-02'
+  estado: FIXED
+  commit: '1f935b1d'
+  test: tests/test_guard_coverage_validation.py
+  descripcion: |
+    test_guard_coverage_validation.py llamaba gc.main() sin monkeypatchear
+    RESULT_PATH. ROOT se calcula en import-time con Path(__file__).resolve(),
+    asi que monkeypatch.chdir(tmp_path) NO reubica el path absoluto. Cada
+    ejecucion del test sobrescribia outputs/state/guard_coverage_result.json
+    de produccion con status=passed, ok=true, run_id=0, target_session=2026-10-15
+    (default del helper _mk_manifest).
+  evidencia: |
+    Detectado 2026-11-02 al ver un guard_coverage_result.json con target_session
+    stale (17 dias anterior a la ultima sesion bursatil cerrada) y run_id=0
+    (entorno local, no CI). Confirmado con run controlado: mtime del JSON real
+    cambio de 01:52:26 a 02:14:21 tras pytest tests/test_guard_coverage_validation.py.
+    Causa: ROOT = Path(__file__).resolve().parents[1] es absoluto en import-time;
+    chdir no lo mueve. Test mal escrito, no bug del guard.
+  verificacion: |
+    Fix en 1f935b1d. _run_guard(monkeypatch, tmp_path, ...) monkeypatchea
+    RESULT_PATH. 4 callers actualizados. Centinela test_guard_no_escribe_state_real
+    verifica que el mtime del JSON real no cambia tras pytest. Verificado:
+    5 passed en el fichero, 51 passed en el bloque guard completo, mtime
+    pre==post, pyflakes + compileall silencio.
+- id: INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH
+  tipo: auditoria_interna
+  ciclo: '2026-11-02'
+  estado: OPEN
+  descripcion: |
+    Tras cerrar GUARD-COVERAGE-TEST-CONTAMINA-STATE, el barrido detecto 8
+    tests que llaman main() del SUT sin monkeypatchear ningun *_PATH a nivel
+    de modulo: test_download_official_list_13f.py,
+    test_generate_estado_failclosed.py, test_holdout_manifest_intersection.py,
+    test_iae_validate_crosswalk_openfigi.py, test_monitor_double_counting_date.py,
+    test_qqq_returns_yahoo_d1.py, test_regenerate_cusip_crosswalk.py,
+    test_regenerate_radar_catalog.py. Sospecha, no hecho: algunos pueden
+    escribir via otro path, no escribir, o usar fixtures con monkeypatch
+    interno. Requiere auditoria caso por caso.
+  siguiente_accion: |
+    Auditar cada uno con el patron del bug confirmado (ROOT = Path(__file__).resolve()
+    en import-time + main() del SUT sin monkeypatch de *_PATH + escritura real).
+    Solo fixear los que se confirmen con evidencia empirica (mtime del artefacto
+    real cambia tras pytest). Bajo ROI: no bloquea CI.
