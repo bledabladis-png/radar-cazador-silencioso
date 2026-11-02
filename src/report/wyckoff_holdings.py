@@ -12,6 +12,10 @@ from __future__ import annotations
 import pandas as pd
 
 
+# Filtro de relevancia en el .md. No afecta al CSV (siempre completo).
+# 0.5% del peso en el ETF: excluye posiciones residuales (SPY ~0.1%).
+MIN_WEIGHT_PCT = 0.5
+
 ACC_KEYS = ("usa_sector_acc", "usa_index_acc", "eu_index_acc")
 DIST_KEYS = ("usa_sector_dist", "usa_index_dist", "eu_index_dist")
 
@@ -89,9 +93,25 @@ def _render_subsection(out, subtitle, df, group_label):
     if df is None or df.empty:
         out.append("*Sin tickers en este estado.*\n\n")
         return
+    n_total = len(df)
+    df = _apply_weight_filter(df)
+    n_filt = len(df)
+    if n_filt == 0:
+        out.append(
+            "*0 de {t} tickers con peso >= {w}% en el ETF. "
+            "Tabla completa en outputs/history/wyckoff_*.csv.*\n\n"
+            .format(t=n_total, w=_fmt_num(MIN_WEIGHT_PCT, 2))
+        )
+        return
     n_by_phase = df.groupby("phase").size().to_dict()
     summary = ", ".join("{} {}".format(n, ph) for ph, n in n_by_phase.items())
-    out.append("*{} tickers: {}.*\n\n".format(len(df), summary))
+    out.append("*{} tickers: {}.*\n\n".format(n_filt, summary))
+    if n_filt < n_total:
+        out.append(
+            "*Filtro: {n} de {t} tickers mostrados (weight >= {w}% del ETF). "
+            "Tabla completa en outputs/history/wyckoff_*.csv.*\n\n"
+            .format(n=n_filt, t=n_total, w=_fmt_num(MIN_WEIGHT_PCT, 2))
+        )
     out.append("| {} | Ticker | Fase | Desde | Peso % | Cob % | Close |\n"
                .format(group_label))
     out.append("|---|---|---|---|---|---|---|\n")
@@ -108,6 +128,14 @@ def _render_subsection(out, subtitle, df, group_label):
             )
         )
     out.append("\n")
+
+
+def _apply_weight_filter(df):
+    """Filtra filas con weight >= MIN_WEIGHT_PCT. NaN se excluye (0)."""
+    if "weight" not in df.columns:
+        return df
+    w = pd.to_numeric(df["weight"], errors="coerce").fillna(0.0)
+    return df[w >= MIN_WEIGHT_PCT].copy()
 
 
 def _fmt_since(v):

@@ -124,3 +124,62 @@ def test_both_sections_independent():
     dist_text = "".join(rh.render_wyckoff_holdings_dist(tables))
     assert "AAPL" in acc_text and "XYZ" not in acc_text
     assert "XYZ" in dist_text and "AAPL" not in dist_text
+
+
+def test_min_weight_filter_excluye_bajo_umbral():
+    """Filtro 0.5%: tickers con weight residual no aparecen en el .md."""
+    tables = {
+        "usa_sector_acc": _make_df([
+            _row("SPY", "BIG", "MARKUP", weight=5.0),
+            _row("SPY", "TINY", "MARKUP", weight=0.1),
+        ]),
+    }
+    text = "".join(rh.render_wyckoff_holdings_acc(tables))
+    assert "BIG" in text
+    assert "TINY" not in text
+    assert "Filtro: 1 de 2" in text
+
+
+def test_min_weight_filter_no_aplica_si_todos_pasan():
+    """Sin filtro efectivo: no aparece la nota de filtro."""
+    tables = {
+        "usa_sector_acc": _make_df([
+            _row("XLK", "A", "MARKUP", weight=5.0),
+            _row("XLK", "B", "MARKUP", weight=3.0),
+        ]),
+    }
+    text = "".join(rh.render_wyckoff_holdings_acc(tables))
+    assert "A" in text and "B" in text
+    assert "Filtro:" not in text
+    assert "2 tickers" in text
+
+
+def test_min_weight_filter_todos_excluidos_fallback_visible():
+    """Si todos caen bajo el umbral: nota visible, no silencio."""
+    tables = {
+        "usa_sector_acc": _make_df([
+            _row("SPY", "TINY1", "MARKUP", weight=0.1),
+            _row("SPY", "TINY2", "MARKUP", weight=0.2),
+        ]),
+    }
+    text = "".join(rh.render_wyckoff_holdings_acc(tables))
+    assert "0 de 2 tickers" in text
+    assert "peso >= 0.50%" in text
+    assert "TINY1" not in text
+
+
+def test_min_weight_filter_nan_se_excluye():
+    """weight NaN se trata como 0: excluido del .md."""
+    r1 = _row("SPY", "GOOD", "MARKUP", weight=5.0)
+    r2 = _row("SPY", "BAD", "MARKUP", weight=float("nan"))
+    tables = {"usa_sector_acc": _make_df([r1, r2])}
+    text = "".join(rh.render_wyckoff_holdings_acc(tables))
+    assert "GOOD" in text
+    assert "BAD" not in text
+
+
+def test_fmt_num_nan_devuelve_dash():
+    """Cobertura directa de _fmt_num(NaN): el filtro puede excluir
+    filas antes, pero el helper debe seguir formateando NaN como dash."""
+    assert rh._fmt_num(float("nan"), 2) == "-"
+    assert rh._fmt_num(None, 2) == "-"

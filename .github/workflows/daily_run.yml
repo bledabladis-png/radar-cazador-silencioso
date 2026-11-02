@@ -245,6 +245,12 @@ jobs:
             outputs/state/mte_state.json
             outputs/state/liquidity_state.json
             outputs/audit/pyflakes_report.txt
+            outputs/history/wyckoff_usa_sector_accumulation.csv
+            outputs/history/wyckoff_usa_sector_distribution.csv
+            outputs/history/wyckoff_usa_index_accumulation.csv
+            outputs/history/wyckoff_usa_index_distribution.csv
+            outputs/history/wyckoff_eu_index_accumulation.csv
+            outputs/history/wyckoff_eu_index_distribution.csv
           retention-days: 7
           if-no-files-found: ignore
 
