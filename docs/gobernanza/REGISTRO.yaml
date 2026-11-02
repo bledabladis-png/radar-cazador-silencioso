@@ -5319,27 +5319,33 @@ items:
   tipo: frente
   ciclo: '2026-10-31'
   estado: OPEN
-  descripcion: '13 fixes verificados en local (sesiones 20-21), 0 en run
-
-    scheduled real desde HEAD 387938e6. Primer daily_run real sera
-
-    lunes 2026-11-02 (sabado/domingo gate=false, 1 min).
-
-    '
-  siguiente_accion: 'Lunes 2026-11-02 (o primer run real con HEAD 387938e6+):
-
-    gh run list --workflow=daily_run.yml --limit 3 y verificar
-
-    conclusion=success con headSha >= 387938e6. Si falla,
-
-    diagnostico prioritario (fixes 20-21 no verificados en prod).
-
-    '
-  evidencia: 'gh run list (2026-10-31): ultimo run real OK 41037457375 con
-
-    HEAD anterior. Ninguno real con 387938e6 aun.
-
-    '
+  descripcion: |
+    13 fixes verificados en local (sesiones 20-21) + fixes sesion 26,
+    0 en run scheduled real desde HEAD 387938e6. Correccion 02-11:
+    los 3 slots pre-cierre del lunes 02-11 fueron gate=false (target
+    resuelto a 2026-10-30, ya publicado el viernes). El item original
+    asumia que lunes 02-11 tendria run real; falso. Primer run real
+    es el slot 23:17 UTC del 02-11 + delays (2-7h), verificable 03-11.
+  siguiente_accion: |
+    2026-11-03: verificar primer run REAL (gate=true, duracion >= 10 min)
+    con headSha >= 387938e6.
+    - gh run list --workflow=daily_run.yml --limit 5
+    - gh run view <id> --json databaseId,headSha,conclusion,createdAt,updatedAt
+    - Buscar conclusion=success, headSha >= 387938e6, duracion >= 10 min
+      (gate=false dura 1 min: excluir).
+    - Si verde: cerrar FIXED con databaseId + headSha + duracion +
+      TARGET_SESSION coherente.
+    - Si falla: diagnostico prioritario (13 fixes sesiones 20-21 +
+      fixes sesion 26 no verificados en prod).
+  evidencia: |
+    Runs scheduled del 02-11 (3, todos gate=false, 1 min, sin artifact,
+    TARGET_SESSION=2026-10-30 ya publicado):
+    - 41378292700 (02:32:40Z): success, headSha 30b5e9de
+    - 41433782143 (11:04:06Z): success, headSha 30b5e9de
+    - 41453249443 (13:28:15Z): success, headSha 30b5e9de
+    Gate resuelve target a ultima sesion bursatil cerrada. Los slots
+    pre-cierre del lunes NO ejecutan pipeline. Ningun run real aun
+    con headSha >= 387938e6.
 - id: METODO-EXCEDE-LIMITE-PROPIO
   tipo: auditoria_interna
   ciclo: '2026-10-31'
