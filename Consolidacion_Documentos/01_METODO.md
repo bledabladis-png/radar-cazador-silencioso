@@ -103,6 +103,27 @@ Heuristica descartada 2026-10-17: detector AST de tests con rutas gitignored.
 leerla). Una regla mecanica con 100% de falsos positivos es peor que la
 regla documental.
 
+**`monkeypatch.chdir(tmp_path)` no reubica paths absolutos calculados en import-time.**
+
+Bug real 2026-11-02 (`GUARD-COVERAGE-TEST-CONTAMINA-STATE`, commit
+`1f935b1d`): un test llamaba `gc.main()` sin monkeypatchear `RESULT_PATH`.
+`ROOT = Path(__file__).resolve().parents[1]` es absoluto en import-time;
+`chdir` no lo mueve. Cada ejecucion del test sobrescribia
+`outputs/state/guard_coverage_result.json` de produccion con
+`status=passed, ok=true, run_id=0, target_session=2026-10-15`.
+
+Regla: si el SUT exporta `RESULT_PATH`/`OUT_PATH`/`RECEIPTS_PATH`/`*_DIR`
+a nivel de modulo, el test debe hacer las DOS cosas:
+
+1. `monkeypatch.chdir(tmp_path)` (para paths relativos derivados del cwd).
+2. `monkeypatch.setattr(<modulo>, "<CONSTANTE>", tmp_path / "...")` (para
+   paths absolutos exportados, que no dependen del cwd).
+
+`chdir` no sustituye al monkeypatch del simbolo. Test centinela recomendado:
+verificar que el path real del repo no cambia de `mtime` tras ejecutar el
+SUT (`test_guard_no_escribe_state_real`,
+`tests/test_guard_coverage_validation.py`).
+
 ---
 
 ## 4. VERIFICACION END-TO-END (REFACTORS GRANDES)
