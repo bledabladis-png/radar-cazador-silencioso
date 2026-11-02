@@ -90,16 +90,16 @@ Lo que NUNCA haces:
 
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
-Snapshot al cierre del ultimo commit (2026-10-31, sesion 22):
+Snapshot al cierre del ultimo commit (2026-11-02, sesion 26):
 - HEAD: `git log --oneline -1`
 - Tests: fuente autoritativa en `Consolidacion_Documentos/ESTADO_SISTEMA.md` (seccion 2). No fijar literal aqui (cambia con cada commit de test); ver ESTADO_SISTEMA.md seccion 2.
 - Validation Gate: 11/11
 - Working tree: limpio
-- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 219 items. Validador reforzado.
+- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 266 items. Validador reforzado.
 - Corpus documental: v3 (Consolidacion_Documentos/00-08)
-- Universo USA (stock_prices): 505 tickers Close. Total (US+EU+expansions): ver `ESTADO_SISTEMA.md`.
-- Scheduled: run 41189491153 (2026-10-31 09:38 UTC) exitoso con HEAD 37482e0a. Guard coverage OK (coverage_pct=0.9964). Fixes de sesion 22 verificados en produccion.
-- Fase 2 (auditoria por bloques): B5 (outputs/persistencia) y B1 (temporal) cerrados. Pendientes B2, B3, B4, B6, B7, B8. Ver HANDOFF §4.5 y bitacora sesion 22.
+- Universo USA (stock_prices): 530 tickers Close. Total (US+EU+expansions): ver `ESTADO_SISTEMA.md`.
+- Scheduled: ultimo run real 41037457375 (2026-10-31 02:14 UTC). Runs del 2026-11-02 pre-cierre gate=false (TARGET_SESSION=2026-10-30). Ver `gh run list`.
+- Fase 2 (auditoria por bloques): COMPLETA (B1-B8). Ver HANDOFF seccion 1.
 
 **Contratos vigentes y decisiones estructurales** (los detalles viven en `04_HISTORICO.md`; aqui solo lo que no se puede olvidar):
 
@@ -200,15 +200,16 @@ Datos exactos: `sector_concentration.csv` (`n_valid_rs`, `n_total`, `coverage_rs
 
 ### 4.3. Pendientes vivos
 
-- **DICT3-TOP20-COBERTURA:** OPEN, pendiente respuesta del auditor a doc 70-v2d. A.2c desplegado condicionado (4 de 6 acciones cerradas).
+- **DICT3-TOP20-COBERTURA:** FIXED `0ab436d9` (2026-10-26). A.2c desplegado condicionado. Pendiente respuesta del auditor a doc 70-v2d sobre parte restante.
 - **DICT3-H04-INTERVALS:** OPEN, registro del rechazo del IC95 inferencial. Evidencia del rechazo, no accionable.
 - **C2 (920):** BLOCKED_EXTERNAL. Auditor debe publicar comando + HEAD del valor externo (-4.264.449.932). Sin eso, no reproducible.
 - **WYCKOFF-5BX:** BLOCKED_EXTERNAL. `n_confirmed_H20_complete >= 550` (~2027).
-- **IWM-HOLDINGS-EXPANSION:** decision de producto. Top-20 cubre ~6.8% del peso de 1977 holdings. Para 50%, ~700 tickers. Microcaps no aportan al sistema holdings-based.
 - **H5.3:** cron 20-nov-2026 06:17 UTC.
 - **RECEIPT-AUDIT-LAG:** cierre 17-nov-2026 (4 semanas de obs).
 - **CRON-SLOTS-OBS:** revision 10-nov-2026 (runs 20-oct a 10-nov).
 - **SCHEDULER-DELAYS:** p95 delays 10-nov-2026.
+- **VERIFICAR-SCHEDULED-387938E6-2026-11-02:** verificable 03-11. Los 3 runs del 02-11 pre-cierre gate=false. Buscar run real gate=true, duracion >= 10 min.
+- **INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH:** 8 tests con main() sin monkeypatch de *_PATH. Auditar caso por caso. ROI bajo.
 - **2 tests skipped** (`test_freshness.py` network, opt-in).
 
 ### 4.4. Deudas documentadas (sin accion pendiente)
