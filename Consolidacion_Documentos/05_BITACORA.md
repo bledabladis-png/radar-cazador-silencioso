@@ -44,6 +44,48 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-02 — Sesion 26: GUARD-COVERAGE fix + WYCKOFF filtro weight
+
+**Objetivo.** Dos frentes independientes: (1) bug en test que escribia
+en outputs/state de produccion; (2) peticion de producto: filtrar el
+.md de Wyckoff por weight + entregar los 6 CSVs como artifact.
+
+**Hecho.**
+- GUARD-COVERAGE-TEST-CONTAMINA-STATE FIXED (`1f935b1d`, `cd6b5bee`).
+  test_guard_coverage_validation.py llamaba gc.main() sin monkeypatch
+  de RESULT_PATH. `ROOT = Path(__file__).resolve().parents[1]` es
+  absoluto en import-time; `chdir(tmp_path)` no lo reubica. El test
+  sobrescribia outputs/state/guard_coverage_result.json con run_id=0,
+  target_session=2026-10-15 stale. Centinela
+  test_guard_no_escribe_state_real. Leccion en 01_METODO seccion 3
+  (`713f8d3d`).
+- WYCKOFF-MD-FILTRO-WEIGHT FIXED (`8b57bd73`, `0ac42079`).
+  MIN_WEIGHT_PCT=0.5 en src/report/wyckoff_holdings.py + nota runtime
+  n_filt/n_total + fallback visible. 6 wyckoff CSVs al artifact
+  daily-report en daily_run.yml (retention-days: 7). 5 tests nuevos.
+  Impacto 2026-10-30: usa_index_acc 12->5, usa_index_dist 55->25.
+  Sector USA y EU sin cambio (weights >= 0.5% ya).
+- HANDOFF corregido (`442bbb3d`): 4358 -> suite filtrada; DICT3-TOP20-
+  COBERTURA FIXED `0ab436d9`.
+- VERIFICAR-SCHEDULED-387938E6 corregido (`0e765d10`): los 3 slots
+  pre-cierre del 02-11 son gate=false (TARGET_SESSION=2026-10-30,
+  1 min). Sigue OPEN, verificable 03-11.
+
+**Commits.** `1f935b1d`, `cd6b5bee`, `442bbb3d`, `713f8d3d`, `d372dd9e`,
+`8b57bd73`, `0ac42079`, `30b5e9de`, `0e765d10`.
+
+**Pendiente.**
+- VERIFICAR-SCHEDULED-387938E6: 03-11 verificar primer run real
+  (gate=true, duracion >= 10 min, headSha >= 387938e6).
+- INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH OPEN (8 sospechosos).
+- Resto OPEN sin cambio (06/10/17/20-nov).
+
+**Proximo paso sugerido.** 2026-11-03: `gh run list --workflow=daily_run.yml
+--limit 5` + `gh run view <id>`. Si run real success con headSha >=
+387938e6, verificar artifact daily-report (6 wyckoff CSVs +
+reporte_diario.md con 2 notas *Filtro:*). Si verde, cerrar
+VERIFICAR-SCHEDULED-387938E6.
+
 ### 2026-11-01 — Sesion 25: FASE-A (analisis economico 30-oct)
 
 **Objetivo.** Ejecutar los 5 puntos tecnicos del analista del reporte
@@ -1761,32 +1803,6 @@ e26b7c7b, 1cc8387a, 1bb56473.
 **Proximo paso sugerido.** Verificar scheduled 2026-10-22 con
 `verify_run_20261022.ps1` (criterios: liquidez NEUTRAL no N/A,
 `cboe_vix3m` sin no-bursatiles, receipt `pcr_history`).
-
-### 2026-10-21 - Auditoria externa #3 + REVIEW-EXTERNAL cerrado
-
-**Objetivo.** Atender los 8 hallazgos H1-H8 del reporte 2026-10-20
-(run 39528211520) y cerrar REVIEW-EXTERNAL.
-
-**Hecho.**
-- H1-H8: 7 FIXED con nota o renombrado, 1 FALSE_POSITIVE (H3
-  sesgo de seleccion). H1 = Struct Wyckoff vs struct_score. H2 =
-  edades runtime vs CSV. H4 = SLPM 0/5 trazabilidad. H5 = XLK
-  MARKUP -5.52% (struct_score mide tendencia de fondo). H6 =
-  nota P2.2 XLE siempre visible. H7 = orden por Score, no por
-  Struct Wyckoff. H8 = FRED NEUTRAL -> ABUNDANTE, FALSE_POSITIVE.
-- Notas derivadas de constantes (`STRUCTURAL_WEIGHTS`,
-  `STRUCT_STRONG`, `FLOW_PROXY_WEIGHTS`, `EXPECTED_SECTOR_COUNT`,
-  `TOP_N_CANDIDATES`, `TOP_N_LEADERS`). Protegido con
-  `tests/test_report_notas_derivadas.py` (4 tests monkeypatch).
-- REVIEW-EXTERNAL FIXED. FLS-SOFR confirmado en prod (run
-  39528211520, gate 10/10, FLS 63/100).
-
-**Commits.** bd32577a, ec0e7b8b, 100b55d6, 714fba5a, 9ebfacdd,
-fd9e202d, c073f2a5, 10cf8ea5.
-
-**Pendiente.** Auditoria externa #4 (nueva, 22 oct).
-
-**Proximo paso sugerido.** Recibir auditoria #4 y atenderla.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 

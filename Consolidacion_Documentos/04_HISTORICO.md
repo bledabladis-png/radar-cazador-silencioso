@@ -2848,3 +2848,67 @@ delay 2h33m), pipeline completo, receipt emitido, 0 MISSING.
 '0aec4ce5|41b1c8bf|f3efa062|6d2278c3|14838307' devuelve los
 commits completos con mensaje y diff.
 
+### 2026-10-21 - Auditoria externa #3 + cierre REVIEW-EXTERNAL
+
+**Objetivo.** Atender los 8 hallazgos H1-H8 del reporte externo
+2026-10-20 (run 39528211520) y cerrar REVIEW-EXTERNAL.
+
+**Hecho.** H1-H8: 7 FIXED con nota o renombrado, 1 FALSE_POSITIVE
+(H3 sesgo de seleccion). H1 Struct Wyckoff vs struct_score
+(conceptos distintos). H2 edades runtime vs CSV. H4 SLPM 0/5
+trazabilidad. H5 XLK MARKUP -5.52% (struct_score mide tendencia
+de fondo). H6 nota P2.2 XLE siempre visible. H7 orden por Score,
+no por Struct Wyckoff. H8 FRED NEUTRAL -> ABUNDANTE,
+FALSE_POSITIVE. Notas derivadas de constantes
+(`STRUCTURAL_WEIGHTS`, `STRUCT_STRONG`, `FLOW_PROXY_WEIGHTS`,
+`EXPECTED_SECTOR_COUNT`, `TOP_N_CANDIDATES`, `TOP_N_LEADERS`)
+con proteccion en `tests/test_report_notas_derivadas.py`
+(4 tests monkeypatch). REVIEW-EXTERNAL FIXED. FLS-SOFR confirmado
+en prod (run 39528211520, gate 10/10, FLS 63/100).
+
+**Recuperable.** git log --oneline | grep -E
+'bd32577a|ec0e7b8b|100b55d6|714fba5a|9ebfacdd|fd9e202d|c073f2a5|10cf8ea5'
+devuelve los commits completos.
+
+**Pendiente (al cierre de esta sesion).** Auditoria externa #4
+(nueva, 22 oct).
+
+### 2026-11-02 - Filtro weight en .md Wyckoff + bug chdir
+
+**Objetivo.** Peticion de producto (reporte 30-10): filtrar empresas
+con peso residual en el .md de Wyckoff (SPY ~0.1%). Ademas, bug
+detectado al revisar el estado: un test escribia en outputs/state
+de produccion.
+
+**Hecho.**
+
+1. WYCKOFF-MD-FILTRO-WEIGHT (`8b57bd73`, `0ac42079`): primer caso
+   en que el `.md` FILTRA respecto al `.csv` (antes eran 1:1).
+   Productor (indicators/wyckoff_holdings_report.py) sigue completo;
+   consumidor (src/report/wyckoff_holdings.py) filtra con
+   `MIN_WEIGHT_PCT = 0.5`. Nota runtime con n_filt/n_total; fallback
+   visible si todos caen bajo umbral. Los 6 CSVs Wyckoff se anaden
+   al artifact daily-report (retention-days: 7). Impacto medido
+   2026-10-30: usa_index_acc 12->5 (7 SPY residuales excluidos),
+   usa_index_dist 55->25 (30 excluidos). Sector USA y EU sin cambio.
+   Principio: CSV = audit completo; .md = diagnostico de relevancia.
+   No se confunden ni se duplican.
+
+2. GUARD-COVERAGE-TEST-CONTAMINA-STATE (`1f935b1d`, `cd6b5bee`):
+   `chdir(tmp_path)` NO reubica paths calculados en import-time con
+   `Path(__file__).resolve()`. test_guard_coverage_validation.py
+   sobrescribia outputs/state/guard_coverage_result.json de
+   produccion con run_id=0, target_session=2026-10-15 stale.
+   Centinela test_guard_no_escribe_state_real. Regla en 01_METODO
+   seccion 3: si el SUT exporta *_PATH a nivel de modulo, chdir no
+   basta; hay que monkeypatchear el simbolo.
+
+**Recuperable.** git log --oneline | grep -E
+'1f935b1d|8b57bd73|cd6b5bee|713f8d3d|0e765d10' devuelve los
+commits completos.
+
+**Pendiente residual (vivo hoy).** INVESTIGAR-TESTS-MAIN-SIN-
+MONKEYPATCH-PATH (8 tests con patron similar, no verificados),
+VERIFICAR-SCHEDULED (primer run real gate=true 03-11), y los 4
+items observacionales con fecha (06-nov, 10-nov x2, 17-nov, 20-nov).
+
