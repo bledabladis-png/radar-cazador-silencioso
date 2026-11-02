@@ -13,7 +13,8 @@ HEAD: `bdfb74bb` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2.
-       Al cierre sesion 25: 4358 passed, 2 skipped.
+       Al cierre sesion 25: 4358 passed filtrada (suite completa
+       al cierre: ver ESTADO_SISTEMA.md seccion 2).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
 Gobernanza: docs/gobernanza/REGISTRO.yaml, 263 items.
@@ -112,7 +113,8 @@ producto.
 - Transversales: FASE2 (`39df77b0`), FASE0 (WONT_FIX), DT-NOW (FALSE_POSITIVE).
 
 **Verificacion.**
-- Suite completa al cierre: 4358 passed, 2 skipped.
+- Suite filtrada al cierre: 4358 passed, 2 skipped (completa
+  en ESTADO_SISTEMA.md seccion 2).
 - pyflakes/compileall silencio.
 - CI verde en los 12+ runs del dia.
 - Verifica_gobernanza [OK] tras cada commit.
@@ -129,10 +131,11 @@ producto.
 
 - **WYCKOFF-5BX**: n_confirmed_H20_complete >= 550 (~2027).
 
-### 3.2. OPEN heredados DICT3 (2)
+### 3.2. OPEN heredados DICT3 (1)
 
-- **DICT3-TOP20-COBERTURA**: OPEN, pendiente respuesta del auditor
-  a doc 70-v2d. 4 de 6 acciones cerradas.
+- **DICT3-TOP20-COBERTURA**: FIXED `0ab436d9` (2026-10-26). 4 de 6
+  acciones cerradas; A.2c desplegado condicionado. Pendiente
+  respuesta del auditor a doc 70-v2d sobre la parte restante.
 - **DICT3-H04-INTERVALS**: OPEN sin accion propia. Registro historico
   del rechazo del IC95 inferencial (dictamen H-04 2026-10-26).
   Se mantiene OPEN como evidencia.
