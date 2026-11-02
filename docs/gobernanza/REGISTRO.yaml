@@ -6852,3 +6852,30 @@ items:
     en import-time + main() del SUT sin monkeypatch de *_PATH + escritura real).
     Solo fixear los que se confirmen con evidencia empirica (mtime del artefacto
     real cambia tras pytest). Bajo ROI: no bloquea CI.
+- id: WYCKOFF-MD-FILTRO-WEIGHT
+  tipo: frente
+  ciclo: '2026-11-02'
+  estado: FIXED
+  commit: '8b57bd73'
+  test: tests/test_report_wyckoff_holdings.py
+  descripcion: |
+    Peticion de producto: el reporte pintaba tickers con peso residual
+    en el ETF (SPY ~0.1%) en las tablas de acumulacion/distribucion,
+    percibidos por el usuario como empresas sin relevancia. Ademas, los
+    6 CSVs Wyckoff ya existian en outputs/history pero no se entregaban
+    como artifact descargable en cada daily_run.
+  evidencia: |
+    Impacto medido sobre datos 2026-10-30: usa_index_acc 12 -> 5 (7
+    excluidos, todos SPY < 0.5%); usa_index_dist 55 -> 25 (30
+    excluidos, todos SPY < 0.5%). Sector USA, EU indices y EU sector
+    sin cambio (weights ya >= 0.5%). Nota runtime con n_filt/n_total
+    en el .md, fallback visible si todos caen bajo umbral (no
+    silencio). CSV completo siempre (auditable).
+  verificacion: |
+    Fix en 8b57bd73. src/report/wyckoff_holdings.py: MIN_WEIGHT_PCT=0.5
+    + _apply_weight_filter + nota runtime. daily_run.yml: 6 paths
+    wyckoff al step daily-report (retention-days: 7). Tests: 5 nuevos
+    (filtro, no-filtro, fallback, NaN excluido, _fmt_num(NaN) directo).
+    Verificado: 14 passed en el fichero, 23 passed regresion cruzada,
+    229 passed bloque wyckoff, pyflakes + compileall silencio,
+    verifica_gobernanza [OK], yaml.safe_load valida el workflow.
