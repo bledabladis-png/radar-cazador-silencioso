@@ -7,17 +7,16 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-11-01, sesion 25)
+## 1. ESTADO AL CIERRE (2026-11-02, sesion 26)
 
-HEAD: `bdfb74bb` (consultar `git log --oneline -1` para el actual).
+HEAD: `5742f41a` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2.
-       Al cierre sesion 25: 4358 passed filtrada (suite completa
-       al cierre: ver ESTADO_SISTEMA.md seccion 2).
+       Al cierre sesion 26: 4377 passed, 2 skipped (suite completa).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 263 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 266 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 
@@ -47,78 +46,77 @@ Analisis economico 30-oct (FASE-A): 5 items cerrados.
   - FASE-A-IAE-PER-TICKER: FIXED (c0f2a204). 13F por ticker.
   - FASE-A-AMPLIAR-UNIVERSO-PESO: FIXED (bcd31652, opcion 90%).
 
-Docs: 01_METODO dividido (01d_POWERSHELL_AUDITORIA.md). README sin
-cifras caducas.
+Sesion 26: 2 frentes cerrados end-to-end.
+  - GUARD-COVERAGE-TEST-CONTAMINA-STATE: FIXED (1f935b1d, cd6b5bee).
+    Test contaminaba outputs/state real. Centinela activo.
+  - WYCKOFF-MD-FILTRO-WEIGHT: FIXED (8b57bd73, 0ac42079). Filtro
+    MIN_WEIGHT_PCT=0.5 en .md, CSVs completos como artifact.
+  - Docs derivados: HANDOFF 442bbb3d, 01_METODO 713f8d3d,
+    ESTADO_SISTEMA d372dd9e+30b5e9de, VERIFICAR-SCHEDULED 0e765d10.
 
-Pendientes vivos: 4 observacionales con fecha + 2 BLOCKED_EXTERNAL
-+ 2 OPEN DICT3 + prioritaria (a) analista (no abierta). Ver seccion 3.
+Docs: 01_METODO dividido (01d_POWERSHELL_AUDITORIA.md). README sin
+cifras caducas. Regla chdir/__file__ en 01_METODO seccion 3.
+
+Pendientes vivos: 1 foco con fecha (VERIFICAR-SCHEDULED, 03-11) +
+1 OPEN auditoria (INVESTIGAR-TESTS, ROI bajo) + 2 BLOCKED_EXTERNAL
++ 2 OPEN DICT3 (1 FIXED + 1 evidencia) + 4 observacionales con fecha
++ 1 prioritaria (a) analista no abierta. Ver seccion 3.
 
 ---
-## 2. SESION 2026-11-01 (sesion 25): detalle
+## 2. SESION 2026-11-02 (sesion 26): detalle
 
-**Objetivo inicial.** Ejecutar los 5 puntos tecnicos del analista del
-reporte 30-oct (analisis economico integral). Prioridad (a) del
-analista (bloque macro oficial separado) no abierta: decision de
-producto.
+**Objetivo inicial.** Ninguno predefinido. Diagnostico por contexto
+(estado del sistema) derivó en dos frentes: (1) bug de test
+contaminando outputs/state; (2) peticion de producto (filtro weight
+en Wyckoff .md + CSVs descargables).
 
-**Hecho (41 commits, 5 items FASE-A FIXED).**
+**Hecho (10 commits).**
 
-1. **FASE-A-COBERTURA-DUAL** (`50ab0e1f`): el analista pide "cobertura
-   sectorial dual". Diagnostico: `n_total` es universo completo del ETF
-   (76 XLF), no universo descargado (34). Fix: `n_descargados`,
-   `coverage_rs_sobre_descarga`, `peso_total_etf`, `coverage_peso`
-   derivados del df. Sin constante de porcentaje. Render: 2 columnas
-   nuevas + nota derivada. Tests: 2 nuevos + adaptacion del test de
-   header (por NOMBRE de columna, no por count("|")).
+1. **GUARD-COVERAGE-TEST-CONTAMINA-STATE** (`1f935b1d`, `cd6b5bee`).
+   test_guard_coverage_validation.py llamaba gc.main() sin monkeypatch
+   de RESULT_PATH. ROOT = Path(__file__).resolve().parents[1] es
+   absoluto en import-time; chdir(tmp_path) no lo reubica. Cada pytest
+   sobrescribia outputs/state/guard_coverage_result.json de produccion
+   con status=passed, run_id=0, target_session=2026-10-15 stale. Fix:
+   _run_guard(monkeypatch, tmp_path, ...) monkeypatchea RESULT_PATH.
+   5 tests (4 + centinela test_guard_no_escribe_state_real). Leccion
+   en 01_METODO seccion 3 (`713f8d3d`).
 
-2. **FASE-A-FLUJOS-CAPAS-DERIVADAS** (`180f0ad6`): el analista pide
-   separar capas de flujos. Fix: `FLOW_SYNTHESIS_LABELS` dict como
-   fuente unica. La regla de FLOW_CONFIDENCE lista capas derivadas
-   de `flow_synthesis.keys()`, no literal "4 capas". Nota de no-
-   sumabilidad con `N = len(_sign keys)`. Test centinela que falla si
-   productor anade capa sin label.
+2. **WYCKOFF-MD-FILTRO-WEIGHT** (`8b57bd73`, `0ac42079`). Peticion
+   producto: filtrar empresas con peso residual en el .md de Wyckoff
+   (SPY ~0.1%). Primer caso .md != .csv (antes eran 1:1). Productor
+   completo (indicators/wyckoff_holdings_report.py), consumidor filtra
+   con MIN_WEIGHT_PCT=0.5. Nota runtime n_filt/n_total + fallback
+   visible. Los 6 CSVs Wyckoff al artifact daily-report
+   (retention-days: 7). 5 tests nuevos. Impacto 2026-10-30:
+   usa_index_acc 12->5 (7 excluidos), usa_index_dist 55->25 (30
+   excluidos). Sector USA y EU sin cambio (weights >= 0.5% ya).
 
-3. **FASE-A-INDEPENDENCIA-ESTADISTICA** (`180f0ad6`): el analista
-   marca dependencia entre modulos. Fix: `config/shared_inputs.py` con
-   `SHARED_INPUTS` (6 variables verificadas por Gate 0). `_shared_vars_note`
-   en helpers lee el registro y genera nota en runtime. Aplicada en
-   `render_sector_concentration`. 13 tests fuerzan coherencia registro-
-   codigo.
+3. **HANDOFF corregido** (`442bbb3d`). L16/L115 "4358 passed" era
+   la suite filtrada, no la completa. DICT3-TOP20-COBERTURA estaba
+   como OPEN; REGISTRO lo tiene FIXED 0ab436d9 desde 2026-10-26.
+   Encabezado "OPEN heredados DICT3 (2)" -> (1).
 
-4. **FASE-A-IAE-PER-TICKER** (`c0f2a204`): el analista pide identificar
-   tickers acumulando, no solo numero global. Gate 0: 243 tickers del
-   radar con datos 13F. Densidad alta (min 353 gestores, mediana 1919).
-   Nuevo modulo `aggregation/per_ticker.py` con filtros de anomalia por
-   ratio (pct_new, pct_exit, pct_increase) que capturan IPO (SPCX
-   ipo 12-jun-2026) y spin-offs (HON/SOLS oct-2025, DD/Qnity nov-2025)
-   sin lista de tickers. Ranking por consenso de gestores. Render:
-   `### Cambio neto por ticker (13F)` con Top 20 acumulando/distribuyendo
-   + nota de exclusiones derivada.
-
-5. **FASE-A-AMPLIAR-UNIVERSO-PESO** (`bcd31652`): el analista pide
-   ampliar cobertura. Opcion B aprobada: 90% de peso. 25 tickers en
-   `universe_expansions.yaml` (8 bloques *_90). WBD declarado en XLC
-   como caso documentado (DELISTED 2026-10-06, Paramount Skydance).
-   Universo: 505 -> 530 tickers. Test centinela: 4 tests (AST filter,
-   foto universo, WBD en YAML no en universo, cobertura >=90% por ETF).
-
-**Otros trabajos:**
-- B6 completa: RATIO-NAMES (`3d21264a`) + MTE-CLS-INF (`ba1f2eac`) +
-  ILOC-BARRIDO (`b661a0d6`) + MTE-INF-NO-FINITE (`ac0a607e`) FIXED.
-  FLOWS-CURRENCY y FLOWS-REGISTRY WONT_FIX (B5).
-- B3: WYCKOFF-RENDERS-HUERFANOS FIXED (`3a516268`).
-- B2, B7, B1, B8: WONT_FIX (0 bugs).
-- Fase 0/1: 302 hits. 2 fixes (`336b48ab`). FASE1-CENSO FIXED.
-- Docs: 01_METODO dividido (5675d720), README (6cf37a56).
-- Transversales: FASE2 (`39df77b0`), FASE0 (WONT_FIX), DT-NOW (FALSE_POSITIVE).
+4. **VERIFICAR-SCHEDULED corregido** (`0e765d10`). Los 3 slots
+   pre-cierre del 02-11 (41378292700, 41433782143, 41453249443)
+   fueron gate=false (1 min, sin artifact, TARGET_SESSION=2026-10-30
+   ya publicado). Item original asumia run real el lunes 02-11; falso.
+   Sigue OPEN, verificable 03-11 con primer run real gate=true.
 
 **Verificacion.**
-- Suite filtrada al cierre: 4358 passed, 2 skipped (completa
-  en ESTADO_SISTEMA.md seccion 2).
+- Suite completa al cierre: 4377 passed, 2 skipped (ESTADO_SISTEMA.md).
 - pyflakes/compileall silencio.
-- CI verde en los 12+ runs del dia.
-- Verifica_gobernanza [OK] tras cada commit.
-- D38 aplicado en los 4 FIXED de codigo.
+- verifica_gobernanza [OK] tras cada commit.
+- poda_bitacora --check [OK] (11 sesiones + dia en curso).
+- Filtro Wyckoff verificado con probe sobre CSV reales (2 notas
+  *Filtro:* emitidas, 0 fallbacks).
+
+**Pendiente al cierre.**
+- VERIFICAR-SCHEDULED: 03-11 verificar primer run real (gate=true,
+  duracion >= 10 min, headSha >= 387938e6, TARGET_SESSION coherente).
+- INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH OPEN (8 tests con
+  patron similar, no verificados).
+- Resto de pendientes vivos sin cambio. Ver seccion 3.
 
 ---
 ## 3. PENDIENTES VIVOS
@@ -140,7 +138,24 @@ producto.
   del rechazo del IC95 inferencial (dictamen H-04 2026-10-26).
   Se mantiene OPEN como evidencia.
 
-### 3.3. Items OPEN observacionales (fechas)
+### 3.3. VERIFICAR-SCHEDULED-387938E6-2026-11-02 (verificable 03-11)
+
+- Item: 13 fixes sesiones 20-21 + fixes sesion 26 sin verificar en
+  prod. Los 3 runs scheduled del 02-11 son gate=false (pre-cierre,
+  TARGET_SESSION=2026-10-30 ya publicado).
+- 03-11: gh run list --workflow=daily_run.yml --limit 5. Verificar
+  conclusion=success, headSha >= 387938e6, duracion >= 10 min
+  (gate=false dura 1 min: excluir). Si verde, cerrar FIXED con
+  databaseId + headSha + duracion + TARGET_SESSION.
+
+### 3.4. INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH (OPEN, ROI bajo)
+
+- 8 tests que llaman main() del SUT sin monkeypatch de *_PATH.
+- Auditar caso por caso con evidencia empirica (mtime del artefacto
+  real cambia tras pytest). Solo fixear los confirmados.
+- No bloquea CI. Sesion dedicada.
+
+### 3.5. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |
 |---|---|---|
@@ -149,7 +164,7 @@ producto.
 | RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
 | H5.3 | 2026-11-20 | Verificar cron trimestral 13F |
 
-### 3.4. Prioritaria analista 30-oct no abierta (decision producto)
+### 3.6. Prioritaria analista 30-oct no abierta (decision producto)
 
 - **FASE-A-REGIMEN-ECONOMIA-REAL** (no abierta como item): el analista
   pide bloque macro con datos oficiales (BEA PIB/PCE/renta, BLS IPC/
@@ -209,6 +224,10 @@ Esperado:
 - **CRLF en ficheros**: 05_BITACORA.md, 01_METODO.md en CRLF;
   00_ARRANQUE.md, HANDOFF en LF. Detectar antes de patch.
 - python sin ruta resuelve a Microsoft Store. Usar py o ruta real.
+- **monkeypatch.chdir no reubica paths de __file__**: si el SUT
+  exporta RESULT_PATH/OUT_PATH/*_DIR a nivel de modulo, chdir(tmp_path)
+  no basta. Monkeypatchear el simbolo. Ver 01_METODO seccion 3 (bug
+  GUARD-COVERAGE-TEST-CONTAMINA-STATE, 2026-11-02).
 
 ### 5.2. Git
 
@@ -248,6 +267,10 @@ Esperado:
 - **Ticker DELISTED en YAML**: declarar es correcto (documenta caso).
   filter_eligible en get_stock_list() lo descarta. Tests genericos de
   universe_expansions excluyen DELISTED de redundancia y presencia.
+- **Wyckoff .md filtra, .csv completo**: MIN_WEIGHT_PCT=0.5 en
+  src/report/wyckoff_holdings.py. Nota runtime n_filt/n_total. Si
+  todos caen bajo umbral, fallback visible (no silencio). CSV = audit
+  completo, .md = diagnostico filtrado. No confundir ni duplicar.
 
 ### 5.5. Autonomia
 
@@ -272,6 +295,9 @@ Expediente Wyckoff (docs/auditoria/wyckoff/): 35+ ficheros.
 Fase 1 (consistencia temporal): item FASE1-CENSO en REGISTRO.
 Fase 2 (auditoria por bloques): items B1-CENSO a B8-CENSO en REGISTRO.
 FASE-A (analisis economico 30-oct): items FASE-A-* en REGISTRO.
+Sesion 26: GUARD-COVERAGE-TEST-CONTAMINA-STATE + WYCKOFF-MD-FILTRO-WEIGHT
++ VERIFICAR-SCHEDULED-387938E6-2026-11-02 + INVESTIGAR-TESTS-MAIN-SIN-
+MONKEYPATCH-PATH en REGISTRO.
 
 ---
 
