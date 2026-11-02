@@ -39,11 +39,20 @@ def _fake_parquet(tmp_path, name):
     return hashlib.sha256(b"").hexdigest()
 
 
-def _run_guard(monkeypatch, manifests=("data/stock_prices.parquet.manifest.json",),
+def _run_guard(monkeypatch, tmp_path,
+               manifests=("data/stock_prices.parquet.manifest.json",),
                threshold=0.95):
-    """Ejecuta gc.main() con sys.argv saneado."""
+    """Ejecuta gc.main() con sys.argv saneado y RESULT_PATH en tmp.
+
+    Regresion 2026-11-02: RESULT_PATH se calcula en import-time con
+    Path(__file__).resolve(), asi que monkeypatch.chdir(tmp_path) NO lo
+    reubica. Hay que monkeypatchear el simbolo del modulo.
+    """
     monkeypatch.setattr(sys, "argv", ["guard_coverage.py"])
     monkeypatch.setattr(gc, "GUARDED_MANIFESTS", manifests)
+    res = tmp_path / "outputs" / "state" / "guard_coverage_result.json"
+    res.parent.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(gc, "RESULT_PATH", res)
     return gc.main()
 
 
@@ -55,7 +64,7 @@ def test_equity_eod_invalid_bloquea(tmp_path, monkeypatch):
                                  "coverage_at_session": 0.0}},
                  sha=sha)
     monkeypatch.chdir(tmp_path)
-    rc = _run_guard(monkeypatch)
+    rc = _run_guard(monkeypatch, tmp_path)
     assert rc == 1
 
 
@@ -66,7 +75,7 @@ def test_equity_eod_ok_pasa(tmp_path, monkeypatch):
                                  "coverage_at_session": 0.99}},
                  sha=sha)
     monkeypatch.chdir(tmp_path)
-    rc = _run_guard(monkeypatch)
+    rc = _run_guard(monkeypatch, tmp_path)
     assert rc == 0
 
 
@@ -79,7 +88,7 @@ def test_equity_eod_coverage_baja_bloquea(tmp_path, monkeypatch):
                                  "coverage_at_session": 0.50}},
                  sha=sha)
     monkeypatch.chdir(tmp_path)
-    rc = _run_guard(monkeypatch)
+    rc = _run_guard(monkeypatch, tmp_path)
     assert rc == 1
 
 
@@ -98,5 +107,30 @@ def test_by_market_ausente_no_bloquea(tmp_path, monkeypatch):
         },
     }), encoding="utf-8")
     monkeypatch.chdir(tmp_path)
-    rc = _run_guard(monkeypatch)
+    rc = _run_guard(monkeypatch, tmp_path)
     assert rc == 0
+
+
+def test_guard_no_escribe_state_real(tmp_path, monkeypatch):
+    """Regresion 2026-11-02: chdir no reubica paths absolutos import-time.
+
+    Comprueba que RESULT_PATH monkeypatcheado != path real y que ejecutar
+    el guard no modifica el fichero de produccion.
+    """
+    import scripts.guard_coverage as gc
+    real = ROOT / "outputs" / "state" / "guard_coverage_result.json"
+    pre = real.stat().st_mtime if real.exists() else None
+
+    sha = _fake_parquet(tmp_path, "stock_prices")
+    _mk_manifest(tmp_path, "stock_prices",
+                 {"US_EQUITY": {"n": 255, "status": "VALID",
+                                 "coverage_at_session": 0.99}},
+                 sha=sha)
+    monkeypatch.chdir(tmp_path)
+
+    rc = _run_guard(monkeypatch, tmp_path)
+    assert rc == 0
+    assert gc.RESULT_PATH != real
+    post = real.stat().st_mtime if real.exists() else None
+    assert pre == post, "el JSON real de produccion fue modificado por el test"
+
