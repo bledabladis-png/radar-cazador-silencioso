@@ -7233,3 +7233,12 @@ items:
     Ultimo run real (41575090209, 03-11) tiene el bug: los 11
     sectores RANGE en la columna. Fix a89eb1f5 + probe con datos
     reales. Falta run scheduled post-fix.
+
+- id: HANDOFF-DOCS-HISTORICO-SUPERSEDED
+  tipo: documentacion
+  ciclo: '2026-10-27'
+  estado: SUPERSEDED
+  descripcion: docs/handoffs/HANDOFF.md quedo obsoleto al migrar el HANDOFF canonico a la raiz
+  commit: '353bcea8'
+  razon: 'Archivo historico de sesion 11. El HANDOFF canonico vive en la raiz del repo (HANDOFF - Radar de Rotacion Sectorial.txt), marcado OBSOLETO en cabecera desde 353bcea8. No usar como fuente de estado.'
+  verificacion: FIXED
