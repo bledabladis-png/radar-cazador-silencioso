@@ -3095,3 +3095,61 @@ tickers salen en la tabla correcta. `VERIFICAR-WALK-BACK-PROD`
 OPEN (sin cambio). Los 3 items de auditoria (10.1/10.2/10.3) sin
 decision de producto aun.
 
+### 2026-11-03 - Fase dominante excluye RANGE: la columna era decorativa
+
+**Objetivo.** El usuario pregunta por que la columna 'Fase dominante'
+de la Matriz de Regimen Sectorial es RANGE en los 11 sectores, si
+supuestamente el modulo Wyckoff no clasifica ETFs (clasifica holdings
+desde sesion 3).
+
+**Hallazgo.** No era bug de calculo ni contradiccion con la decision
+arquitectonica. Lo retirado en sesion 3 fue clasificar el ETF como
+entidad. Lo que hay es moda de fases de holdings. Pero la columna era
+**decorativa**: RANGE gana 85-95% en 8 de 11 sectores porque RANGE =
+ausencia de senal, no una fase Wyckoff. La moda bruta siempre va a ser
+RANGE mientras la mayoria de holdings no completan cascada. La columna
+decia la verdad pero ocultaba la senal real (la 2a fase mas frecuente).
+
+**Evidencia (datos reales 2026-10-30).** XLK RANGE=44% (2o
+DIST_FORMING=20%), XLF RANGE=85% (2o MARKDOWN=9%), XLP RANGE=90%,
+XLU RANGE=95%, XLRE RANGE=95%. RANGE gana por 24-90 puntos. La senal
+esta debajo.
+
+**Fix (`a89eb1f5`).** Schema v2->v3, aditivo. `wyckoff_phase` original
+intacta para no romper la serie historica. 3 columnas nuevas:
+
+1. `wyckoff_signal_phase`: moda de las 6 fases con senal (ACC,
+   ACC_FORMING, MARKUP, DIST, DIST_FORMING, MARKDOWN). Fallback
+   'RANGE' si no hay senal. Desempate determinista: MARKDOWN >
+   DIST > DIST_FORMING > ACC_FORMING > ACC > MARKUP (conservador,
+   prioriza deterioro en empates).
+2. `wyckoff_signal_share`: % del sector en la fase ganadora
+   (escala 0-100, mismo que pct_*).
+3. `wyckoff_signal_n`: count absoluto de holdings en esa fase.
+
+Render: 'DIST_FORMING (20%, N=5)' o 'RANGE (sin senal)'. Nota
+reescrita: declara que RANGE es ausencia de senal, que el CSV
+publica wyckoff_phase (moda bruta) para auditoria, y que no es la
+fase del ETF (retirada sesion 3).
+
+**Resultado 2026-10-30.** XLK->DIST_FORMING(20%), XLF->MARKDOWN(9%),
+XLV->MARKUP(12%), XLE->DIST(10%), XLY->DIST_FORMING(10%),
+XLP->DIST(5%), XLI->MARKDOWN(11%), XLB->DIST(10%),
+XLU->MARKDOWN(5%), XLRE->DIST(5%), XLC->MARKDOWN(11%).
+
+**Verificacion.** pytest 9 passed (4 nuevos: excluye RANGE, fallback
+sin senal, desempate determinista, forming en pool). Bloque
+sector_context/regime/phase: 41 passed. Probe con CSV real 30-10:
+los 11 sectores con share correcto (sin doble *100; bug detectado y
+corregido en el mismo probe). Fallback RANGE verificado con XLK
+forzado a 100% RANGE. pyflakes + compileall silencio.
+
+**Recuperable.** git log --oneline | grep -E
+'a89eb1f5|78431c49' devuelve los commits completos.
+
+**Pendiente residual (vivo hoy).** `VERIFICAR-WYCKOFF-PHASE-PROD`
+OPEN: verificar en el proximo run scheduled real que la Matriz de
+Regimen Sectorial publica fases con senal. Los 3 items de verificacion
+prod (WALK-BACK, IAE-CONSENSO, WYCKOFF-PHASE) se cierran con la misma
+descarga del artifact.
+
