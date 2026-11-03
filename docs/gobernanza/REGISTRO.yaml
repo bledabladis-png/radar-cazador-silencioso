@@ -5318,34 +5318,36 @@ items:
 - id: VERIFICAR-SCHEDULED-387938E6-2026-11-02
   tipo: frente
   ciclo: '2026-10-31'
-  estado: OPEN
+  estado: FIXED
+  commit: 'db8ed703'
+  test: tests/test_daily_run_workflow_contract.py
   descripcion: |
     13 fixes verificados en local (sesiones 20-21) + fixes sesion 26,
-    0 en run scheduled real desde HEAD 387938e6. Correccion 02-11:
+    sin verificacion en scheduled real hasta 03-11. Correccion 02-11:
     los 3 slots pre-cierre del lunes 02-11 fueron gate=false (target
     resuelto a 2026-10-30, ya publicado el viernes). El item original
-    asumia que lunes 02-11 tendria run real; falso. Primer run real
-    es el slot 23:17 UTC del 02-11 + delays (2-7h), verificable 03-11.
+    asumia run real el lunes pre-cierre; falso. Primer run real fue
+    el slot 23:17 UTC del 02-11 con delay 2-7h, ejecutado el 03-11.
   siguiente_accion: |
-    2026-11-03: verificar primer run REAL (gate=true, duracion >= 10 min)
-    con headSha >= 387938e6.
-    - gh run list --workflow=daily_run.yml --limit 5
-    - gh run view <id> --json databaseId,headSha,conclusion,createdAt,updatedAt
-    - Buscar conclusion=success, headSha >= 387938e6, duracion >= 10 min
-      (gate=false dura 1 min: excluir).
-    - Si verde: cerrar FIXED con databaseId + headSha + duracion +
-      TARGET_SESSION coherente.
-    - Si falla: diagnostico prioritario (13 fixes sesiones 20-21 +
-      fixes sesion 26 no verificados en prod).
+    Ninguna. Cerrado. Los fixes sesiones 20-21 + sesion 26 (GUARD-
+    COVERAGE + WYCKOFF-MD-FILTRO-WEIGHT) estan en produccion con
+    cobertura completa verificada.
   evidencia: |
-    Runs scheduled del 02-11 (3, todos gate=false, 1 min, sin artifact,
-    TARGET_SESSION=2026-10-30 ya publicado):
-    - 41378292700 (02:32:40Z): success, headSha 30b5e9de
-    - 41433782143 (11:04:06Z): success, headSha 30b5e9de
-    - 41453249443 (13:28:15Z): success, headSha 30b5e9de
-    Gate resuelve target a ultima sesion bursatil cerrada. Los slots
-    pre-cierre del lunes NO ejecutan pipeline. Ningun run real aun
-    con headSha >= 387938e6.
+    Run scheduled real 41575090209 (2026-11-03T03:55:49Z,
+    event=schedule, 21.0 min, conclusion=success, HEAD db8ed703).
+    - ancestor(387938e6, db8ed703) = True.
+    - gate.should_run = true (slot '17 23 * * *').
+    - Artifact daily-report presente, no expirado, descargado.
+    - 6/6 wyckoff CSVs en el artifact (usa_sector_acc/dist,
+      usa_index_acc/dist, eu_index_acc/dist).
+    - reporte_diario.md con 2 notas '*Filtro: N de M tickers
+      mostrados (weight >= 0.50% del ETF)' (N=5/12 y N=25/55),
+      0 fallbacks visibles. Confirma WYCKOFF-MD-FILTRO-WEIGHT en
+      produccion.
+    Los 3 runs scheduled pre-cierre del 02-11 (41378292700,
+    41433782143, 41453249443) fueron gate=false segun diseno (target
+    2026-10-30 ya publicado). No son evidencia de fallo.
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: METODO-EXCEDE-LIMITE-PROPIO
   tipo: auditoria_interna
   ciclo: '2026-10-31'
@@ -6885,3 +6887,35 @@ items:
     Verificado: 14 passed en el fichero, 23 passed regresion cruzada,
     229 passed bloque wyckoff, pyflakes + compileall silencio,
     verifica_gobernanza [OK], yaml.safe_load valida el workflow.
+- id: REVISION-WORKFLOWS-2026-11-03
+  tipo: auditoria_interna
+  ciclo: '2026-11-03'
+  estado: FIXED
+  commit: 'd84ca390'
+  test: tests/test_runbook_vs_workflows.py
+  descripcion: |
+    Revision de los 10 workflows del repo. Inventario: daily_run,
+    ci_tests, health_check, y 7 update_* (sector/index/european/
+    macro_manual/qqq_sec_flow/sec_13f/sec_nport). Hallazgos: H1
+    (runbook desfasado 18 dias: update_sec_nport documentado como
+    trimestral cuando el YAML era semanal), H2 (upload path huerfano
+    sec_nport_positions.csv sin sufijo, ficheros reales con sufijo
+    _2026q2/_2026q3), H4 (qqq_sec_nport_cross_validation.py es
+    descriptivo pero corria sin continue-on-error: un schema raro
+    tumbaria el run completo), H5 (formato inconsistente en L266-
+    287, cosmetico, no accionable), H3 FALSE_POSITIVE (6 API keys
+    parecian huerfanas en grep inicial; tenian usos en
+    data/providers/).
+  siguiente_accion: |
+    Ninguna. Cerrado. Centinela tests/test_runbook_vs_workflows.py
+    previene regresion de H1 (drift crons runbook-YAML) y detecta
+    altas de update_*.yml no documentadas.
+  evidencia: |
+    H1 fix en commit d84ca390 (07_RUNBOOK.md reestructurado 2.1..
+    2.4; update_sec_nport movido a semanal; update_macro_manual y
+    update_qqq_sec_flow documentados). H2 + H4 en commit e351d486
+    (daily_run.yml: glob sec_nport_positions_*.csv; continue-on-
+    error en qqq_sec_nport_cross_validation). Verificacion: 10/10
+    yaml.safe_load OK; 75 tests workflow verdes; 2 tests centinela
+    nuevos.
+  verificacion: VERIFIED_IN_PRODUCTION
