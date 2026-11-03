@@ -190,15 +190,24 @@ def aggregate_by_ticker(delta_df):
 
 
 def top_accumulating(per_ticker_df, n=20):
-    """Top N acumulando, ordenado por CONSENSO (n_increase), no por suma bruta.
+    """Top N acumulando: consenso neto positivo (n_increase > n_decrease).
 
-    Filtra: filter_reason isna (paso los filtros) y sum_delta > 0.
-    Ordena por (n_increase desc, sum_delta desc) y devuelve n.
+    Filtra: filter_reason isna Y n_increase > n_decrease. Ordena por
+    (n_increase desc, sum_delta desc) y devuelve n.
+
+    Contrato (auditoria externa 2026-11-03, hallazgo 9.3): el
+    encabezado de la tabla dice 'mas gestores aumentan que reducen'.
+    El filtro debe respetar esa definicion. Antes filtraba por
+    sum_delta > 0 (variacion neta de ACCIONES), lo que permitia
+    tickers con mas gestores reduciendo que aumentando pero con
+    sum_delta positivo (los que aumentan lo hacen con mas acciones).
+    Fix: filtrar por consenso, coherente con encabezado y orden.
     """
     if per_ticker_df is None or per_ticker_df.empty:
         return pd.DataFrame(columns=list(PER_TICKER_COLUMNS))
     df = per_ticker_df[
-        per_ticker_df["filter_reason"].isna() & (per_ticker_df["sum_delta"] > 0)
+        per_ticker_df["filter_reason"].isna()
+        & (per_ticker_df["n_increase"] > per_ticker_df["n_decrease"])
     ]
     if df.empty:
         return df
@@ -208,11 +217,24 @@ def top_accumulating(per_ticker_df, n=20):
 
 
 def top_distributing(per_ticker_df, n=20):
-    """Top N distribuyendo, ordenado por CONSENSO (n_decrease), no por suma bruta."""
+    """Top N distribuyendo: consenso neto negativo (n_increase < n_decrease).
+
+    Filtra: filter_reason isna Y n_increase < n_decrease. Ordena por
+    n_decrease desc y devuelve n.
+
+    Contrato (auditoria externa 2026-11-03, hallazgo 9.3): el
+    encabezado dice 'mas gestores reducen que aumentan'. El filtro
+    debe respetar esa definicion. Antes filtraba por sum_delta < 0
+    (variacion neta de acciones). Un ticker con mas gestores
+    aumentando que reduciendo pero sum_delta negativo (los que
+    reducen lo hacen con mas acciones) caia en Distribuyendo.
+    Fix: filtrar por consenso.
+    """
     if per_ticker_df is None or per_ticker_df.empty:
         return pd.DataFrame(columns=list(PER_TICKER_COLUMNS))
     df = per_ticker_df[
-        per_ticker_df["filter_reason"].isna() & (per_ticker_df["sum_delta"] < 0)
+        per_ticker_df["filter_reason"].isna()
+        & (per_ticker_df["n_increase"] < per_ticker_df["n_decrease"])
     ]
     if df.empty:
         return df

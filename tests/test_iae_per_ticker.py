@@ -19,6 +19,7 @@ import pytest
 from src.institutional_accumulation.aggregation.per_ticker import (
     aggregate_by_ticker,
     top_accumulating,
+    top_distributing,
     excluded_anomalies,
     FILTER_ANOMALOUS,
     FILTER_MOSTLY_NEW,
@@ -324,3 +325,86 @@ def test_render_iae_per_ticker_excluye_anomalias_del_top():
     # Y debe estar en la nota de excluidos
     assert "SPCX" in out[out.index("Excluidos de las tablas"):]
 
+
+# ============================================================
+# 9.3 (auditoria externa 2026-11-03): filtro por consenso, no sum_delta
+# ============================================================
+
+def test_top_accumulating_filtra_por_consenso_no_por_sum_delta():
+    """Regresion 9.3: n_increase < n_decrease con sum_delta > 0 NO va a Acumulando."""
+    rows = []
+    # AAPL: 3 aumentan fuerte (+900), 5 reducen poco (-100). sum_delta=+2200 (>0)
+    # n_increase=3 < n_decrease=5 -> consenso NEGATIVO (no debe estar en Acumulando)
+    for i in range(3):
+        rows.append(_row(f"aapl_inc_{i}", "equity:AAPL", 100, 1000, "BOTH"))
+    for i in range(5):
+        rows.append(_row(f"aapl_dec_{i}", "equity:AAPL", 1000, 900, "BOTH"))
+    # MSFT: 10 aumentan poco (+10), 3 reducen poco (-10). consenso POSITIVO
+    for i in range(10):
+        rows.append(_row(f"msft_inc_{i}", "equity:MSFT", 100, 110, "BOTH"))
+    for i in range(3):
+        rows.append(_row(f"msft_dec_{i}", "equity:MSFT", 100, 90, "BOTH"))
+    out = aggregate_by_ticker(pd.DataFrame(rows))
+    aapl = out[out['ticker']=='AAPL'].iloc[0]
+    msft = out[out['ticker']=='MSFT'].iloc[0]
+    assert aapl['sum_delta'] > 0
+    assert aapl['n_increase'] < aapl['n_decrease']
+    assert msft['n_increase'] > msft['n_decrease']
+    top_acc = top_accumulating(out, n=20)
+    assert "MSFT" in set(top_acc["ticker"])
+    assert "AAPL" not in set(top_acc["ticker"]), (
+        "AAPL (n_inc<n_dec, sum_delta>0) NO debe estar en Acumulando. "
+        "El filtro debe ser por consenso, no por suma bruta."
+    )
+
+
+def test_top_distributing_filtra_por_consenso_no_por_sum_delta():
+    """Regresion 9.3: n_increase > n_decrease con sum_delta < 0 NO va a Distribuyendo."""
+    rows = []
+    # CB: 6 aumentan (+100), 5 reducen (-200). sum_delta=-400 (<0)
+    # n_increase=6 > n_decrease=5 -> consenso POSITIVO (no debe estar en Distribuyendo)
+    for i in range(6):
+        rows.append(_row(f"cb_inc_{i}", "equity:CB", 100, 200, "BOTH"))
+    for i in range(5):
+        rows.append(_row(f"cb_dec_{i}", "equity:CB", 200, 0, "BOTH"))
+    # NOW: 3 aumentan (+10), 10 reducen (-10). consenso NEGATIVO
+    for i in range(3):
+        rows.append(_row(f"now_inc_{i}", "equity:NOW", 100, 110, "BOTH"))
+    for i in range(10):
+        rows.append(_row(f"now_dec_{i}", "equity:NOW", 100, 90, "BOTH"))
+    out = aggregate_by_ticker(pd.DataFrame(rows))
+    cb = out[out['ticker']=='CB'].iloc[0]
+    now = out[out['ticker']=='NOW'].iloc[0]
+    assert cb['sum_delta'] < 0
+    assert cb['n_increase'] > cb['n_decrease']
+    assert now['n_increase'] < now['n_decrease']
+    top_dis = top_distributing(out, n=20)
+    assert "NOW" in set(top_dis["ticker"])
+    assert "CB" not in set(top_dis["ticker"]), (
+        "CB (n_inc>n_dec, sum_delta<0) NO debe estar en Distribuyendo."
+    )
+
+
+def test_consistencia_encabezado_y_columnas():
+    """Contrato 9.3: top_acc cumple n_inc>n_dec; top_dis n_inc<n_dec.
+    Ninguna fila puede contradecir el encabezado de su tabla."""
+    rows = []
+    for i in range(5):
+        rows.append(_row(f"a_inc_{i}", "equity:A", 100, 200, "BOTH"))
+    for i in range(2):
+        rows.append(_row(f"a_dec_{i}", "equity:A", 200, 100, "BOTH"))
+    for i in range(3):
+        rows.append(_row(f"b_inc_{i}", "equity:B", 100, 200, "BOTH"))
+    for i in range(7):
+        rows.append(_row(f"b_dec_{i}", "equity:B", 200, 100, "BOTH"))
+    out = aggregate_by_ticker(pd.DataFrame(rows))
+    top_acc = top_accumulating(out, n=20)
+    top_dis = top_distributing(out, n=20)
+    for _, r in top_acc.iterrows():
+        assert r['n_increase'] > r['n_decrease'], (
+            f"Acumulando tiene {r['ticker']} con n_inc={r['n_increase']} <= n_dec={r['n_decrease']}"
+        )
+    for _, r in top_dis.iterrows():
+        assert r['n_increase'] < r['n_decrease'], (
+            f"Distribuyendo tiene {r['ticker']} con n_inc={r['n_increase']} >= n_dec={r['n_decrease']}"
+        )
