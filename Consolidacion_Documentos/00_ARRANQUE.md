@@ -160,43 +160,11 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en `04_HISTORICO.md`;
 
 ### 4.2. Frente Wyckoff (sistema holdings, sesion 3 cerrada)
 
-**Sesion 2026-10-24 (sesion 3). Plan 63 ejecutado completo.**
-
-Sistema Wyckoff completo por holdings. Decision arquitectonica: los holdings pasan directamente por el detector, no los ETFs sectoriales e indices.
-
-**Modulos del sistema (`indicators/`):**
-- `wyckoff_event.py` - dataclasses comunes.
-- `wyckoff_distribution.py` - cascada distribucion.
-- `wyckoff_accumulation.py` - cascada acumulacion.
-- `wyckoff_orchestrator.py` - `classify_phase` + regla simetrica de vigencia.
-- `wyckoff_v1.py` - features y detectores primitivos.
-- `sector_wyckoff_distribution.py` - agregado por sector.
-- `wyckoff_holdings_report.py` - 6 tablas descargables (usa_sector_acc, usa_sector_dist, usa_index_acc, usa_index_dist, eu_index_acc, eu_index_dist).
-- `stock_metrics.py` - metricas per-ticker + WLS.
-
-**Retirado en sesion 3:** SLPM completo (`slpm_v12.py`, `state_machine.py`, `state_transition.py`, `SLPM_WEIGHTS`, `SLPM_EXPECTED_LEADERS`), lideres por sector (`stock_leader.py`, `leaders.py`, `leader_representativeness.py`, `sector_leader_divergence.py`, `sector_annotations.py`), fase ETF del ranking, `classify_wyckoff_phase` legacy.
-
-**Cobertura (2026-10-31, post c879df71):** `n_valid_rs` por sector tras O2:
-XLB 20/26 (76.9%), XLC 20/23 (87%), XLE 20/21 (95.2%), XLF 34/76 (44.7%), XLI 50/83 (60.2%), XLK 39/74 (52.7%), XLP 21/33 (63.6%), XLRE 21/30 (70%), XLU 22/31 (71%), XLV 26/60 (43.3%), XLY 22/47 (46.8%).
-Datos exactos: `sector_concentration.csv` (`n_valid_rs`, `n_total`, `coverage_rs`).
-
-**Pre-registros fallidos (no ocultos):**
-- `60_current_phase_rule_v1.md`: regla unidireccional fallo C1, reemplazada por simetrica.
-- `61_utad_spring_pending_v1.md`: UTAD_PENDING/SPRING_PENDING fallo A3 (ratio 8.67x > 5x). No se ajusto.
-
-**Limitaciones documentadas:**
-- PSY/PS: dead code funcional. Detectores implementados y testeados,
-  disparan en backtest (probe 2026-10-31: PSY 35/3843, PS 8/3960 en
-  20 holdings 2022-26), pero no estan wireados en produccion. Aunque
-  se wirearan, no aportarian valor visible: los detectores solo
-  evaluan la ultima barra y la mayoria de tickers no completan la
-  cascada BC->AR->Range->SOW. Visibles solo si se hiciera escaneo
-  por ventana (feature pendiente, doc 80 seccion 10).
-- `current_phase_basis` no va al CSV del reporte (solo al CSV descargable).
-- `ACCUMULATION=0` en produccion: transitorio por diseno.
-- Validation Gate no reproducible standalone (WONT_FIX razonado).
-- TWST en CONFLICT (ambiguedad real).
-- Cobertura USA 231/504 holdings (pendiente ampliacion).
+Sistema holdings-based en produccion desde sesion 3 (2026-10-24).
+Modulos, pre-registros fallidos (docs 60 y 61) y limitaciones
+(PSY/PS dead code, ACCUMULATION=0, cobertura USA 231/504 holdings
+pendiente de ampliacion): detalle en 04_HISTORICO.md. Cobertura
+n_valid_rs por sector: sector_concentration.csv.
 
 ### 4.3. Pendientes vivos
 
