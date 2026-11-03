@@ -25,17 +25,30 @@ def render_matriz_regimen(sector_regime_matrix_data):
             _sr_str = "N/D" if (_sr is None or pd.isna(_sr)) else f"{float(_sr):.2f}"
             _ne = row.get('n_estructuras', 0)
             _ne_str = str(int(_ne)) if pd.notna(_ne) else "0"
-            out.append(f"| {row['sector']} | {row['price_ret_20d']:.2%} | {row['pct_above_ema50']:.1f}% | {_fmt_signed(row['flow_20d_sum'], '{:+,.0f}', '{:,.0f}')} | {row['wyckoff_phase']} | {_sr_str} | {_ne_str} | {row['positive_conditions']:.0f} | {row['regime_reading']} |\n")
+            _sig_phase = row.get('wyckoff_signal_phase')
+            _sig_share = row.get('wyckoff_signal_share')
+            _sig_n = row.get('wyckoff_signal_n')
+            if _sig_phase in (None, 'N/D') or pd.isna(_sig_phase):
+                _sig_display = 'N/D'
+            elif _sig_phase == 'RANGE':
+                _sig_display = 'RANGE (sin senal)'
+            else:
+                # wyckoff_signal_share ya viene en escala 0-100 (pct_*).
+                _share_pct = _sig_share if pd.notna(_sig_share) else 0.0
+                _n_str = int(_sig_n) if pd.notna(_sig_n) else 0
+                _sig_display = f'{_sig_phase} ({_share_pct:.0f}%, N={_n_str})'
+            out.append(f"| {row['sector']} | {row['price_ret_20d']:.2%} | {row['pct_above_ema50']:.1f}% | {_fmt_signed(row['flow_20d_sum'], '{:+,.0f}', '{:,.0f}')} | {_sig_display} | {_sr_str} | {_ne_str} | {row['positive_conditions']:.0f} | {row['regime_reading']} |\n")
         out.append("\n")
         out.append("*Struct = proporcion de holdings con estructura alcista clara*\n")
         out.append("*(ACC + ACC_FORMING + MARKUP) / (todas las fases claras).*\n")
         out.append("*N est = numero de holdings con estructura clara (no-RANGE, no-CONFLICT).*\n")
-        out.append("*Fase dominante = fase con mayor porcentaje de holdings del sector "
-                   "(pct_accumulation / pct_markup / pct_range / pct_distribution / "
-                   "pct_markdown). NO es la fase del ETF sectorial (esa se retiro en "
-                   "sesion 3): es la moda de la distribucion de fases de los holdings. "
-                   "Un sector puede tener fase dominante RANGE y mayoria de holdings "
-                   "en distribucion: son cosas distintas.*\n")
+        out.append("*Fase dominante = fase con senal mas frecuente entre los holdings "
+                   "del sector (ACC / ACC_FORMING / MARKUP / DIST / DIST_FORMING / "
+                   "MARKDOWN). NO incluye RANGE: RANGE es ausencia de senal, no una "
+                   "fase. Si ningun holding tiene senal, se publica RANGE (sin senal) "
+                   "y N=0. NO es la fase del ETF sectorial (esa se retiro en sesion 3). "
+                   "El CSV publica ademas wyckoff_phase (moda bruta incluyendo RANGE) "
+                   "para auditoria historica.*\n")
         out.append("*NO es senal predictiva de retorno. Describe estado estructural actual.*\n")
         out.append("*Struct=1.00 con N est=1 es fragil; Struct=0.60 con N est=15 es robusto.*\n")
         out.append("*H-01 auditor externo 2026-10-25: periodo del historico Wyckoff*\n")

@@ -88,3 +88,79 @@ def test_structure_ratio_nan_si_todo_range():
     df = build_sector_regime_matrix(b, f, sr, dist)
     assert pd.isna(df.iloc[0]['structure_ratio'])
     assert df.iloc[0]['n_estructuras'] == 0
+
+
+# ============================================================
+# WYCKOFF-PHASE-SEMANTICA (2026-11-03, auditoria externa)
+# signal_phase = moda de fases con senal; RANGE fallback.
+# ============================================================
+
+def _make_dist_signal(pcts):
+    """Construye dist con pcts dict {fase: pct}. count = round(pct/10)."""
+    cols = {
+        'count_accumulation': int(round(pcts.get('pct_accumulation', 0) / 10)),
+        'count_accumulation_forming': int(round(pcts.get('pct_accumulation_forming', 0) / 10)),
+        'count_markup': int(round(pcts.get('pct_markup', 0) / 10)),
+        'count_range': int(round(pcts.get('pct_range', 0) / 10)),
+        'count_distribution': int(round(pcts.get('pct_distribution', 0) / 10)),
+        'count_distribution_forming': int(round(pcts.get('pct_distribution_forming', 0) / 10)),
+        'count_markdown': int(round(pcts.get('pct_markdown', 0) / 10)),
+    }
+    d = {'sector': ['XLK']}
+    d.update({k: [v] for k, v in cols.items()})
+    d.update({k: [pcts.get(k, 0.0)] for k in [
+        'pct_accumulation', 'pct_accumulation_forming', 'pct_markup',
+        'pct_range', 'pct_distribution', 'pct_distribution_forming',
+        'pct_markdown',
+    ]})
+    return pd.DataFrame(d)
+
+
+def _make_breadth_flow_ok():
+    sector = 'XLK'
+    breadth = pd.DataFrame({'sector': [sector], 'pct_above_ema50': [60.0], 'date': [pd.Timestamp.now()]})
+    flow = pd.DataFrame({'sector': [sector], 'price_ret_20d': [0.02], 'flow_20d_sum': [1000], 'date': [pd.Timestamp.now()]})
+    sr = {'ranking': [(sector, 'Tech', 0.5)]}
+    return breadth, flow, sr
+
+
+def test_signal_phase_excluye_range():
+    """RANGE 80% + MARKDOWN 20% -> signal_phase=MARKDOWN (no RANGE)."""
+    b, f, sr = _make_breadth_flow_ok()
+    dist = _make_dist_signal({'pct_range': 80.0, 'pct_markdown': 20.0})
+    df = build_sector_regime_matrix(b, f, sr, dist)
+    row = df.iloc[0]
+    assert row['wyckoff_phase'] == 'RANGE', 'historico (moda bruta) sigue siendo RANGE'
+    assert row['wyckoff_signal_phase'] == 'MARKDOWN', 'signal excluye RANGE'
+    assert abs(row['wyckoff_signal_share'] - 20.0) < 0.01
+    assert row['wyckoff_signal_n'] == 2
+
+
+def test_signal_phase_fallback_range_sin_senal():
+    """Todo RANGE (sin senal) -> signal_phase=RANGE, share=0, N=0."""
+    b, f, sr = _make_breadth_flow_ok()
+    dist = _make_dist_signal({'pct_range': 100.0})
+    df = build_sector_regime_matrix(b, f, sr, dist)
+    row = df.iloc[0]
+    assert row['wyckoff_signal_phase'] == 'RANGE'
+    assert row['wyckoff_signal_share'] == 0.0
+    assert row['wyckoff_signal_n'] == 0
+
+
+def test_signal_phase_desempate_determinista():
+    """Empate MARKUP 20% vs MARKDOWN 20% -> gana MARKDOWN (orden conservador)."""
+    b, f, sr = _make_breadth_flow_ok()
+    dist = _make_dist_signal({'pct_markup': 20.0, 'pct_markdown': 20.0, 'pct_range': 60.0})
+    df = build_sector_regime_matrix(b, f, sr, dist)
+    row = df.iloc[0]
+    assert row['wyckoff_signal_phase'] == 'MARKDOWN'
+
+
+def test_signal_phase_forming_compone_pool():
+    """DIST_FORMING 20% > MARKDOWN 10% -> signal_phase=DISTRIBUTION_FORMING."""
+    b, f, sr = _make_breadth_flow_ok()
+    dist = _make_dist_signal({'pct_distribution_forming': 20.0, 'pct_markdown': 10.0, 'pct_range': 70.0})
+    df = build_sector_regime_matrix(b, f, sr, dist)
+    row = df.iloc[0]
+    assert row['wyckoff_signal_phase'] == 'DISTRIBUTION_FORMING'
+    assert abs(row['wyckoff_signal_share'] - 20.0) < 0.01

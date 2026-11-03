@@ -13,6 +13,34 @@ from config.tickers import MARKET_TICKERS
 
 SECTORS = MARKET_TICKERS['sectors']
 
+# WYCKOFF-PHASE-SEMANTICA (2026-11-03, auditoria externa): la fase
+# dominante debe excluir RANGE, que es ausencia de senal, no una fase.
+# 'wyckoff_phase' (historico) mantiene la moda bruta con RANGE para
+# no romper la serie. 'wyckoff_signal_phase' es la moda de las 6
+# fases con senal, con fallback RANGE cuando ningun holding tiene
+# senal. Schema bump v2->v3 (aditivo).
+_SIGNAL_PHASES = (
+    ('pct_accumulation', 'ACCUMULATION'),
+    ('pct_accumulation_forming', 'ACCUMULATION_FORMING'),
+    ('pct_markup', 'MARKUP'),
+    ('pct_distribution', 'DISTRIBUTION'),
+    ('pct_distribution_forming', 'DISTRIBUTION_FORMING'),
+    ('pct_markdown', 'MARKDOWN'),
+)
+_SIGNAL_PHASE_ORDER = (
+    'MARKDOWN', 'DISTRIBUTION', 'DISTRIBUTION_FORMING',
+    'ACCUMULATION_FORMING', 'ACCUMULATION', 'MARKUP',
+)
+
+_COUNT_BY_SIGNAL_PHASE = {
+    'ACCUMULATION': 'count_accumulation',
+    'ACCUMULATION_FORMING': 'count_accumulation_forming',
+    'MARKUP': 'count_markup',
+    'DISTRIBUTION': 'count_distribution',
+    'DISTRIBUTION_FORMING': 'count_distribution_forming',
+    'MARKDOWN': 'count_markdown',
+}
+
 def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results, sector_wyckoff_distribution_df=None):
     """
     Combina datos existentes y devuelve DataFrame con la matriz.
@@ -26,6 +54,9 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
     #   structure_ratio  = (acc + acc_forming + markup) / estructura_clara
     # Null si estructura_clara == 0. NO es senal predictiva.
     phase_map = {}
+    signal_phase_map = {}
+    signal_share_map = {}
+    signal_n_map = {}
     structure_ratio_map = {}
     n_estructuras_map = {}
     if sector_wyckoff_distribution_df is not None and not sector_wyckoff_distribution_df.empty:
@@ -70,6 +101,35 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
                         pass
             phase_map[_sector] = max(_candidates, key=lambda x: x[1])[0] if _candidates else 'N/D'
 
+            # signal_phase: moda entre las 6 fases con senal.
+            _sig_candidates = []
+            for _pct_col, _sig_name in _SIGNAL_PHASES:
+                _v = _row.get(_pct_col)
+                if _v is None or not pd.notna(_v):
+                    continue
+                try:
+                    _pct = float(_v)
+                except (ValueError, TypeError):
+                    continue
+                if _pct > 0:
+                    _sig_candidates.append((_sig_name, _pct))
+            if _sig_candidates:
+                # Desempate determinista por _SIGNAL_PHASE_ORDER.
+                _order_idx = {n: i for i, n in enumerate(_SIGNAL_PHASE_ORDER)}
+                _sig_candidates.sort(key=lambda x: (-x[1], _order_idx[x[0]]))
+                _sig_name, _sig_share = _sig_candidates[0]
+                signal_phase_map[_sector] = _sig_name
+                signal_share_map[_sector] = _sig_share
+                _cnt_col = _COUNT_BY_SIGNAL_PHASE.get(_sig_name)
+                try:
+                    signal_n_map[_sector] = int(float(_row.get(_cnt_col, 0) or 0))
+                except (ValueError, TypeError):
+                    signal_n_map[_sector] = 0
+            else:
+                signal_phase_map[_sector] = 'RANGE'
+                signal_share_map[_sector] = 0.0
+                signal_n_map[_sector] = 0
+
     # Unificar por sector tomando la última fila si hay histórico
     breadth = sector_breadth_df.drop_duplicates(subset='sector', keep='last').set_index('sector')
     flow = sector_flow_df.drop_duplicates(subset='sector', keep='last').set_index('sector')
@@ -95,6 +155,10 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
                 'pct_above_ema50': pct_above,
                 'flow_20d_sum': flow_sum,
                 'wyckoff_phase': phase,
+                'wyckoff_signal_phase': signal_phase_map.get(sector,
+                                                       'RANGE'),
+                'wyckoff_signal_share': signal_share_map.get(sector, 0.0),
+                'wyckoff_signal_n': signal_n_map.get(sector, 0),
                 'structure_ratio': (structure_ratio_map.get(sector)
                                      if sector_wyckoff_distribution_df is not None else None),
                 'n_estructuras': (n_estructuras_map.get(sector, 0)
@@ -130,6 +194,10 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
             'pct_above_ema50': pct_above,
             'flow_20d_sum': flow_sum,
             'wyckoff_phase': phase,
+            'wyckoff_signal_phase': signal_phase_map.get(sector,
+                                                   'RANGE'),
+            'wyckoff_signal_share': signal_share_map.get(sector, 0.0),
+            'wyckoff_signal_n': signal_n_map.get(sector, 0),
             'structure_ratio': (structure_ratio_map.get(sector)
                                  if sector_wyckoff_distribution_df is not None else None),
             'n_estructuras': (n_estructuras_map.get(sector, 0)
