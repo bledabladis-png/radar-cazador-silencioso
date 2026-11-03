@@ -7242,3 +7242,64 @@ items:
   commit: '353bcea8'
   razon: 'Archivo historico de sesion 11. El HANDOFF canonico vive en la raiz del repo (HANDOFF - Radar de Rotacion Sectorial.txt), marcado OBSOLETO en cabecera desde 353bcea8. No usar como fuente de estado.'
   verificacion: FIXED
+
+- id: DECISION-EFFECTIVE-DATE-POR-MODULO
+  tipo: deuda_tecnica
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: 'Decidir si effective_date se propaga del pipeline o cada modulo expone el suyo (auditoria 11-03, hallazgo 10.1)'
+  siguiente_accion: 'Decidir (a) propagar effective_date del pipeline vs (b) cada modulo expone el suyo. Documentar en 02_ARQUITECTURA antes de implementar.'
+- id: DECISION-MTE-DEGRADED-STATE
+  tipo: deuda_tecnica
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: 'Definir taxonomia de estados degradados MTE (auditoria 11-03, hallazgo 10.2)'
+  siguiente_accion: 'Decidir taxonomia DEGRADED (VALID/DEGRADED/INVALID y sub-estados) y auditar strings existentes en src/indicators/mte*.'
+- id: DECISION-FRESHNESS-POR-BLOQUE
+  tipo: deuda_tecnica
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: 'Definir bloque de frescura: seccion del reporte vs fuente de datos (auditoria 11-03, hallazgo 10.3)'
+  siguiente_accion: 'Decidir bloque = seccion del reporte vs fuente de datos; enumerar secciones candidatas antes de implementar.'
+- id: AUDIT-DOC-70-V2D-PETICIONES
+  tipo: documentacion
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: 'Auditar doc 70-v2d y REGISTRO por peticiones de producto no registradas'
+  siguiente_accion: 'Revisar doc 70-v2d + notas sueltas; abrir items para peticiones no registradas.'
+- id: COMMIT-46A3B370-AUDIT
+  tipo: auditoria_interna
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: 'Commit 46a3b370 (27-oct) con mensaje CURRENT-PHASE-BASIS-CSV -> WONT_FIX toca docs/handoffs/HANDOFF.md (obsoleto)'
+  siguiente_accion: 'Auditar commit 46a3b370; decidir si es huerfano o intencional. Buscar mas commits con patron (mensaje distinto al fichero tocado).'
+- id: SEMANTICA-SIN-CONTRATO-INVENTARIO
+  tipo: documentacion
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: 'Inventariar conceptos con semantica sin contrato escrito (regla de que si tiene semantica, tiene contrato)'
+  siguiente_accion: 'Inventariar conceptos con semantica sin contrato. ROI bajo, no urgente. No implementar hasta inventario completo.'
+- id: WYCKOFF-5BX-INSTRUMENTACION
+  tipo: observabilidad
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: 'Decidir si instrumentar n_confirmed_H20_complete antes de 2027 o dejar madurar (WYCKOFF-5BX esta BLOCKED_EXTERNAL hasta ~2027)'
+  siguiente_accion: 'Decidir si instrumentar el conteo ahora (observabilidad) o dejar madurar solo hasta >= 550 confirmados.'
+- id: CHECK-YAHOO-REVISION-FRECUENCIA
+  tipo: observabilidad
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: 'Verificar frecuencia real de check_yahoo_revision desde D2 (2026-09-30); si nunca dispara, decidir si el check funciona'
+  siguiente_accion: 'gh run list + grep en logs por check_yahoo_revision; decidir si el check funciona o hay que revisarlo.'
+- id: FORCE-DISPATCH-EMERGENCIA
+  tipo: documentacion
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: 'Documentar procedimiento de force dispatch de emergencia (13:30-20:00 UTC prohibido; backup no documentado)'
+  siguiente_accion: 'Documentar (a) por que force=true corrompe en market open; (b) backup pre-force; (c) procedimiento paso a paso.'
+- id: POWERSHELL-TRAMPS-NO-DOCUMENTADAS
+  tipo: documentacion
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: 'Auditar trampas PowerShell conocidas no documentadas en 01_METODO seccion 6'
+  siguiente_accion: 'Auditar trampas PowerShell conocidas; anadir a 01_METODO seccion 6 solo las verificadas empiricamente.'
