@@ -49,10 +49,14 @@ def test_matriz_header_fase_dominante():
 
 
 def test_matriz_nota_fase_dominante_aclaratoria():
-    """La nota debe explicar que la fase es moda de holdings, no del ETF."""
+    """La nota debe explicar que la fase es la mas frecuente entre holdings con senal, no del ETF."""
     out = "".join(render_matriz_regimen(_matriz_df()))
     assert "NO es la fase del ETF sectorial" in out
-    assert "moda de la distribucion de fases" in out
+    # WYCKOFF-PHASE-SEMANTICA 2026-11-03: RANGE no es fase, la
+    # fase es la mas frecuente entre holdings con senal.
+    assert "fase con senal mas frecuente" in out
+    assert "RANGE es ausencia de senal" in out
+    assert "wyckoff_phase (moda bruta incluyendo RANGE)" in out
 
 
 # ============================================================

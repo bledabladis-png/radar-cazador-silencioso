@@ -22,7 +22,7 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 4396 passed, 2 skipped (sin filtro; suite completa)
+- **Resumen:** 4403 passed, 2 skipped (sin filtro; suite completa)
 - **Exit code:** 0
 
 **Tests skip:**
@@ -46,7 +46,7 @@ porque el commit que lo contiene cambia HEAD.
 | `src/institutional_accumulation/aggregation/coverage.py` | 258 |
 | `src/institutional_accumulation/aggregation/delta_shares.py` | 434 |
 | `src/institutional_accumulation/aggregation/nipc.py` | 398 |
-| `src/institutional_accumulation/aggregation/per_ticker.py` | 231 |
+| `src/institutional_accumulation/aggregation/per_ticker.py` | 253 |
 | `src/institutional_accumulation/aggregation/reporting_dedup.py` | 890 |
 | `src/institutional_accumulation/catalog_pit.py` | 232 |
 | `src/institutional_accumulation/identity/__init__.py` | 15 |
@@ -75,7 +75,7 @@ porque el commit que lo contiene cambia HEAD.
 | `src/institutional_accumulation/security_type.py` | 407 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 162 |
-| **TOTAL** | **37 ficheros, 8698 LOC** |
+| **TOTAL** | **37 ficheros, 8720 LOC** |
 
 ## 5. Datos IAE
 

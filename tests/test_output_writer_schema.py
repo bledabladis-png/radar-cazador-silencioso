@@ -11,7 +11,7 @@ schemas mezclados o perder historia.
 
 T1. Sin CSV previo -> escribe, .schema = current.
 T2. CSV con mismo schema -> append, sin backup.
-T3. CSV v1, spec v2 -> backup .v1.csv creado, .schema = 2.
+T3. CSV v1, spec actual (v3) -> backup .v1.csv creado, .schema = 3.
 T4. Backup existente con contenido -> no se sobrescribe.
 T5. Backup falla (shutil.copy2 raising) -> CSV viejo intacto, .schema
     no se actualiza, WARN emitido.
@@ -33,8 +33,8 @@ def _write_csv_with_schema(path, schema, df):
 
 
 # Spec temporal de prueba. Usa el registro real (sector_breadth, schema=1).
-# Para T3 necesita un spec con schema_version=2. Uso sector_regime_matrix
-# que ya esta en v2 en el registro.
+# Para T3 necesita un spec con schema_version >= 2. Uso sector_regime_matrix
+# que esta en v3 en el registro (era v2 antes del fix WYCKOFF-PHASE-2026-11-03).
 
 def test_t1_sin_csv_previo_escribe_normal(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
@@ -46,7 +46,7 @@ def test_t1_sin_csv_previo_escribe_normal(tmp_path, monkeypatch):
     csv = tmp_path / "outputs/history/sector_regime_matrix.csv"
     schema = tmp_path / "outputs/history/sector_regime_matrix.csv.schema"
     assert csv.exists()
-    assert schema.read_text(encoding="utf-8").strip() == "2"
+    assert schema.read_text(encoding="utf-8").strip() == "3"
 
 
 def test_t2_mismo_schema_append_sin_backup(tmp_path, monkeypatch):
@@ -55,7 +55,7 @@ def test_t2_mismo_schema_append_sin_backup(tmp_path, monkeypatch):
     base.mkdir(parents=True)
     df1 = pd.DataFrame({"date": ["2026-10-09"], "sector": ["XLK"]})
     _write_csv_with_schema(
-        base / "sector_regime_matrix.csv", 2, df1
+        base / "sector_regime_matrix.csv", 3, df1
     )
     df2 = pd.DataFrame({"date": ["2026-10-10"], "sector": ["XLK"]})
     output_writer.persist(
@@ -63,11 +63,11 @@ def test_t2_mismo_schema_append_sin_backup(tmp_path, monkeypatch):
     )
     out = pd.read_csv(base / "sector_regime_matrix.csv")
     assert len(out) == 2
-    # Sin backup .v2.csv (mismo schema)
-    assert not (base / "sector_regime_matrix.v2.csv").exists()
+    # Sin backup .v3.csv (mismo schema)
+    assert not (base / "sector_regime_matrix.v3.csv").exists()
 
 
-def test_t3_migracion_v1_a_v2_crea_backup(tmp_path, monkeypatch):
+def test_t3_migracion_v1_a_v3_crea_backup(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     base = tmp_path / "outputs/history"
     base.mkdir(parents=True)
@@ -91,9 +91,9 @@ def test_t3_migracion_v1_a_v2_crea_backup(tmp_path, monkeypatch):
     out = pd.read_csv(base / "sector_regime_matrix.csv")
     assert len(out) == 1
     assert out["date"].iloc[0] == "2026-10-10"
-    # .schema actualizado a 2
+    # .schema actualizado a 3
     schema = base / "sector_regime_matrix.csv.schema"
-    assert schema.read_text(encoding="utf-8").strip() == "2"
+    assert schema.read_text(encoding="utf-8").strip() == "3"
 
 
 def test_t4_backup_existente_no_se_sobrescribe(tmp_path, monkeypatch):
@@ -172,8 +172,9 @@ def test_t6_to_csv_falla_csv_intacto(tmp_path, monkeypatch):
     base = tmp_path / "outputs/history"
     base.mkdir(parents=True)
     df_old = pd.DataFrame({"date": ["2026-09-01"], "sector": ["XLK"]})
+    # Mismo schema que el spec (v3). Sin migracion. Solo falla to_csv.
     _write_csv_with_schema(
-        base / "sector_regime_matrix.csv", 2, df_old
+        base / "sector_regime_matrix.csv", 3, df_old
     )
     contenido_csv_previo = (
         base / "sector_regime_matrix.csv"
