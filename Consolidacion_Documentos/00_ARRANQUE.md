@@ -90,7 +90,7 @@ Lo que NUNCA haces:
 
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
-Snapshot al cierre del ultimo commit (2026-11-03, sesion 27 p4):
+Snapshot al cierre del ultimo commit (2026-11-03, sesion 27 p5):
 - HEAD: `git log --oneline -1`
 - Tests: fuente autoritativa en `Consolidacion_Documentos/ESTADO_SISTEMA.md` (seccion 2). No fijar literal aqui (cambia con cada commit de test); ver ESTADO_SISTEMA.md seccion 2.
 - Validation Gate: 11/11

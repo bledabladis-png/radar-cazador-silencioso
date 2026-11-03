@@ -9,7 +9,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-03, sesion 27)
 
-HEAD: `38ad29ec` (consultar `git log --oneline -1` para el actual).
+HEAD: `386b6fe0` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2.
@@ -85,6 +85,25 @@ Sesion 27 (2026-11-03) parte 4: fase dominante excluye RANGE.
     XLP->DIST(5%), XLI->MARKDOWN(11%), XLB->DIST(10%),
     XLU->MARKDOWN(5%), XLRE->DIST(5%), XLC->MARKDOWN(11%).
 
+Sesion 27 (2026-11-03) parte 5: consolidacion documental.
+  - 4 tests adaptados a schema v3 (1335cb72). T1 y T3 esperaban
+    .schema == '2'; T2/T6 cambian v2->v3. La nota de fase dominante
+    actualizada. ESTADO_SISTEMA regenerado: 4396 -> 4403 passed.
+  - Contrato docs/auditoria/sector_regime_matrix_v3.md nuevo
+    (7e4fe196, 4918 B, LF). 3 columnas aditivas, pool de 6 fases
+    con senal, desempate determinista, invariantes I1-I5, ejemplo
+    con datos reales, rollback.
+  - 02_ARQUITECTURA.md L216-224: distingue wyckoff_phase (moda
+    bruta con RANGE, auditoria) vs wyckoff_signal_phase (moda de
+    fases con senal, informativa).
+  - 01_METODO seccion 3: 2 lecciones nuevas. 'Escala pct_*: 0-100,
+    no 0-1' (bug real del render: '2000%' donde era '20%').
+    'Out-String convierte \n a \r\n al capturar' (2 diagnosticos
+    erroneos por verificar EOL de blob con `git cat-file | Out-String`).
+  - Regla documentada: 'si tiene semantica, tiene contrato'. Gap
+    previo: la Matriz de Regimen no tenia contrato. Mismo patron
+    que temporal_coherence vs pipeline_gate antes del fix WALK_BACK.
+
 Docs: 01_METODO dividido (01d_POWERSHELL_AUDITORIA.md). README sin
 cifras caducas. Regla chdir/__file__ en 01_METODO seccion 3.
 
@@ -95,6 +114,12 @@ BLOCKED_EXTERNAL + 1 OPEN DICT3 (evidencia) + 4 observacionales con
 fecha (06-nov, 10-nov x2, 17-nov, 20-nov) + 1 prioritaria (a)
 analista + 3 deudas de auditoria 11-03 sin decision de producto. Ver
 seccion 3.
+
+DEUDA ACTIVA (no bloquea, anotada): 00_ARRANQUE a 20305 B (margen
+175 B sobre 20480) y 01_METODO a 20369 B (margen 111 B). Proximo
+contenido en cualquiera obliga recorte o division. Candidatos:
+seccion 4.2 del arranque (Wyckoff detallado, ya vive en historico);
+seccion 3 de 01_METODO (lecciones, ya dividida parcialmente en 01c).
 
 ---
 ## 2. SESION 2026-11-03 (sesion 27): detalle
