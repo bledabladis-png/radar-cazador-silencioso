@@ -3153,3 +3153,66 @@ Regimen Sectorial publica fases con senal. Los 3 items de verificacion
 prod (WALK-BACK, IAE-CONSENSO, WYCKOFF-PHASE) se cierran con la misma
 descarga del artifact.
 
+### 2026-11-03 - Consolidacion documental: contrato v3 + 2 lecciones
+
+**Objetivo.** Dejar la documentacion al dia tras el fix
+WYCKOFF-PHASE-SEMANTICA (a89eb1f5). Contrato nuevo, arquitectura
+actualizada, tests adaptados a schema v3, dos lecciones operativas
+nuevas.
+
+**Hecho.**
+
+1. Tests adaptados a schema v3 (`1335cb72`). Los 4 tests que
+   rompieron no eran bugs funcionales: el cambio de schema v2->v3 y
+   de nota (fase dominante excluye RANGE) exigia adaptarlos.
+   - `test_output_writer_schema.py` (T1, T2, T3, T6): usan
+     `sector_regime_matrix` como spec, ahora v3. T3 renombrado
+     v1_a_v3. T2 aserta `sin .v3.csv` (antes `.v2.csv`).
+   - `test_report_fase_dominante_n_valid.py`: 3 asserts nuevos del
+     contrato (fase con senal mas frecuente, RANGE = ausencia de
+     senal, wyckoff_phase en CSV para auditoria).
+   - ESTADO_SISTEMA regenerado: 4396 -> 4403 passed (+7).
+
+2. Contrato `docs/auditoria/sector_regime_matrix_v3.md`
+   (`7e4fe196`). Semantica del schema v3: 3 columnas aditivas,
+   pool de 6 fases con senal (excluye RANGE, CONFLICT,
+   INSUFFICIENT_DATA), desempate determinista (MARKDOWN > DIST >
+   DIST_FORMING > ACC_FORMING > ACC > MARKUP), invariantes I1-I5,
+   ejemplo con datos reales del 30-10, rollback, tests asociados.
+   Regla: si tiene semantica, tiene contrato. Faltaba.
+
+3. `02_ARQUITECTURA.md` actualizado (`7e4fe196`). Bloque L216-224
+   distingue `wyckoff_phase` (moda bruta con RANGE, auditoria
+   historica) vs `wyckoff_signal_phase` (moda de fases con senal,
+   informativa). Corrige el gap: la seccion describia el sistema
+   holdings pero no la semantica del render de la Matriz.
+
+4. Dos lecciones nuevas en `01_METODO.md` seccion 3
+   (`7e4fe196`, `ded662ed`):
+   - "Escala de `pct_*`: 0-100, no 0-1". Bug real: el render
+     aplicaba `* 100` y publicaba '2000%' donde era '20%'.
+     Detectado en probe con CSV real antes de commitear. Test con
+     `pytest.approx` no detecta doble factor si el fixture usa la
+     escala equivocada. Centinela: probe con CSV real del run.
+   - "`Out-String` convierte `\n` a `\r\n` al capturar". Dos
+     diagnosticos erroneos seguidos: `git cat-file -p | Out-String`
+     reportaba CRLF donde el blob era LF. Regla: leer binario con
+     `[IO.File]::ReadAllBytes`, o `git ls-files --eol` / `git
+     cat-file -s`.
+
+**Verificacion.** pytest 25 passed. ESTADO_SISTEMA 4403 passed, exit
+0. Contrato v3 LF (4918 B, verificado con `git cat-file -s` y
+lectura binaria). verifica_gobernanza [OK].
+
+**Deuda activa (anotada, no oculta).** `00_ARRANQUE` 20305 B
+(margen 175 B) y `01_METODO` 20369 B (margen 111 B). Proximo
+contenido en cualquiera de los dos obliga recorte o division.
+
+**Recuperable.** git log --oneline | grep -E
+'1335cb72|7e4fe196|ded662ed' devuelve los commits completos.
+
+**Pendiente residual (vivo hoy).** Los 3 items de verificacion prod
+siguen OPEN: `VERIFICAR-WALK-BACK-PROD`, `VERIFICAR-IAE-CONSENSO-PROD`,
+`VERIFICAR-WYCKOFF-PHASE-PROD`. Proximo run scheduled real los cierra
+con la misma descarga del artifact.
+

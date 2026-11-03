@@ -44,6 +44,64 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-03 — Sesion 27 parte 5: consolidacion documental
+
+**Objetivo.** Tras el fix WYCKOFF-PHASE-SEMANTICA, dejar la
+documentacion al dia: contrato nuevo de la Matriz de Regimen
+schema v3, arquitectura actualizada, 2 lecciones nuevas, tests
+adaptados a v3, ESTADO_SISTEMA regenerado.
+
+**Hecho.**
+
+1. `1335cb72` test(schema): adaptar 4 tests al schema v3.
+   T1 y T3 esperaban `.schema == "2"`; T3 renombrado v1_a_v3;
+   T2 usa v3 (no v2) para `sin backup`; T6 usa v3 (mismo que
+   spec). `test_matriz_nota_fase_dominante` adaptado a la nota
+   nueva (RANGE no es fase). ESTADO_SISTEMA regenerado:
+   4396 -> 4403 passed (+7: 3 IAE + 4 sector_regime).
+
+2. `7e4fe196` docs(arquitectura):
+   - `docs/auditoria/sector_regime_matrix_v3.md` nuevo (4918 B,
+     LF). Contrato semantico del schema v3: 3 columnas nuevas
+     (`wyckoff_signal_phase`, `_share`, `_n`), pool de 6 fases con
+     senal, desempate determinista, invariantes I1-I5, ejemplo con
+     datos reales del 30-10, rollback.
+   - `02_ARQUITECTURA.md` L216-224: bloque nuevo distinguiendo
+     `wyckoff_phase` (moda bruta con RANGE, auditoria) vs
+     `wyckoff_signal_phase` (moda de fases con senal, informativa).
+   - `01_METODO.md` seccion 3: leccion "Escala de `pct_*`: 0-100,
+     no 0-1". Bug real del render: `* 100` daba 2000% donde el
+     valor era 20%. Detectado en probe antes de commitear.
+
+3. `ded662ed` docs(metodo): leccion "`Out-String` convierte
+   `\n` a `\r\n` al capturar". Dos diagnosticos erroneos en la
+   misma sesion por usar `git cat-file -p | Out-String` para
+   verificar EOL de blob. El blob estaba bien (LF, 4918 B); el
+   instrumento de medida estaba roto. Regla: leer binario con
+   `[IO.File]::ReadAllBytes` o usar `git ls-files --eol` / `git
+   cat-file -s`.
+
+**Verificacion.** pytest 25 passed (6 writer + 1 nota + 9
+sector_matrix + 9 mas). ESTADO_SISTEMA 4403 passed, exit 0.
+Blob en HEAD del contrato v3: 4918 B, LF (verificado con
+`git cat-file -s` y lectura binaria). verifica_gobernanza [OK]
+tras cada commit.
+
+**Pendiente / deuda activa.**
+- `00_ARRANQUE` 20305 B (margen 175 B). Proximo contenido
+  obliga recorte o division.
+- `01_METODO` 20369 B (margen 111 B). Idem.
+- 3 items de verificacion prod OPEN (WALK-BACK, IAE-CONSENSO,
+  WYCKOFF-PHASE). Proximo run scheduled real los cierra con la
+  misma descarga.
+
+**Commits.** `1335cb72`, `7e4fe196`, `ded662ed`.
+
+**Proximo paso sugerido.** Esperar run scheduled real (slot
+23:17 UTC del 03-11 + delays). Verificar los 3 items con una
+descarga del artifact daily-report. Tras verificacion, recorte
+de `00_ARRANQUE` y `01_METODO` antes de anadir contenido nuevo.
+
 ### 2026-11-03 — Sesion 27 parte 4: fase dominante excluye RANGE
 
 **Objetivo.** El usuario pregunta por que la columna 'Fase dominante'
