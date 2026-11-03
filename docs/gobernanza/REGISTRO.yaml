@@ -6993,3 +6993,137 @@ items:
     render), 7f1b6e4f (contrato + REGISTRO). Probe local con
     manifest real 03-11 confirma el comportamiento esperado. Falta
     run real post-fix.
+
+- id: IAE-CONSENSO-VS-SUM-DELTA
+  tipo: bug
+  ciclo: '2026-11-03'
+  estado: FIXED
+  commit: '5bbc7681'
+  test: tests/test_iae_per_ticker.py
+  descripcion: |
+    Hallazgo 9.3 de auditoria externa (2026-11-03). El reporte
+    publicaba tickers clasificados contra sus propios recuentos en
+    la seccion 'Cambio neto por ticker (13F)'.
+    - En 'Acumulando' (encabezado 'mas gestores aumentan que
+      reducen') aparecian AAPL (2544/2885), GOOGL (2291/2529),
+      GOOG (1970/2251), HD (1673/1748), PG (1641/1684).
+    - En 'Distribuyendo' (encabezado 'mas gestores reducen que
+      aumentan') aparecian CB (826/790), NOW (946/769), VLO
+      (707/705), WDC (590/589), EOG (661/575), LHX (688/562).
+    11 casos. Causa raiz: el filtro de top_accumulating usaba
+    sum_delta > 0 (variacion neta de ACCIONES) y top_distributing
+    sum_delta < 0. El encabezado declara consenso de GESTORES
+    (n_increase vs n_decrease). El codigo contradecia su propio
+    docstring ('ranking por consenso, no por suma bruta'). El
+    ranking SI era por consenso; el filtro no.
+  evidencia: |
+    Reporte del run scheduled real 41575090209 (03-11 03:55 UTC,
+    HEAD db8ed703): tablas 'Cambio neto por ticker (13F)' del
+    artifact daily-report. Los 11 tickers aparecen con sus
+    recuentos n_increase/n_decrease cruzados. El primer run real
+    que publico la seccion fue este (los scheduled del 01-11 y
+    02-11 fueron gate=false por fin de semana).
+  verificacion: |
+    Fix 5bbc7681: top_accumulating filtra n_increase > n_decrease;
+    top_distributing filtra n_increase < n_decrease. sum_delta se
+    mantiene para desempate del orden. 3 tests nuevos:
+    test_top_accumulating_filtra_por_consenso_no_por_sum_delta,
+    test_top_distributing_filtra_por_consenso_no_por_sum_delta,
+    test_consistencia_encabezado_y_columnas (verifica que toda
+    fila cumple la condicion del encabezado).
+    pytest test_iae_per_ticker.py: 12 passed (3 nuevos). Bloque
+    IAE: 142 passed. Probe con los 11 casos reales del run: los 5
+    de Acumulando pasan a Distribuyendo, los 6 de Distribuyendo
+    pasan a Acumulando. Controles MSFT/NVDA/HON/CAT se mantienen.
+    pyflakes + compileall silencio. verifica_gobernanza [OK].
+    VERIFIED_IN_PRODUCTION: pendiente de confirmar en el proximo
+    run scheduled real (cuando la seccion IAE publique con el
+    codigo nuevo; los 11 tickers deben aparecer en la tabla
+    correcta).
+
+- id: TEMPORAL-EFFECTIVE-DATE-POR-MODULO
+  tipo: deuda_tecnica
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: |
+    Hallazgo 10.1 de auditoria externa (2026-11-03). El reporte
+    publica una sola `effective_date_equity` global (2026-10-30 en
+    el run 41575090209), mientras distintos modulos declaran
+    fechas distintas en Data Freshness: Sector Breadth /
+    Concentration / Evidence Matrix / Sector Regime Matrix /
+    Wyckoff a 30/10; Yahoo / CBOE / Cross Asset / Sector
+    Persistence / Rank History a 02/11; FINRA a 12/10; SEC N-PORT
+    a 30/06. Un `temporal_coherence` global no captura esa mezcla.
+  siguiente_accion: |
+    Decision de producto: (a) `temporal_coherence` global pasa a
+    ser la PEOR de las coherencias por modulo (conservador), o
+    (b) cada bloque del reporte declara su propia fecha efectiva
+    en su encabezado o nota. (a) es barato, (b) es correcto. Sin
+    decision, no tocar. El fix WALK_BACK (3c488a22..095e8789) NO
+    cubre esto: resuelve el warning INCOHERENT espurio, no la
+    declaracion por modulo. Estimacion (b): 1-2 sesiones, toca
+    provenance + render_provenance + dict de build_provenance.
+  evidencia: |
+    Reporte 41575090209: L11 effective_date_equity=2026-10-30,
+    L111-134 tabla Data Freshness con fechas heterogeneas. L108
+    'Sector Breadth' 30/10. L135 'Yahoo Finance' 02/11. El
+    auditor pide: 'no publicar un diagnostico sectorial
+    consolidado como plenamente actualizado cuando
+    temporal_coherence = INCOHERENT'. Nota: el fix WALK_BACK
+    elimino ese INCOHERENT espurio; queda la declaracion por
+    modulo.
+
+- id: MTE-DEGRADED-STATE
+  tipo: deuda_tecnica
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: |
+    Hallazgo 10.2 de auditoria externa (2026-11-03). El MTE
+    publica un escenario (RECESSION, Confidence 0.48, estado
+    UNCONFIRMED) con `Futures Status: STALE` (inputs de futuros
+    ausentes o desactualizados), sin degradar la confianza por ese
+    estado. El auditor propone tres estados: VALID (inputs
+    criticos disponibles), DEGRADED (secundarios ausentes),
+    INVALID (criticos insuficientes).
+  siguiente_accion: |
+    Decision de producto. Diseno de contrato, no bug. Coste: 1
+    sesion diseno + 1-2 implementacion. Afecta a SCENARIO_RULES,
+    confianza publicada, y todos los consumidores del MTE. Sin
+    urgencia: `futures_status=STALE` visible en el run 41575090209
+    una sola vez (no cronico). El escenario no se publica como
+    VALID hoy (es UNCONFIRMED), pero el auditor tiene razon en que
+    falta un estado explicito DEGRADED que penalice la confianza.
+  evidencia: |
+    Reporte 41575090209, bloque MTE. `Futures Status: STALE`
+    visible junto a Confidence 0.48 sin penalizacion. Auditor:
+    'no presentar un escenario como validado cuando el estado de
+    sus fuentes criticas sea degradado'.
+
+- id: FRESHNESS-POR-BLOQUE
+  tipo: deuda_tecnica
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: |
+    Hallazgo 10.3 de auditoria externa (2026-11-03). La tabla
+    compacta 'Data Freshness' usa `CURRENT` como umbral por fuente
+    (FRED, FINRA, CBOE, Yahoo), no como actualizacion a la sesion.
+    Un gestor puede leer `CURRENT` y creer que el dato es del dia
+    cuando puede ser de hace 3-30 dias. El auditor pide que el
+    lector sepa cuando una conclusion depende de informacion de
+    una sesion anterior.
+  siguiente_accion: |
+    Decision de producto. Observabilidad, no bug. El sistema ya
+    tiene la informacion (tabla completa en Data Freshness,
+    effective_date_equity por fuente). Falta presentacion: que
+    cada bloque del reporte cite las fechas efectivas de las
+    fuentes que lo alimentan, o que la tabla compacta distinga
+    'CURRENT al umbral de la fuente' vs 'sesion actual'. Coste
+    medio-alto. No urgente.
+  evidencia: |
+    Reporte 41575090209: tabla compacta L107-113 con CURRENT
+    para Yahoo (02/11), CBOE (02/11), FRED (30/10), FINRA (12/10).
+    Tabla completa L111-135 con 25 fuentes y frecuencia explicita.
+    Auditor: 'el problema no es que todos los datos deban tener
+    frecuencia diaria. El problema es que el gestor necesita saber
+    cuando una conclusion depende de informacion que termina en
+    una sesion anterior'.
