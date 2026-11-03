@@ -7,116 +7,112 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-11-02, sesion 26)
+## 1. ESTADO AL CIERRE (2026-11-03, sesion 27)
 
-HEAD: `5742f41a` (consultar `git log --oneline -1` para el actual).
+HEAD: `ced5b702` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2.
-       Al cierre sesion 26: 4377 passed, 2 skipped (suite completa).
+       Al cierre sesion 27: sin regeneracion (no se toco codigo
+       de tests en S27; el conteo vigente esta en ESTADO_SISTEMA).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 266 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 267 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 
 Fase 2 (auditoria por bloques): COMPLETA. B1-B8 auditados.
-  - B1 (temporal): WONT_FIX, 0 bugs (13 modulos).
-  - B2 (pipelines descarga): WONT_FIX, 0 bugs (28 modulos).
-  - B3 (Wyckoff): 1 FIXED (3a516268, renders huerfanos).
-  - B4 (motores/regimen): 4 FIXED + 2 WONT_FIX (B4-propia-1/2).
-  - B5 (outputs/persistencia): 2 WONT_FIX razonados.
-  - B6 (reporte): CERRADO, 20 FIXED + 0 OPEN heredados.
-  - B7 (IAE): WONT_FIX, 0 bugs (36 modulos).
-  - B8 (scripts audit): WONT_FIX, 0 bugs (19 scripts).
-
-Fase 0 (inventario hardcodes) + Fase 1 (clasificacion): COMPLETAS.
-  302 hits / 15 tipos. 2 fixes reales (336b48ab). Resto NO_BUG.
-
+Fase 0 + Fase 1: COMPLETAS.
 Transversales: cerrados.
-  - FASE0-BARRIDO-SCRIPTS: WONT_FIX razonado.
-  - FASE2-BARRIDO-CONSUMIDORES-ROTOS: FIXED (39df77b0, 27 entry points CI).
-  - DT-NOW-HELPER-HUERFANO: FALSE_POSITIVE.
-  - IWM-HOLDINGS-EXPANSION: WONT_FIX razonado.
-
 Analisis economico 30-oct (FASE-A): 5 items cerrados.
-  - FASE-A-COBERTURA-DUAL: FIXED (50ab0e1f). Cobertura dual derivada.
-  - FASE-A-FLUJOS-CAPAS-DERIVADAS: FIXED (180f0ad6).
-  - FASE-A-INDEPENDENCIA-ESTADISTICA: FIXED (180f0ad6).
-  - FASE-A-IAE-PER-TICKER: FIXED (c0f2a204). 13F por ticker.
-  - FASE-A-AMPLIAR-UNIVERSO-PESO: FIXED (bcd31652, opcion 90%).
 
-Sesion 26: 2 frentes cerrados end-to-end.
+Sesion 26 (2026-11-02): 2 frentes cerrados end-to-end.
   - GUARD-COVERAGE-TEST-CONTAMINA-STATE: FIXED (1f935b1d, cd6b5bee).
-    Test contaminaba outputs/state real. Centinela activo.
   - WYCKOFF-MD-FILTRO-WEIGHT: FIXED (8b57bd73, 0ac42079). Filtro
     MIN_WEIGHT_PCT=0.5 en .md, CSVs completos como artifact.
-  - Docs derivados: HANDOFF 442bbb3d, 01_METODO 713f8d3d,
-    ESTADO_SISTEMA d372dd9e+30b5e9de, VERIFICAR-SCHEDULED 0e765d10.
+
+Sesion 27 (2026-11-03): revision de los 10 workflows.
+  - H2+H4 en daily_run.yml: FIXED (e351d486). Glob
+    sec_nport_positions_*.csv + continue-on-error qqq_sec_nport.
+  - H1 en 07_RUNBOOK.md: FIXED (d84ca390). Reestructurada seccion 2
+    (sec_nport semanal, macro_manual + qqq_sec_flow documentados).
+    Centinela tests/test_runbook_vs_workflows.py previene drift.
+  - VERIFICAR-SCHEDULED-387938E6: FIXED con run 41575090209
+    (03-11 03:55 UTC, 21 min, gate=true, HEAD db8ed703).
+    Confirma sesion 26 en produccion: 6/6 wyckoff CSVs, 2 notas
+    *Filtro:* (5/12 y 25/55), 0 fallbacks.
 
 Docs: 01_METODO dividido (01d_POWERSHELL_AUDITORIA.md). README sin
 cifras caducas. Regla chdir/__file__ en 01_METODO seccion 3.
 
-Pendientes vivos: 1 foco con fecha (VERIFICAR-SCHEDULED, 03-11) +
-1 OPEN auditoria (INVESTIGAR-TESTS, ROI bajo) + 2 BLOCKED_EXTERNAL
-+ 2 OPEN DICT3 (1 FIXED + 1 evidencia) + 4 observacionales con fecha
-+ 1 prioritaria (a) analista no abierta. Ver seccion 3.
+Pendientes vivos: 1 OPEN auditoria (INVESTIGAR-TESTS, ROI bajo) +
+2 BLOCKED_EXTERNAL + 1 OPEN DICT3 (evidencia) + 4 observacionales
+con fecha (06-nov, 10-nov x2, 17-nov, 20-nov) + 1 prioritaria (a)
+analista no abierta. Ver seccion 3.
 
 ---
-## 2. SESION 2026-11-02 (sesion 26): detalle
+## 2. SESION 2026-11-03 (sesion 27): detalle
 
-**Objetivo inicial.** Ninguno predefinido. Diagnostico por contexto
-(estado del sistema) derivó en dos frentes: (1) bug de test
-contaminando outputs/state; (2) peticion de producto (filtro weight
-en Wyckoff .md + CSVs descargables).
+**Objetivo.** Revisar los 10 workflows del repo (daily_run, ci_tests,
+health_check, 7 update_*) para detectar drift entre runbook, YAML y
+produccion. Sin cambio de producto.
 
-**Hecho (10 commits).**
+**Contexto previo.** Al arrancar, pull con 2 commits del bot
+(`db8ed703` update_macro_manual + `532bb4c2` Daily hist/state). El
+run scheduled real 41575090209 (03-11 03:55 UTC, 21 min, gate=true,
+HEAD `db8ed703`) confirma sesion 26 en produccion.
 
-1. **GUARD-COVERAGE-TEST-CONTAMINA-STATE** (`1f935b1d`, `cd6b5bee`).
-   test_guard_coverage_validation.py llamaba gc.main() sin monkeypatch
-   de RESULT_PATH. ROOT = Path(__file__).resolve().parents[1] es
-   absoluto en import-time; chdir(tmp_path) no lo reubica. Cada pytest
-   sobrescribia outputs/state/guard_coverage_result.json de produccion
-   con status=passed, run_id=0, target_session=2026-10-15 stale. Fix:
-   _run_guard(monkeypatch, tmp_path, ...) monkeypatchea RESULT_PATH.
-   5 tests (4 + centinela test_guard_no_escribe_state_real). Leccion
-   en 01_METODO seccion 3 (`713f8d3d`).
+**Hecho (3 commits de codigo + 2 docs).**
 
-2. **WYCKOFF-MD-FILTRO-WEIGHT** (`8b57bd73`, `0ac42079`). Peticion
-   producto: filtrar empresas con peso residual en el .md de Wyckoff
-   (SPY ~0.1%). Primer caso .md != .csv (antes eran 1:1). Productor
-   completo (indicators/wyckoff_holdings_report.py), consumidor filtra
-   con MIN_WEIGHT_PCT=0.5. Nota runtime n_filt/n_total + fallback
-   visible. Los 6 CSVs Wyckoff al artifact daily-report
-   (retention-days: 7). 5 tests nuevos. Impacto 2026-10-30:
-   usa_index_acc 12->5 (7 excluidos), usa_index_dist 55->25 (30
-   excluidos). Sector USA y EU sin cambio (weights >= 0.5% ya).
+1. **H2** (`e351d486`). daily_run.yml: el artifact daily-report
+   subia `outputs/history/sec_nport_positions.csv` (sin sufijo),
+   que nunca ha existido. Productor real (update_sec_nport_data.py)
+   escribe `sec_nport_positions_{quarter}.csv`. Existian Q2 y Q3.
+   Fix: glob `sec_nport_positions_*.csv`. Los 2 ficheros existentes
+   empiezan a viajar en el artifact.
 
-3. **HANDOFF corregido** (`442bbb3d`). L16/L115 "4358 passed" era
-   la suite filtrada, no la completa. DICT3-TOP20-COBERTURA estaba
-   como OPEN; REGISTRO lo tiene FIXED 0ab436d9 desde 2026-10-26.
-   Encabezado "OPEN heredados DICT3 (2)" -> (1).
+2. **H4** (`e351d486`). `validation/qqq_sec_nport_cross_validation.py`
+   es control DESCRIPTIVO (docstring: 'No emite senales'). Corria
+   sin continue-on-error: un schema raro en CSV auxiliar tumbaria
+   el run completo y bloquearia el reporte. Fix: continue-on-error
+   + comentario justificativo.
 
-4. **VERIFICAR-SCHEDULED corregido** (`0e765d10`). Los 3 slots
-   pre-cierre del 02-11 (41378292700, 41433782143, 41453249443)
-   fueron gate=false (1 min, sin artifact, TARGET_SESSION=2026-10-30
-   ya publicado). Item original asumia run real el lunes 02-11; falso.
-   Sigue OPEN, verificable 03-11 con primer run real gate=true.
+3. **H1** (`d84ca390`). 07_RUNBOOK.md documentaba `update_sec_nport`
+   como trimestral (dia 20), pero el YAML es semanal (miercoles
+   06:17 UTC) desde 2026-10-16 (dictamen H5). 18 dias mintiendo.
+   Ademas faltaban en el runbook `update_macro_manual` (diario) y
+   `update_qqq_sec_flow` (semestral 15-ene/jul). Seccion 2
+   reestructurada (2.1..2.4 con 2.3.1 nueva). Centinela nuevo
+   `tests/test_runbook_vs_workflows.py` (2 tests) previene drift
+   futuro: compara crons runbook-YAML y exige todos los update_*
+   documentados.
+
+4. **Cierre de VERIFICAR-SCHEDULED** (`041fecc7`). Item cerrado
+   FIXED con evidencia del run real: 41575090209 (21 min, gate=true,
+   HEAD db8ed703, 6/6 wyckoff CSVs, 2 notas *Filtro:*, 0 fallbacks).
+   Los 3 runs pre-cierre del 02-11 fueron gate=false (target
+   2026-10-30 ya publicado). Nuevo REVISION-WORKFLOWS-2026-11-03
+   FIXED documentando H1/H2/H4/H5 + H3 FALSE_POSITIVE.
+
+**Falsos positivos descartados (no ocultos).**
+- H3 (6 API keys parecian huerfanas en grep inicial): falso
+  positivo. Grep no cubria `data/providers/`; cada key tiene usos.
+- H5 (formato L266-287 inconsistente): YAML valido, cosmetico.
+  No accionable (refactor masivo sin valor).
 
 **Verificacion.**
-- Suite completa al cierre: 4377 passed, 2 skipped (ESTADO_SISTEMA.md).
-- pyflakes/compileall silencio.
+- Run real 41575090209: success, gate=true, artifact completo.
+- pytest -k workflow/runbook: 75 passed (40 pre + 35 ampliacion).
+- 2 tests centinela nuevos (runbook vs YAML).
+- yaml.safe_load: 10/10 workflows validos.
 - verifica_gobernanza [OK] tras cada commit.
-- poda_bitacora --check [OK] (11 sesiones + dia en curso).
-- Filtro Wyckoff verificado con probe sobre CSV reales (2 notas
-  *Filtro:* emitidas, 0 fallbacks).
+- poda_bitacora --check [OK] (11 sesiones + dia, 10-22 podado).
 
 **Pendiente al cierre.**
-- VERIFICAR-SCHEDULED: 03-11 verificar primer run real (gate=true,
-  duracion >= 10 min, headSha >= 387938e6, TARGET_SESSION coherente).
-- INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH OPEN (8 tests con
-  patron similar, no verificados).
-- Resto de pendientes vivos sin cambio. Ver seccion 3.
+- INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH: OPEN (8 tests, ROI
+  bajo, sesion dedicada).
+- DAILY-RUN-FAIL-40992758129: revisar 06-nov.
+- Observacionales: 10-nov x2, 17-nov, 20-nov.
 
 ---
 ## 3. PENDIENTES VIVOS
@@ -129,42 +125,33 @@ en Wyckoff .md + CSVs descargables).
 
 - **WYCKOFF-5BX**: n_confirmed_H20_complete >= 550 (~2027).
 
-### 3.2. OPEN heredados DICT3 (1)
+### 3.2. OPEN heredado DICT3 (1)
 
 - **DICT3-TOP20-COBERTURA**: FIXED `0ab436d9` (2026-10-26). 4 de 6
   acciones cerradas; A.2c desplegado condicionado. Pendiente
-  respuesta del auditor a doc 70-v2d sobre la parte restante.
+  respuesta del auditor a doc 70-v2d sobre parte restante.
 - **DICT3-H04-INTERVALS**: OPEN sin accion propia. Registro historico
   del rechazo del IC95 inferencial (dictamen H-04 2026-10-26).
   Se mantiene OPEN como evidencia.
 
-### 3.3. VERIFICAR-SCHEDULED-387938E6-2026-11-02 (verificable 03-11)
-
-- Item: 13 fixes sesiones 20-21 + fixes sesion 26 sin verificar en
-  prod. Los 3 runs scheduled del 02-11 son gate=false (pre-cierre,
-  TARGET_SESSION=2026-10-30 ya publicado).
-- 03-11: gh run list --workflow=daily_run.yml --limit 5. Verificar
-  conclusion=success, headSha >= 387938e6, duracion >= 10 min
-  (gate=false dura 1 min: excluir). Si verde, cerrar FIXED con
-  databaseId + headSha + duracion + TARGET_SESSION.
-
-### 3.4. INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH (OPEN, ROI bajo)
+### 3.3. INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH (OPEN, ROI bajo)
 
 - 8 tests que llaman main() del SUT sin monkeypatch de *_PATH.
 - Auditar caso por caso con evidencia empirica (mtime del artefacto
   real cambia tras pytest). Solo fixear los confirmados.
 - No bloquea CI. Sesion dedicada.
 
-### 3.5. Items OPEN observacionales (fechas)
+### 3.4. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |
 |---|---|---|
+| DAILY-RUN-FAIL-40992758129 | 2026-11-06 | 7 dias sin reaparecer -> WONT_FIX |
 | CRON-SLOTS-OBS | 2026-11-10 | Revision runs 20-10 a 10-11 |
 | SCHEDULER-DELAYS | 2026-11-10 | p95 delays |
 | RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
 | H5.3 | 2026-11-20 | Verificar cron trimestral 13F |
 
-### 3.6. Prioritaria analista 30-oct no abierta (decision producto)
+### 3.5. Prioritaria analista 30-oct no abierta (decision producto)
 
 - **FASE-A-REGIMEN-ECONOMIA-REAL** (no abierta como item): el analista
   pide bloque macro con datos oficiales (BEA PIB/PCE/renta, BLS IPC/
