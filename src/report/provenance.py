@@ -63,13 +63,25 @@ def _compute_validation_gate(vg):
 
 
 def _temporal_coherence(target_session, effective_date_equity,
-                        contract_max_lag_days=0):
+                        contract_max_lag_days=0,
+                        effective_is_walk_back=False):
     """H8 (2026-10-16, auditor): valida coherencia temporal del bloque.
 
-    Si target_session == effective_date -> 'OK'.
-    Si effective_date < target_session por <= max_lag_days -> 'LAG_ADMITTED'.
-    Si effective_date < target_session por > max_lag_days -> 'INCOHERENT'.
-    Si alguno falta -> 'N/D'.
+    Estados (orden de decision):
+      - t == e -> 'OK'
+      - e > t  -> 'ANOMALY'    (integridad, nunca walk-back)
+      - effective_is_walk_back -> 'WALK_BACK'  (pipeline retrocedio por
+        cobertura insuficiente en target; el gate lo acepto con
+        coverage_pct_effective >= umbral. El reporte lo declara con
+        nombre propio, distinto de LAG_ADMITTED e INCOHERENT.)
+      - lag <= max_lag_days -> 'LAG_ADMITTED'  (lag inherente a fuente)
+      - resto -> 'INCOHERENT'  (stale real, incoherencia no justificada)
+      - falta target o effective -> 'N/D'
+
+    WALK_BACK (2026-11-03, TEMPORAL-COHERENCE-WALK-BACK): la senal
+    `effective_is_walk_back` la aporta el caller a partir del manifest
+    (`effective_session_is_fallback=False` Y `effective != target`).
+    No se deriva de fechas: es una afirmacion explicita del pipeline.
     """
     if not target_session or not effective_date_equity:
         return "N/D"
@@ -82,6 +94,8 @@ def _temporal_coherence(target_session, effective_date_equity,
         return "OK"
     if e > t:
         return "ANOMALY"
+    if effective_is_walk_back:
+        return "WALK_BACK"
     lag = (t - e).days
     if lag <= contract_max_lag_days:
         return "LAG_ADMITTED"
@@ -117,6 +131,7 @@ def build_provenance(
     effective_date_equity=None,
     validation_gate_result=None,
     contract_max_lag_days=0,
+    effective_is_walk_back=False,
     env=None,
     generated_at=None,
 ) -> dict:
@@ -127,6 +142,12 @@ def build_provenance(
         target_session: str ISO o None.
         effective_date_equity: date | str | None.
         validation_gate_result: dict con passed, checks, errors, o None.
+        effective_is_walk_back: True si el pipeline resolvio
+            effective_date_equity mediante walk-back (cobertura
+            insuficiente en target, retroceso a ultima sesion con
+            cobertura >= umbral). El caller lo computa desde el
+            manifest: effective_session_is_fallback=False Y
+            effective != target. False por defecto (no walk-back).
         env: dict de env vars. Default os.environ.
         generated_at: str ISO. Default now UTC.
 
@@ -149,6 +170,7 @@ def build_provenance(
     _coh = _temporal_coherence(
         target_session, effective_date_equity,
         contract_max_lag_days=contract_max_lag_days,
+        effective_is_walk_back=effective_is_walk_back,
     )
     # H8 (2026-10-16, auditor): coherencia temporal. Si INCOHERENT con
     # validation_gate=10/10, es contradiccion: el gate no deberia haber
@@ -163,6 +185,7 @@ def build_provenance(
         "reference_date": reference_date,
         "effective_date_equity": effective_date_equity,
         "contract_max_lag_days": contract_max_lag_days,
+        "effective_is_walk_back": effective_is_walk_back,
         "temporal_coherence": _coh,
         "validation_gate": _gate,
         "generated_at": generated_at,

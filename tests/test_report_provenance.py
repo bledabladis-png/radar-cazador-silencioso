@@ -291,3 +291,63 @@ def test_is_gate_passed_none_false():
 def test_is_gate_passed_basura_false():
     assert not _is_gate_passed("10")
     assert not _is_gate_passed("10/10/10")
+
+
+# ============================================================
+# WALK_BACK (2026-11-03, TEMPORAL-COHERENCE-WALK-BACK)
+# ============================================================
+def test_coherencia_walk_back_es_estado_propio():
+    """effective < target con flag walk_back -> WALK_BACK, no INCOHERENT."""
+    from src.report.provenance import _temporal_coherence
+    r = _temporal_coherence(
+        "2026-11-02", "2026-10-30",
+        contract_max_lag_days=0, effective_is_walk_back=True,
+    )
+    assert r == "WALK_BACK"
+
+
+def test_coherencia_walk_back_no_aplica_si_effective_posterior():
+    """effective > target es ANOMALY aunque el flag sea True."""
+    from src.report.provenance import _temporal_coherence
+    r = _temporal_coherence(
+        "2026-10-30", "2026-11-02", effective_is_walk_back=True,
+    )
+    assert r == "ANOMALY"
+
+
+def test_coherencia_walk_back_no_aplica_si_effective_igual():
+    """t == e con flag walk_back -> OK (no hubo lag que explicar)."""
+    from src.report.provenance import _temporal_coherence
+    r = _temporal_coherence(
+        "2026-11-02", "2026-11-02", effective_is_walk_back=True,
+    )
+    assert r == "OK"
+
+
+def test_coherencia_sin_flag_sigue_incoherent():
+    """Regresion: sin flag, lag > 0 con max_lag=0 sigue INCOHERENT.
+    El fix no elimina la deteccion de incoherencia real."""
+    from src.report.provenance import _temporal_coherence
+    r = _temporal_coherence(
+        "2026-11-02", "2026-10-30",
+        contract_max_lag_days=0, effective_is_walk_back=False,
+    )
+    assert r == "INCOHERENT"
+
+
+def test_build_provenance_walk_back_no_marca_gate_incoherent():
+    """Flag walk_back + gate passed -> validation_gate sin (INCOHERENT)."""
+    vg = {"passed": True, "checks": ["a"] * 11, "errors": []}
+    p = build_provenance(
+        reference_date=None,
+        target_session="2026-11-02",
+        effective_date_equity="2026-10-30",
+        validation_gate_result=vg,
+        contract_max_lag_days=0,
+        effective_is_walk_back=True,
+        env={},
+    )
+    assert p["validation_gate"] == "11/11"
+    assert p["temporal_coherence"] == "WALK_BACK"
+    assert p["effective_is_walk_back"] is True
+    assert "INCOHERENT" not in p["validation_gate"]
