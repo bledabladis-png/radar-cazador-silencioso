@@ -7127,3 +7127,37 @@ items:
     frecuencia diaria. El problema es que el gestor necesita saber
     cuando una conclusion depende de informacion que termina en
     una sesion anterior'.
+
+- id: VERIFICAR-IAE-CONSENSO-PROD
+  tipo: frente
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: |
+    IAE-CONSENSO-VS-SUM-DELTA esta FIXED en codigo (5bbc7681) con
+    probe sobre los 11 casos del run 41575090209. Ningun run
+    scheduled post-fix ha publicado la seccion IAE 'Cambio neto
+    por ticker (13F)' con el codigo nuevo. Falta confirmar en
+    produccion que los 11 tickers del auditor salen en la tabla
+    correcta y que el encabezado es coherente con las columnas.
+  siguiente_accion: |
+    Proximo run scheduled real (gate=true, duracion >= 10 min):
+    - gh run list --workflow=daily_run.yml --limit 5 (identificar
+      el run con duracion >= 10 min).
+    - gh run download <id> -n daily-report.
+    - Localizar 'Cambio neto por ticker (13F)' en reporte_diario.md.
+    - Verificar los 5 casos: AAPL, GOOGL, GOOG, HD, PG NO en
+      'Acumulando'.
+    - Verificar los 6 casos: CB, NOW, VLO, WDC, EOG, LHX NO en
+      'Distribuyendo'.
+    - Verificar que toda fila de Acumulando cumple n_inc > n_dec
+      y toda fila de Distribuyendo n_inc < n_dec.
+    - Si verde: cerrar FIXED con databaseId + fecha.
+    - Si falla: reabrir IAE-CONSENSO-VS-SUM-DELTA.
+  evidencia: |
+    Ultimo run real (41575090209, 03-11 03:55 UTC) publico el bug:
+    11 tickers clasificados contra sus propios recuentos. Fix
+    commit 5bbc7681 + 3 tests centinela. Probe con los 11 casos
+    reales del run confirma el swap correcto (5 casos de
+    Acumulando pasan a Distribuyendo; 6 de Distribuyendo pasan a
+    Acumulando; controles MSFT/NVDA/HON/CAT se mantienen). Falta
+    run real post-fix.
