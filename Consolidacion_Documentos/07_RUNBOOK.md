@@ -24,11 +24,18 @@ elimina. Si un procedimiento se vuelve obsoleto, se tacha con fecha.
 
 ### 2.1. Cron diario
 
+Pipeline principal:
+
     Workflow:      daily_run.yml
     Cron (UTC):    5 slots: 23:17, 03:17, 05:17, 07:17, 11:17
     Proposito:     Pipeline principal
 
 health_check los verifica con severidad 0->OK, 1-2->WARN, 3+->FAIL.
+
+Actualizacion de macros FRED (independiente del pipeline):
+
+    update_macro_manual.yml         17 6 * * *            CEST 08:17
+      -> data/macro_manual/ (diario)
 
 ### 2.2. Cron semanal
 
@@ -36,9 +43,13 @@ health_check los verifica con severidad 0->OK, 1-2->WARN, 3+->FAIL.
     Cron (UTC):    lunes 06:47
     Proposito:     Termometro del sistema
 
+    update_sec_nport.yml            17 6 * * 3            CEST 08:17
+      (miercoles; reacciona en <=7 dias a la SEC)
+      -> outputs/history/sec_nport_*, qqq_nport_flow.csv
+
 ### 2.3. Cron trimestral (meses 1, 4, 7, 10)
 
-Disparan el dia 1 del mes (holdings) o el dia 20 (SEC):
+Disparan el dia 1 del mes (holdings):
 
     update_sector_holdings.yml      47 2 1 1,4,7,10 *    CEST 04:47
       -> data/etf_holdings.csv
@@ -46,8 +57,11 @@ Disparan el dia 1 del mes (holdings) o el dia 20 (SEC):
       -> data/index_holdings.csv
     update_european_holdings.yml    17 5 1 1,4,7,10 *    CEST 07:17
       -> data/index_holdings.csv
-    update_sec_nport.yml            17 6 20 1,4,7,10 *   CEST 08:17
-      -> outputs/history/sec_nport_*, qqq_nport_flow.csv
+
+### 2.3.1. Cron semestral (15 ene, 15 jul)
+
+    update_qqq_sec_flow.yml         17 6 15 1,7 *        CEST 08:17
+      -> outputs/history/qqq_sec_primary_flow.csv
 
 ### 2.4. Cron trimestral (meses 2, 5, 8, 11)
 
@@ -75,11 +89,13 @@ Los 4 workflows de §2.3 nunca se han disparado por schedule en el
 historial visible. Todos los runs conocidos son workflow_dispatch
 (9-sep, 25-ago).
 
-**Matiz operativo 1-oct-2026:** de los 4 workflows de la seccion, solo 3
-disparan el dia 1 (sector 04:47, index 06:17, european 07:17 CEST).
-`update_sec_nport` dispara el dia 20. El cron del 1-oct sera la primera
-ejecucion automatica de los 3 primeros; update_sec_nport tendra la
-suya el 20-oct.
+**Matiz operativo (historico 1-oct-2026, corregido 2026-11-03):** los
+3 workflows sector/index/european disparan el dia 1. `update_sec_nport`
+es SEMANAL (miercoles 06:17 UTC), no trimestral dia 20: la SEC publica
+N-PORT con latencia irregular y el cron semanal reacciona en <=7 dias
+(dictamen H5, 2026-10-16; YAML cambiado entonces, runbook actualizado
+2026-11-03 tras revision de workflows). Ver `update_sec_nport.yml`
+para el cron vigente. Test centinela: `tests/test_runbook_vs_workflows.py`.
 
 **Riesgo de colision el 1-oct:** `update_macro_manual` dispara DIARIO
 a `17 6 UTC` (06:17 CEST), justo cuando `european` lleva 1h corriendo.
