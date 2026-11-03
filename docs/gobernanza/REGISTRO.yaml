@@ -6919,3 +6919,43 @@ items:
     yaml.safe_load OK; 75 tests workflow verdes; 2 tests centinela
     nuevos.
   verificacion: VERIFIED_IN_PRODUCTION
+
+- id: TEMPORAL-COHERENCE-WALK-BACK
+  tipo: bug
+  ciclo: '2026-11-03'
+  estado: FIXED
+  commit: '1abddd73'
+  test: tests/test_report_provenance.py
+  descripcion: |
+    El reporte publicaba temporal_coherence=INCOHERENT (y gate
+    11/11 (INCOHERENT)) en runs scheduled donde el pipeline aplico
+    walk-back sano: cobertura insuficiente en target, retroceso a
+    la ultima sesion con coverage_pct_effective >= 0.90, gate lo
+    acepta. Causa raiz: dos criterios incompatibles sobre el mismo
+    hecho. Gate: coverage_pct_effective >= umbral. Provenance:
+    contract_max_lag_days=0 estricto. Detectado en run 41575090209
+    (03-11 03:55 UTC, HEAD db8ed703, target=2026-11-02,
+    effective=2026-10-30, lag=3d).
+  evidencia: |
+    Run real 41575090209: reporte con INCOHERENT y gate 11/11
+    (INCOHERENT). Manifest stock_prices: last_date=2026-11-02,
+    coverage_pct_last=0.7698, effective_session=2026-10-30,
+    coverage_pct_effective=1.0, effective_session_is_fallback=False.
+    El propio codigo (provenance.py L153-157, H8 2026-10-16) lo
+    marcaba como 'contradiccion: el gate no deberia haber pasado'
+    sin resolverla. El reporte (lo que ve el usuario) llevaba
+    mintiendo desde la introduccion de walk-back por
+    GUARD-COVERAGE-LAST-DATE-PARCIAL (a692fafb, 2026-10-31).
+  verificacion: |
+    4 commits: 3c488a22 (estado WALK_BACK en _temporal_coherence +
+    infer_walk_back), e25e051d (run.py cablea el flag),
+    1abddd73 (nota explicativa en render_provenance), este commit
+    (contratos + item). Contrato semantico:
+    docs/auditoria/temporal_coherence_walk_back_v1.md. Enmienda
+    gate: daily_run_gate_enmienda_v1_3.md. 18 tests nuevos en
+    tests/test_report_provenance.py (45 passed). Probe con manifest
+    real 03-11: flag=True -> WALK_BACK, gate sin (INCOHERENT);
+    flag=False -> INCOHERENT (deteccion real preservada).
+    pyflakes + compileall silencio. verifica_gobernanza [OK].
+    VERIFIED_IN_PRODUCTION: pendiente de confirmar en el proximo
+    run scheduled con walk-back (proximo slot con Close parcial).
