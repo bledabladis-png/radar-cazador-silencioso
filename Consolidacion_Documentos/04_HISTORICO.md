@@ -3022,3 +3022,76 @@ ningun run scheduled post-fix ha publicado. Verificar en el proximo
 scheduled real con walk-back que el reporte sale WALK_BACK y no
 INCOHERENT. Si falla, reabrir TEMPORAL-COHERENCE-WALK-BACK.
 
+### 2026-11-03 - Auditoria externa 11-03: IAE consenso vs sum_delta
+
+**Objetivo.** Responder al informe de auditoria externa 2026-11-03
+(4 hallazgos: 9.3, 10.1, 10.2, 10.3). 9.3 es bug real, los otros 3
+deuda de producto/diseno.
+
+**Bug 9.3 (FIXED, `5bbc7681`).** La seccion 'Cambio neto por ticker
+(13F)' publicaba 11 tickers contra sus propios recuentos. En
+'Acumulando' con n_increase < n_decrease: AAPL (2544 vs 2885),
+GOOGL (2291 vs 2529), GOOG (1970 vs 2251), HD (1673 vs 1748), PG
+(1641 vs 1684). En 'Distribuyendo' con n_increase > n_decrease: CB
+(826 vs 790), NOW (946 vs 769), VLO (707 vs 705), WDC (590 vs 589),
+EOG (661 vs 575), LHX (688 vs 562).
+
+**Causa raiz.** El filtro de `top_accumulating` usaba `sum_delta >
+0` y `top_distributing` `sum_delta < 0` (variacion neta de
+ACCIONES). El encabezado de las tablas dice 'mas gestores
+aumentan/reducen' (consenso de GESTORES). Dos metricas distintas
+que el codigo mezclaba. Un ticker con 2544 aumentando y 2885
+reduciendo puede tener sum_delta > 0 si los que aumentan lo hacen
+con mas acciones. El ranking SI era por consenso (n_increase /
+n_decrease desc); solo el filtro no. El docstring del modulo
+declaraba 'ranking por consenso, no por suma bruta'. Codigo
+contradecia su propio contrato desde `c0f2a204` (01-11). Primer run
+que publico la seccion fue 41575090209 (03-11); los scheduled del
+01-11 y 02-11 fueron gate=false.
+
+**Fix.** Filtro por consenso: `top_accumulating` requiere
+n_increase > n_decrease; `top_distributing` n_increase < n_decrease.
+sum_delta se mantiene para desempate del orden. 3 tests nuevos:
+top_accumulating filtra por consenso, top_distributing filtra por
+consenso, consistencia encabezado-columnas. Gap detectado en tests
+existentes: verificaban orden pero no filtro; ningun test cubria
+`n_inc<n_dec con sum_delta>0`.
+
+**3 deudas OPEN (decision de producto).**
+
+1. `TEMPORAL-EFFECTIVE-DATE-POR-MODULO` (10.1): el reporte sigue con
+   una sola `effective_date_equity` mientras modulos declaran fechas
+   heterogeneas en Data Freshness (Sector Breadth 30/10, Yahoo
+   02/11, FINRA 12/10, SEC N-PORT 30/06). El fix WALK_BACK resuelve
+   el warning espurio, no la declaracion por modulo. Decision:
+   coherencia global conservadora (peor de las coherencias) vs fecha
+   por bloque. 1-2 sesiones, toca provenance + render_provenance.
+
+2. `MTE-DEGRADED-STATE` (10.2): MTE publica `Futures Status: STALE`
+   sin degradar confianza (RECESSION, Confidence 0.48). Auditor
+   propone VALID/DEGRADED/INVALID. Diseno de contrato. Afecta a
+   SCENARIO_RULES y consumidores del MTE. 1 sesion diseno + 1-2
+   implementacion. Sin urgencia (STALE visible una vez).
+
+3. `FRESHNESS-POR-BLOQUE` (10.3): la tabla compacta 'Data Freshness'
+   usa `CURRENT` como umbral por fuente (FRED, FINRA, CBOE, Yahoo),
+   no como actualizacion a la sesion. El sistema ya tiene la
+   informacion (tabla completa con fechas exactas); falta
+   presentacion por bloque. Observabilidad, no bug. Coste
+   medio-alto. No urgente.
+
+**Verificacion.** pytest test_iae_per_ticker.py 12 passed (3
+nuevos). Bloque IAE 142 passed. Probe con los 11 casos reales:
+swap correcto (5 pasan a Distribuyendo, 6 a Acumulando).
+Controles MSFT/NVDA/HON/CAT se mantienen. pyflakes + compileall
+silencio. verifica_gobernanza [OK]. REGISTRO 269 -> 274 items.
+
+**Recuperable.** git log --oneline | grep -E
+'5bbc7681|f7b823dc|9766714f' devuelve los commits completos.
+
+**Pendiente residual (vivo hoy).** `VERIFICAR-IAE-CONSENSO-PROD`
+OPEN: verificar en el proximo run scheduled real que los 11
+tickers salen en la tabla correcta. `VERIFICAR-WALK-BACK-PROD`
+OPEN (sin cambio). Los 3 items de auditoria (10.1/10.2/10.3) sin
+decision de producto aun.
+

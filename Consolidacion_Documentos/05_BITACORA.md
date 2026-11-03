@@ -44,6 +44,78 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-03 — Sesion 27 parte 3: auditoria externa 11-03 (IAE consenso)
+
+**Objetivo.** Responder al informe de auditoria externa 2026-11-03.
+El auditor trae 4 hallazgos (9.3, 10.1, 10.2, 10.3). Prioridad:
+9.3 es bug real, los otros 3 son deuda de producto/diseno.
+
+**Bug real 9.3 (FIXED).** El reporte publicaba 11 tickers
+clasificados contra sus propios recuentos en 'Cambio neto por
+ticker (13F)':
+- En 'Acumulando' con mas reduciendo que aumentando: AAPL (2544
+  vs 2885), GOOGL (2291 vs 2529), GOOG (1970 vs 2251), HD (1673
+  vs 1748), PG (1641 vs 1684).
+- En 'Distribuyendo' con mas aumentando que reduciendo: CB (826
+  vs 790), NOW (946 vs 769), VLO (707 vs 705), WDC (590 vs 589),
+  EOG (661 vs 575), LHX (688 vs 562).
+Causa raiz: `top_accumulating` filtraba `sum_delta > 0` y
+`top_distributing` `sum_delta < 0` (variacion neta de ACCIONES),
+pero el encabezado dice 'mas gestores aumentan/reducen' (consenso
+de GESTORES, n_increase vs n_decrease). El ranking SI era por
+consenso; solo el filtro no. El docstring del modulo lo declaraba
+('ranking por consenso, no por suma bruta'). Codigo contradecia su
+propio contrato desde `c0f2a204` (01-11). Primer run que publico la
+seccion fue 41575090209 (03-11); los scheduled del 01-11 y 02-11
+fueron gate=false (fin de semana).
+
+**Fix 9.3.** `5bbc7681`: filtro por consenso (n_inc>n_dec en
+acc; n_inc<n_dec en dis). `sum_delta` sigue para desempate del
+orden. 3 tests centinela:
+- `test_top_accumulating_filtra_por_consenso_no_por_sum_delta`.
+- `test_top_distributing_filtra_por_consenso_no_por_sum_delta`.
+- `test_consistencia_encabezado_y_columnas` (toda fila cumple el
+  encabezado de su tabla).
+Probe con los 11 casos reales del run: los 5 pasan a Distribuyendo,
+los 6 pasan a Acumulando. Controles MSFT/NVDA/HON/CAT se mantienen.
+Gap de tests detectado: los existentes verificaban ORDEN pero no
+FILTRO. Caso `n_inc<n_dec con sum_delta>0` no estaba cubierto.
+
+**3 deudas OPEN (decision de producto, no codigo).**
+- `TEMPORAL-EFFECTIVE-DATE-POR-MODULO` (10.1): el reporte sigue
+  con una sola `effective_date_equity` mientras modulos declaran
+  fechas heterogeneas en Data Freshness. El fix WALK_BACK resuelve
+  el warning espurio, no la declaracion por modulo. Decision:
+  coherencia global conservadora vs fecha por bloque. 1-2 sesiones.
+- `MTE-DEGRADED-STATE` (10.2): MTE publica `STALE` sin degradar
+  confianza. Auditor propone VALID/DEGRADED/INVALID. Diseno de
+  contrato. 1 sesion diseno + 1-2 implementacion. Sin urgencia:
+  STALE visible una vez.
+- `FRESHNESS-POR-BLOQUE` (10.3): `CURRENT` es umbral por fuente,
+  no actualidad. Auditor pide declarar por bloque cuando una
+  conclusion depende de datos de sesion anterior. Observabilidad,
+  no bug. El sistema ya tiene la informacion; falta presentacion.
+
+**Verificacion.** pytest test_iae_per_ticker.py 12 passed (3
+nuevos). Bloque IAE 142 passed. Probe con los 11 casos reales del
+run 41575090209: swap correcto. pyflakes + compileall silencio.
+verifica_gobernanza [OK]. REGISTRO 269 -> 274 items (9.3 FIXED,
+10.1/10.2/10.3 OPEN, VERIFICAR-IAE-CONSENSO-PROD OPEN).
+
+**Commits.** `5bbc7681`, `f7b823dc`, `9766714f`.
+
+**Pendiente.** `VERIFICAR-IAE-CONSENSO-PROD` OPEN: verificar en
+el proximo run scheduled real que los 11 tickers salen en la tabla
+correcta. `VERIFICAR-WALK-BACK-PROD` OPEN (sin cambio). Resto sin
+cambio (06-nov, 10-nov x2, 17-nov, 20-nov, INVESTIGAR-TESTS,
+2 BLOCKED_EXTERNAL).
+
+**Proximo paso sugerido.** El proximo run scheduled real (post-23:17
+UTC del 03-11) verifica AMBOS items: `VERIFICAR-WALK-BACK-PROD`
+(si hubo walk-back) y `VERIFICAR-IAE-CONSENSO-PROD` (siempre que la
+seccion IAE publique). Los 11 tickers del auditor deben estar en la
+tabla correcta. Si falla, reabrir IAE-CONSENSO-VS-SUM-DELTA.
+
 ### 2026-11-03 — Sesion 27: revision de los 10 workflows
 
 **Objetivo.** Tras cerrar sesion 26, revisar los 10 workflows del repo
