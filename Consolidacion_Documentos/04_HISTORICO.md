@@ -2912,3 +2912,51 @@ MONKEYPATCH-PATH (8 tests con patron similar, no verificados),
 VERIFICAR-SCHEDULED (primer run real gate=true 03-11), y los 4
 items observacionales con fecha (06-nov, 10-nov x2, 17-nov, 20-nov).
 
+### 2026-11-03 - Revision de workflows: 3 hallazgos reales
+
+**Objetivo.** Auditar los 10 workflows del repo (daily_run, ci_tests,
+health_check, 7 update_*) tras cerrar sesion 26. Detectar drift entre
+runbook, YAML y produccion. Sin cambio de producto.
+
+**Verificacion previa.** Primer run scheduled real post-cierre 02-11:
+41575090209 (03-11 03:55 UTC, 21 min, gate=true, HEAD db8ed703).
+Confirma fixes sesion 26 en produccion: 6/6 wyckoff CSVs en artifact,
+reporte_diario.md con 2 notas *Filtro:* (5/12 y 25/55), 0 fallbacks.
+Item VERIFICAR-SCHEDULED-387938E6 cerrado FIXED con esta evidencia.
+
+**Hecho.**
+
+1. H1 (runbook desfasado, `d84ca390`): 07_RUNBOOK.md documentaba
+   `update_sec_nport` como trimestral dia 20, pero el YAML era
+   semanal miercoles desde 2026-10-16 (dictamen H5). 18 dias
+   mintiendo. Ademas faltaban en el runbook `update_macro_manual`
+   (diario) y `update_qqq_sec_flow` (semestral). Seccion 2
+   reestructurada (2.1..2.4 con 2.3.1 nueva). Nuevo centinela
+   `tests/test_runbook_vs_workflows.py` (2 tests) previene
+   regresion: compara crons runbook-YAML y exige todos los
+   update_*.yml documentados.
+
+2. H2 (upload huerfano, `e351d486`): daily_run.yml subia
+   `sec_nport_positions.csv` (sin sufijo) que nunca ha existido.
+   Los ficheros reales son `_2026q2`/`_2026q3` (productor en
+   update_sec_nport_data.py). Fix: glob `sec_nport_positions_*.csv`.
+
+3. H4 (fail-loud accidental, `e351d486`): qqq_sec_nport_cross_
+   validation.py es control DESCRIPTIVO (docstring explicito).
+   Corria sin continue-on-error: un schema raro en CSV auxiliar
+   tumbaria el run completo y bloquearia el reporte. Fix:
+   continue-on-error: true + comentario justificativo.
+
+**Falsos positivos descartados (no ocultos).**
+- H3 (API keys parecian huerfanas): grep inicial no cubria
+  data/providers/; cada key tiene usos reales.
+- H5 (formato inconsistente L266-287): YAML valido, cosmetico.
+
+**Recuperable.** git log --oneline | grep -E
+'e351d486|d84ca390|041fecc7' devuelve los commits completos.
+
+**Pendiente residual (vivo hoy).** INVESTIGAR-TESTS-MAIN-SIN-
+MONKEYPATCH-PATH (8 tests con patron similar, no verificados), y
+los 4 items observacionales con fecha (06-nov, 10-nov x2, 17-nov,
+20-nov). 2 BLOCKED_EXTERNAL sin accion propia.
+
