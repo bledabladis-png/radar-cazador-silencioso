@@ -91,3 +91,64 @@ Estas son las reglas que hemos aprendido rompiendo cosas. Se aplican.
 - **Here-string de 500+ lineas se descarta silenciosamente al pegar en PowerShell.** Incluso con el patron `WriteAllText` correcto. Sintoma: no se escribe nada, `git status` no muestra el fichero. Solucion: escribir en chunks de ~25-50 lineas (seccion 10). Verificar con `Test-Path` + `(Get-Item $path).Length` tras cada chunk.
 
 ---
+
+## Lecciones S26-S27
+
+### `monkeypatch.chdir(tmp_path)` no reubica paths absolutos calculados en import-time
+
+Bug real 2026-11-02 (`GUARD-COVERAGE-TEST-CONTAMINA-STATE`, commit
+`1f935b1d`): un test llamaba `gc.main()` sin monkeypatchear `RESULT_PATH`.
+`ROOT = Path(__file__).resolve().parents[1]` es absoluto en import-time;
+`chdir` no lo mueve. Cada ejecucion del test sobrescribia
+`outputs/state/guard_coverage_result.json` de produccion con
+`status=passed, ok=true, run_id=0, target_session=2026-10-15`.
+
+Regla: si el SUT exporta `RESULT_PATH`/`OUT_PATH`/`RECEIPTS_PATH`/`*_DIR`
+a nivel de modulo, el test debe hacer las DOS cosas:
+
+1. `monkeypatch.chdir(tmp_path)` (para paths relativos derivados del cwd).
+2. `monkeypatch.setattr(<modulo>, "<CONSTANTE>", tmp_path / "...")` (para
+   paths absolutos exportados, que no dependen del cwd).
+
+`chdir` no sustituye al monkeypatch del simbolo. Test centinela recomendado:
+verificar que el path real del repo no cambia de `mtime` tras ejecutar el
+SUT (`test_guard_no_escribe_state_real`,
+`tests/test_guard_coverage_validation.py`).
+
+### Escala de las columnas `pct_*` en outputs/history: 0-100, no 0-1
+
+Bug real 2026-11-03 (WYCKOFF-PHASE-SEMANTICA): el render de una
+columna nueva derivada de `pct_*` aplicaba `* 100` asumiendo 0-1,
+y publicaba "2000%" donde el valor era 20%. Detectado en probe
+con CSV real antes de commitear. Confirmar la escala leyendo el
+CSV y comparando con `count_* / n_valid`: si `pct_X = count_X /
+n_valid * 100`, la escala es 0-100; el render no debe
+multiplicar.
+
+Regla: cuando un render consume una columna `pct_*` de
+`outputs/history/`, verificar la escala con datos reales antes
+de formatear. Un test con `pytest.approx` no detecta el doble
+factor si el fixture se construye con la escala equivocada. Test
+centinela recomendado: probe contra el CSV real del ultimo run,
+comparando con `count_* / n_*`.
+
+### `Out-String` de PowerShell convierte `\n` a `\r\n` al capturar texto
+
+Bug de metodo 2026-11-03: verificar EOL de un blob con `git cat-file
+-p HEAD:file | Out-String` reportaba CRLF donde el blob era LF. El
+pipe pasa por `Out-String`, que captura texto como string PowerShell
+y normaliza EOL a CRLF. Dos diagnosticos erroneos en la misma
+sesion antes de detectarlo.
+
+Regla: para verificar EOL de un blob, redirigir a fichero binario
+(`cmd /c "git show HEAD:file > tmp"`) y leer con
+`[IO.File]::ReadAllBytes`. Nunca `| Out-String`. Alternativa mas
+directa: `git ls-files --eol <file>` (muestra `i/lf w/lf` etc).
+Y `git cat-file -s HEAD:file` da tamano en bytes sin transformacion:
+4918 B -> LF, 5045 B -> CRLF (127 lineas con `\r\n`).
+
+### Heuristica descartada (2026-10-17): detector AST de tests con rutas gitignored
+
+6 falsos positivos en 6 casos (docstrings y regex que mencionan la ruta sin
+leerla). Una regla mecanica con 100% de falsos positivos es peor que la
+regla documental.
