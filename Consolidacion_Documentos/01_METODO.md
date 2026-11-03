@@ -141,6 +141,21 @@ factor si el fixture se construye con la escala equivocada. Test
 centinela recomendado: probe contra el CSV real del ultimo run,
 comparando con `count_* / n_*`.
 
+**`Out-String` de PowerShell convierte `\n` a `\r\n` al capturar texto.**
+
+Bug de metodo 2026-11-03: verificar EOL de un blob con `git cat-file
+-p HEAD:file | Out-String` reportaba CRLF donde el blob era LF. El
+pipe pasa por `Out-String`, que captura texto como string PowerShell
+y normaliza EOL a CRLF. Dos diagnosticos erroneos en la misma
+sesion antes de detectarlo.
+
+Regla: para verificar EOL de un blob, redirigir a fichero binario
+(`cmd /c "git show HEAD:file > tmp"`) y leer con
+`[IO.File]::ReadAllBytes`. Nunca `| Out-String`. Alternativa mas
+directa: `git ls-files --eol <file>` (muestra `i/lf w/lf` etc).
+Y `git cat-file -s HEAD:file` da tamano en bytes sin transformacion:
+4918 B -> LF, 5045 B -> CRLF (127 lineas con `\r\n`).
+
 ---
 
 ## 4. VERIFICACION END-TO-END (REFACTORS GRANDES)
