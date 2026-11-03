@@ -266,6 +266,21 @@ def render_provenance(prov: Optional[dict]) -> list:
     _coh = prov.get("temporal_coherence")
     if _coh and _coh != "N/D":
         out.append("- `temporal_coherence`: {0}\n".format(_coh))
+        # WALK_BACK (2026-11-03, TEMPORAL-COHERENCE-WALK-BACK): nota
+        # especifica cuando el pipeline retrocedio por cobertura
+        # parcial. Distinto de INCOHERENT (stale real) y LAG_ADMITTED
+        # (fuente lenta por diseno). El gate lo acepto.
+        if _coh == "WALK_BACK":
+            out.append(
+                "*Walk-back aplicado: el `target_session` aun no "
+                "estaba completo (cobertura parcial al momento del "
+                "run). El pipeline uso la ultima sesion con "
+                "cobertura >= 90% (`effective_date_equity`) para el "
+                "bloque de equities. El gate lo acepto "
+                "(`coverage_pct_effective` >= umbral). No es "
+                "incoherencia temporal: es una eleccion documentada "
+                "del pipeline.*\n"
+            )
         # P6 (2026-10-22, auditor externo): aclarar alcance.
         out.append("*`temporal_coherence` valida solo `stock_prices` y "
                    "`market_data` (sesion esperada vs ultimo dato). El "

@@ -414,3 +414,63 @@ def test_run_py_pasa_effective_is_walk_back():
     src = inspect.getsource(_run)
     assert "infer_walk_back(df_stocks_effective_meta)" in src
     assert "effective_is_walk_back=_prov_walk_back" in src
+
+
+# ============================================================
+# Nota WALK_BACK en render (2026-11-03)
+# ============================================================
+def test_render_walk_back_incluye_nota_explicativa():
+    """WALK_BACK renderiza la nota explicativa con terminos claros."""
+    prov = {
+        "commit_sha": "abc12345",
+        "target_session": "2026-11-02",
+        "effective_date_equity": "2026-10-30",
+        "validation_gate": "11/11",
+        "temporal_coherence": "WALK_BACK",
+    }
+    body = "".join(render_provenance(prov))
+    assert "`temporal_coherence`: WALK_BACK" in body
+    assert "Walk-back aplicado" in body
+    assert "cobertura parcial" in body
+    assert "No es incoherencia temporal" in body
+
+
+def test_render_ok_no_incluye_nota_walk_back():
+    """OK no arrastra la nota WALK_BACK (evitar contaminacion)."""
+    prov = {
+        "commit_sha": "abc12345",
+        "target_session": "2026-11-02",
+        "effective_date_equity": "2026-11-02",
+        "validation_gate": "11/11",
+        "temporal_coherence": "OK",
+    }
+    body = "".join(render_provenance(prov))
+    assert "Walk-back aplicado" not in body
+
+
+def test_render_incoherent_no_incluye_nota_walk_back():
+    """INCOHERENT no arrastra la nota WALK_BACK (son estados
+    distintos, no se confunden)."""
+    prov = {
+        "commit_sha": "abc12345",
+        "target_session": "2026-11-02",
+        "effective_date_equity": "2026-10-30",
+        "validation_gate": "11/11 (INCOHERENT)",
+        "temporal_coherence": "INCOHERENT",
+    }
+    body = "".join(render_provenance(prov))
+    assert "Walk-back aplicado" not in body
+    assert "INCOHERENT" in body
+
+
+def test_render_lag_admitted_no_incluye_nota_walk_back():
+    """LAG_ADMITTED tampoco arrastra la nota WALK_BACK."""
+    prov = {
+        "commit_sha": "abc12345",
+        "target_session": "2026-11-02",
+        "effective_date_equity": "2026-11-01",
+        "validation_gate": "11/11",
+        "temporal_coherence": "LAG_ADMITTED",
+    }
+    body = "".join(render_provenance(prov))
+    assert "Walk-back aplicado" not in body
