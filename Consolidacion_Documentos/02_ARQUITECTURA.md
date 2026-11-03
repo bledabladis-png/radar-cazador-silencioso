@@ -207,6 +207,22 @@ Tres capas independientes que NO deben confundirse:
 
 **Sistema Wyckoff holdings-based (2026-10-24, sesion 3):** clasificacion de fase directamente sobre los tickers de cada sector/indice, orquestada por `wyckoff_orchestrator.classify_phase`. Estados actuales: DISTRIBUTION, MARKDOWN, ACCUMULATION, MARKUP, DISTRIBUTION_FORMING, ACCUMULATION_FORMING, RANGE, CONFLICT, INSUFFICIENT_DATA. Regla simetrica de vigencia: un rango esta vigente mientras el precio no lo haya roto por ningun lado. Detalle en `docs/auditoria/wyckoff/62-63`.
 
+**Fase dominante vs fase con senal (2026-11-03, schema v3):** la
+Matriz de Regimen Sectorial publica dos columnas de fase derivadas
+de `sector_wyckoff_distribution`:
+- `wyckoff_phase`: moda bruta de las 5 fases principales del CSV
+  (ACC, MARKUP, RANGE, DIST, MARKDOWN). Incluye RANGE. Auditoria
+  historica.
+- `wyckoff_signal_phase`: moda de las 6 fases CON SENAL (ACC,
+  ACC_FORMING, MARKUP, DIST, DIST_FORMING, MARKDOWN). Excluye
+  RANGE (ausencia de senal, no fase). Fallback RANGE si ningun
+  holding tiene senal. Desempate determinista: MARKDOWN > DIST >
+  DIST_FORMING > ACC_FORMING > ACC > MARKUP.
+El reporte usa `wyckoff_signal_phase` + `wyckoff_signal_share` +
+`wyckoff_signal_n` en la columna 'Fase dominante'. `wyckoff_phase`
+sigue en el CSV para auditoria. Contrato:
+`docs/auditoria/sector_regime_matrix_v3.md`.
+
 **Retirado (sesion 3):** SLPM v1.2 (Leader Breadth + LIS + Effective Breadth), State Machine de liderazgo, fase Wyckoff del ETF sectorial (`classify_wyckoff_phase` legacy). Ver C3 y C5 en `04_HISTORICO.md`.
 
 **Robust Z-Score canonico (precios/RS):**

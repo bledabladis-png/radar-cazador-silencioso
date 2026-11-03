@@ -124,6 +124,23 @@ verificar que el path real del repo no cambia de `mtime` tras ejecutar el
 SUT (`test_guard_no_escribe_state_real`,
 `tests/test_guard_coverage_validation.py`).
 
+**Escala de las columnas `pct_*` en outputs/history: 0-100, no 0-1.**
+
+Bug real 2026-11-03 (WYCKOFF-PHASE-SEMANTICA): el render de una
+columna nueva derivada de `pct_*` aplicaba `* 100` asumiendo 0-1,
+y publicaba '2000%' donde el valor era 20%. Detectado en probe
+con CSV real antes de commitear. Confirmar la escala leyendo el
+CSV y comparando con `count_* / n_valid`: si `pct_X = count_X /
+n_valid * 100`, la escala es 0-100; el render no debe
+multiplicar.
+
+Regla: cuando un render consume una columna `pct_*` de
+`outputs/history/`, verificar la escala con datos reales antes
+de formatear. Un test con `pytest.approx` no detecta el doble
+factor si el fixture se construye con la escala equivocada. Test
+centinela recomendado: probe contra el CSV real del ultimo run,
+comparando con `count_* / n_*`.
+
 ---
 
 ## 4. VERIFICACION END-TO-END (REFACTORS GRANDES)
