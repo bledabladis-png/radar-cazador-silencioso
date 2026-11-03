@@ -309,8 +309,7 @@ Esperado:
   original (cabecera a col 0, campos a 2, guiones a 2).
 - **BOM UTF-8** presente en varios ficheros. Leer con utf-8-sig,
   escribir preservando BOM.
-- **CRLF en ficheros**: 05_BITACORA.md, 01_METODO.md en CRLF;
-  00_ARRANQUE.md, HANDOFF en LF. Detectar antes de patch.
+- **EOL:** `05_BITACORA.md` working tree CRLF (indice LF por `attr/text eol=lf`); `01_METODO.md`, `00_ARRANQUE.md` y HANDOFF canonico en LF. `docs/handoffs/HANDOFF.md` es CRLF (archivo historico, obsoleto). Detectar con `git ls-files --eol` (no `| Out-String`).
 - python sin ruta resuelve a Microsoft Store. Usar py o ruta real.
 - **monkeypatch.chdir no reubica paths de __file__**: si el SUT
   exporta RESULT_PATH/OUT_PATH/*_DIR a nivel de modulo, chdir(tmp_path)
