@@ -7161,3 +7161,75 @@ items:
     Acumulando pasan a Distribuyendo; 6 de Distribuyendo pasan a
     Acumulando; controles MSFT/NVDA/HON/CAT se mantienen). Falta
     run real post-fix.
+
+- id: WYCKOFF-PHASE-SEMANTICA-2026-11-03
+  tipo: deuda_tecnica
+  ciclo: '2026-11-03'
+  estado: FIXED
+  commit: 'a89eb1f5'
+  test: tests/test_sector_regime_matrix.py
+  descripcion: |
+    La columna 'Fase dominante' de la Matriz de Regimen Sectorial
+    era RANGE en los 11 sectores. No era bug de calculo: era
+    problema de informativa. El calculo era moda sobre 5 fases
+    incluyendo RANGE. RANGE gana 85-95% en 8 de 11 sectores
+    porque RANGE = ausencia de senal, no una fase Wyckoff. La
+    columna decia la verdad pero era decorativa: siempre RANGE.
+    Datos reales 2026-10-30: XLK RANGE=44% (2o DIST_FORMING=20%),
+    XLF RANGE=85% (2o MARKDOWN=9%), XLP RANGE=90%, XLU RANGE=95%,
+    XLRE RANGE=95%. RANGE gana por 24-90 puntos. La senal real
+    (la segunda fase) quedaba oculta.
+  evidencia: |
+    Reporte del run 41575090209 (03-11 03:55 UTC) y CSV local
+    outputs/history/sector_regime_matrix.csv del 30-10. Los 11
+    sectores con wyckoff_phase=RANGE. La distribucion
+    sector_wyckoff_distribution.csv del 30-10 confirma: la moda
+    bruta es RANGE pero hay fases con senal significativas
+    (DIST_FORMING 20% en XLK, MARKDOWN 9% en XLF, etc).
+  verificacion: |
+    Fix a89eb1f5: 3 columnas aditivas (schema v2->v3).
+    wyckoff_signal_phase: moda de las 6 fases con senal (ACC,
+    ACC_FORMING, MARKUP, DIST, DIST_FORMING, MARKDOWN). Fallback
+    'RANGE' si no hay senal. Desempate determinista: MARKDOWN >
+    DIST > DIST_FORMING > ACC_FORMING > ACC > MARKUP (conservador).
+    wyckoff_signal_share (% 0-100) y wyckoff_signal_n (count).
+    wyckoff_phase original intacta (historico no se rompe). Render
+    reformateado: 'DIST_FORMING (20%, N=5)' o 'RANGE (sin senal)'.
+    Nota reescrita: declara semantica y remite a wyckoff_phase del
+    CSV para auditoria.
+    pytest test_sector_regime_matrix.py: 9 passed (4 nuevos:
+    excluye RANGE, fallback sin senal, desempate, forming en pool).
+    Bloque sector_context/regime/phase: 41 passed. Probe con CSV
+    real 30-10: los 11 sectores con share correcto (sin doble
+    *100), fallback RANGE verificado con XLK forzado a 100%.
+    pyflakes + compileall silencio. verifica_gobernanza [OK].
+    VERIFIED_IN_PRODUCTION: pendiente del proximo run scheduled
+    real. La tabla Matriz de Regimen Sectorial debe publicar
+    fases con senal en los 11 sectores, no RANGE.
+
+- id: VERIFICAR-WYCKOFF-PHASE-PROD
+  tipo: frente
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: |
+    WYCKOFF-PHASE-SEMANTICA-2026-11-03 esta FIXED en codigo
+    (a89eb1f5) con 4 tests y probe con CSV real del 30-10. Ningun
+    run scheduled post-fix ha publicado la Matriz de Regimen
+    Sectorial con las columnas signal.
+  siguiente_accion: |
+    Proximo run scheduled real (gate=true, duracion >= 10 min):
+    - gh run download <id> -n daily-report.
+    - Localizar '## Matriz de Regimen Sectorial' en reporte_diario.md.
+    - Verificar que la columna 'Fase dominante' publica fases con
+      senal: DIST_FORMING, MARKDOWN, DISTRIBUTION, MARKUP o similar,
+      con formato 'FASE (X%, N=Y)'.
+    - Si algun sector sin senal: 'RANGE (sin senal)'.
+    - Si TODOS los sectores salen 'RANGE (sin senal)', reabrir
+      WYCKOFF-PHASE-SEMANTICA-2026-11-03 (fix no aplicado en prod o
+      pool vacio por dato real).
+    - Si sale 'RANGE' plano (sin la marca 'sin senal'), el render
+      viejo esta activo: reabrir.
+  evidencia: |
+    Ultimo run real (41575090209, 03-11) tiene el bug: los 11
+    sectores RANGE en la columna. Fix a89eb1f5 + probe con datos
+    reales. Falta run scheduled post-fix.
