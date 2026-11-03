@@ -90,12 +90,12 @@ Lo que NUNCA haces:
 
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
-Snapshot al cierre del ultimo commit (2026-11-03, sesion 27 p3):
+Snapshot al cierre del ultimo commit (2026-11-03, sesion 27 p4):
 - HEAD: `git log --oneline -1`
 - Tests: fuente autoritativa en `Consolidacion_Documentos/ESTADO_SISTEMA.md` (seccion 2). No fijar literal aqui (cambia con cada commit de test); ver ESTADO_SISTEMA.md seccion 2.
 - Validation Gate: 11/11
 - Working tree: limpio
-- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 274 items. Validador reforzado.
+- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 276 items. Validador reforzado.
 - Corpus documental: v3 (Consolidacion_Documentos/00-08)
 - Universo USA (stock_prices): 530 tickers Close. Total (US+EU+expansions): ver `ESTADO_SISTEMA.md`.
 - Scheduled: ultimo run real 41575090209 (2026-11-03 03:55 UTC, 21 min, gate=true, HEAD db8ed703). 6/6 wyckoff CSVs en artifact. Sesion 26 verificada en prod. Ver `gh run list`.
@@ -211,6 +211,7 @@ Datos exactos: `sector_concentration.csv` (`n_valid_rs`, `n_total`, `coverage_rs
 - **SCHEDULER-DELAYS:** p95 delays 10-nov-2026.
 - **VERIFICAR-WALK-BACK-PROD:** OPEN. Proximo scheduled con walk-back: verificar `WALK_BACK` en reporte (no `INCOHERENT`).
 - **VERIFICAR-IAE-CONSENSO-PROD:** OPEN. Proximo scheduled real: los 11 tickers del auditor (9.3) en la tabla correcta.
+- **VERIFICAR-WYCKOFF-PHASE-PROD:** OPEN. Proximo scheduled real: Matriz Regimen con fases con senal (`DIST_FORMING (20%, N=5)`), no RANGE plano.
 - **INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH:** 8 tests con main() sin monkeypatch de *_PATH. Auditar caso por caso. ROI bajo.
 - **2 tests skipped** (`test_freshness.py` network, opt-in).
 

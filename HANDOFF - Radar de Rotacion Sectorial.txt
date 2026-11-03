@@ -9,7 +9,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-03, sesion 27)
 
-HEAD: `803ddddd` (consultar `git log --oneline -1` para el actual).
+HEAD: `38ad29ec` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2.
@@ -17,7 +17,7 @@ Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        de tests en S27; el conteo vigente esta en ESTADO_SISTEMA).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 274 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 276 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 
@@ -67,15 +67,34 @@ Sesion 27 (2026-11-03) parte 3: auditoria externa 11-03.
     TEMPORAL-EFFECTIVE-DATE-POR-MODULO (10.1), MTE-DEGRADED-STATE
     (10.2), FRESHNESS-POR-BLOQUE (10.3).
 
+Sesion 27 (2026-11-03) parte 4: fase dominante excluye RANGE.
+  - Usuario detecta que la columna 'Fase dominante' de la Matriz
+    de Regimen Sectorial era RANGE en los 11 sectores. Auditoria:
+    no era bug de calculo (lo retirado en sesion 3 fue clasificar
+    el ETF como entidad; aqui se clasifican holdings) sino
+    problema de informativa. RANGE = ausencia de senal, no fase.
+    Moda bruta siempre RANGE; la senal real (2a fase) quedaba
+    oculta.
+  - Fix a89eb1f5 (schema v2->v3, aditivo): 3 columnas nuevas
+    wyckoff_signal_phase/_share/_n. wyckoff_phase original
+    intacta (historico no se rompe). Desempate determinista:
+    MARKDOWN > DIST > DIST_FORMING > ACC_FORMING > ACC > MARKUP.
+    Render: 'DIST_FORMING (20%, N=5)' o 'RANGE (sin senal)'.
+  - Resultado 30-10: XLK->DIST_FORMING(20%), XLF->MARKDOWN(9%),
+    XLV->MARKUP(12%), XLE->DIST(10%), XLY->DIST_FORMING(10%),
+    XLP->DIST(5%), XLI->MARKDOWN(11%), XLB->DIST(10%),
+    XLU->MARKDOWN(5%), XLRE->DIST(5%), XLC->MARKDOWN(11%).
+
 Docs: 01_METODO dividido (01d_POWERSHELL_AUDITORIA.md). README sin
 cifras caducas. Regla chdir/__file__ en 01_METODO seccion 3.
 
-Pendientes vivos: 2 OPEN verificacion prod (VERIFICAR-WALK-BACK-PROD
-y VERIFICAR-IAE-CONSENSO-PROD, proximo scheduled real) + 1 OPEN
-auditoria (INVESTIGAR-TESTS, ROI bajo) + 2 BLOCKED_EXTERNAL + 1 OPEN
-DICT3 (evidencia) + 4 observacionales con fecha (06-nov, 10-nov x2,
-17-nov, 20-nov) + 1 prioritaria (a) analista + 3 deudas de auditoria
-11-03 sin decision de producto. Ver seccion 3.
+Pendientes vivos: 3 OPEN verificacion prod (VERIFICAR-WALK-BACK-PROD,
+VERIFICAR-IAE-CONSENSO-PROD, VERIFICAR-WYCKOFF-PHASE-PROD, proximo
+scheduled real) + 1 OPEN auditoria (INVESTIGAR-TESTS, ROI bajo) + 2
+BLOCKED_EXTERNAL + 1 OPEN DICT3 (evidencia) + 4 observacionales con
+fecha (06-nov, 10-nov x2, 17-nov, 20-nov) + 1 prioritaria (a)
+analista + 3 deudas de auditoria 11-03 sin decision de producto. Ver
+seccion 3.
 
 ---
 ## 2. SESION 2026-11-03 (sesion 27): detalle
@@ -182,14 +201,23 @@ HEAD `db8ed703`) confirma sesion 26 en produccion.
   EOG/LHX) NO en Distribuyendo; toda fila cumple el encabezado.
 - Si verde: cerrar FIXED. Si falla: reabrir IAE-CONSENSO-VS-SUM-DELTA.
 
-### 3.5. INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH (OPEN, ROI bajo)
+### 3.5. VERIFICAR-WYCKOFF-PHASE-PROD (OPEN, verificable en proximo scheduled)
+
+- WYCKOFF-PHASE-SEMANTICA-2026-11-03 esta FIXED en codigo
+  (a89eb1f5) con 4 tests y probe con CSV real 30-10.
+- Proximo run scheduled real: verificar que la Matriz de Regimen
+  Sectorial publica fases con senal ('DIST_FORMING (20%, N=5)') en
+  lugar de RANGE plano. Si algun sector sin senal, 'RANGE (sin
+  senal)'. Si TODOS salen 'RANGE (sin senal)', reabrir.
+
+### 3.6. INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH (OPEN, ROI bajo)
 
 - 8 tests que llaman main() del SUT sin monkeypatch de *_PATH.
 - Auditar caso por caso con evidencia empirica (mtime del artefacto
   real cambia tras pytest). Solo fixear los confirmados.
 - No bloquea CI. Sesion dedicada.
 
-### 3.6. Items OPEN observacionales (fechas)
+### 3.7. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |
 |---|---|---|
@@ -199,7 +227,7 @@ HEAD `db8ed703`) confirma sesion 26 en produccion.
 | RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
 | H5.3 | 2026-11-20 | Verificar cron trimestral 13F |
 
-### 3.7. Prioritaria analista 30-oct no abierta (decision producto)
+### 3.8. Prioritaria analista 30-oct no abierta (decision producto)
 
 - **FASE-A-REGIMEN-ECONOMIA-REAL** (no abierta como item): el analista
   pide bloque macro con datos oficiales (BEA PIB/PCE/renta, BLS IPC/
