@@ -6959,3 +6959,37 @@ items:
     pyflakes + compileall silencio. verifica_gobernanza [OK].
     VERIFIED_IN_PRODUCTION: pendiente de confirmar en el proximo
     run scheduled con walk-back (proximo slot con Close parcial).
+
+- id: VERIFICAR-WALK-BACK-PROD
+  tipo: frente
+  ciclo: '2026-11-03'
+  estado: OPEN
+  descripcion: |
+    TEMPORAL-COHERENCE-WALK-BACK esta FIXED en codigo y contrato
+    (commits 3c488a22..7f1b6e4f), con 17 tests nuevos y probe con
+    manifest real del 03-11. Pero ningun run scheduled post-fix ha
+    publicado aun con walk-back activo. Falta confirmar en
+    produccion que el reporte publica temporal_coherence=WALK_BACK
+    (con nota) en lugar de INCOHERENT, y que el gate sale 11/11
+    sin marca (INCOHERENT).
+  siguiente_accion: |
+    Cuando el proximo run scheduled real (gate=true) tenga
+    walk-back (Close parcial en target):
+    - gh run list --workflow=daily_run.yml --limit 5 (identificar
+      el run con duracion >= 10 min).
+    - gh run download <id> -n daily-report.
+    - grep 'temporal_coherence' y 'validation_gate' en
+      reporte_diario.md del artifact.
+    - Si temporal_coherence=WALK_BACK y gate=11/11 (sin
+      (INCOHERENT)): cerrar FIXED con databaseId + fecha.
+    - Si temporal_coherence=INCOHERENT: reabrir
+      TEMPORAL-COHERENCE-WALK-BACK (fix no aplicado en prod).
+    - Si temporal_coherence=OK: el run no fue walk-back, no
+      cuenta como verificacion. Esperar el siguiente.
+  evidencia: |
+    Ultimo run real (41575090209, 03-11 03:55 UTC) tiene el bug:
+    INCOHERENT + gate 11/11 (INCOHERENT). Fix commit 3c488a22
+    (estado WALK_BACK), e25e051d (run.py cablea), 1abddd73 (nota
+    render), 7f1b6e4f (contrato + REGISTRO). Probe local con
+    manifest real 03-11 confirma el comportamiento esperado. Falta
+    run real post-fix.

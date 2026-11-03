@@ -98,6 +98,95 @@ wyckoff CSVs en artifact, 2 notas *Filtro:* en reporte_diario.md
 cerrar S27 documentalmente. Despues, sesion tranquila sin urgencias
 hasta 06-nov (DAILY-RUN-FAIL) o 10-nov (observacionales).
 
+### 2026-11-03 — Sesion 27 parte 2: TEMPORAL-COHERENCE-WALK-BACK
+
+**Objetivo.** Tras el cierre del bloque 1 (revision de workflows),
+revisar el reporte de produccion con datos. El usuario detecto que
+verificar "tests verdes" no equivale a verificar el contenido que ve
+el usuario. Al abrir el `reporte_diario.md` del run real
+41575090209 aparece `temporal_coherence: INCOHERENT` y
+`validation_gate: 11/11 (INCOHERENT)`.
+
+**Verificacion previa (Wyckoff con datos).** Primera auditoria
+cosmetica (2 notas *Filtro:*). Segunda con datos reales: 110 filas
+cruzadas por (group, ticker), 6/6 sub-tablas, 0 discrepancias entre
+.md y CSV filtrado, nota *Filtro:* exactamente en las 2 sub-tablas
+donde n_filt < n_total. Los 21 errores del primer intento eran del
+script del auditor (duplicados AMD/GOOGL entre QQQ/DIA/SPY).
+
+**Bug real detectado.** Dos criterios incompatibles sobre el mismo
+hecho:
+- `pipeline_gate`/`guard_coverage`/`write_completion_receipt`
+  aceptan walk-back si `coverage_pct_effective >= 0.90` (contrato
+  vigente desde 2026-10-31, commit a692fafb).
+- `provenance._temporal_coherence` comparaba lag vs
+  `contract_max_lag_days=0` sin conocer el walk-back.
+Resultado: el reporte publico `INCOHERENT` en un run que el gate
+acepto. El propio codigo (H8, 2026-10-16) lo marcaba como
+contradiccion sin resolverla.
+
+**Hecho (4 commits + gobernanza).**
+
+1. `3c488a22` feat(provenance): estado WALK_BACK. Nuevo param
+   `effective_is_walk_back=False` en `_temporal_coherence` y
+   `build_provenance`. `infer_walk_back(effective_meta)` como fuente
+   de verdad: True si status==OK y lag_days>0. 5 tests.
+2. `e25e051d` feat(pipeline): run.py cablea. Calcula
+   `_prov_walk_back = infer_walk_back(df_stocks_effective_meta)`
+   y lo pasa a `build_provenance`. 8 tests (7 infer_walk_back +
+   1 integracion run.py).
+3. `1abddd73` feat(report): nota explicativa en
+   `render_provenance` cuando temporal_coherence==WALK_BACK. 4 tests.
+4. `7f1b6e4f` docs(contrato): `temporal_coherence_walk_back_v1.md`
+   (contrato semantico, 7 KB) + `daily_run_gate_enmienda_v1_3.md`
+   (enmienda formal, 4.4 KB) + item REGISTRO
+   `TEMPORAL-COHERENCE-WALK-BACK` FIXED commit 1abddd73.
+
+**Decision arquitectonica (no se relaja tolerancia).**
+- `contract_max_lag_days` sigue siendo 0. El fix no es un numero
+  mas alto; es un estado nuevo con nombre propio.
+- Gate y reporte comparten `coverage_pct_effective` como fuente unica
+  (enmienda v1.3).
+- `ANOMALY` gana siempre sobre `WALK_BACK` (integridad).
+- `INCOHERENT` sigue siendo detectable: sin walk-back explicito y
+  lag>0, se preserva. El test `test_coherencia_sin_flag_sigue_incoherent`
+  lo cubre.
+
+**Verificacion.**
+- pytest tests/test_report_provenance.py: 49 passed (17 nuevos reales
+  en 4 commits + 32 existentes).
+- Probe con manifest real 03-11:
+  `infer_walk_back({status:OK, lag_days:3})` -> True;
+  `build_provenance(walk_back=True)` -> WALK_BACK, gate sin marca;
+  `build_provenance(walk_back=False)` -> INCOHERENT (deteccion
+  preservada).
+- Bloque report/provenance: 92 passed.
+- ESTADO_SISTEMA regenerado: 4377 -> 4396 passed (+19; 17 explicados,
+  +2 sin explicacion cerrada, anotado como observacion abierta).
+
+**Falso positivo reconocido.** El commit message de `7f1b6e4f` dice
+"18 tests nuevos". Realmente son 17 (5 coherencia + 7 infer_walk_back
++ 4 nota render + 1 integracion run.py). Error de contabilidad en el
+mensaje, ya pusheado. No se enmienda (ruido).
+
+**Pendiente real.** `VERIFICAR-WALK-BACK-PROD` OPEN: ningun run
+scheduled post-fix ha publicado aun. El proximo run scheduled con
+walk-back (Close parcial) es la verificacion real. Si publica
+`WALK_BACK` y gate 11/11 sin marca, se cierra VERIFIED_IN_PRODUCTION.
+Si publica `INCOHERENT`, se reabre TEMPORAL-COHERENCE-WALK-BACK.
+
+**Commits.** `3c488a22`, `e25e051d`, `1abddd73`, `7f1b6e4f`,
+`45731e94`.
+
+**Pendiente.** `VERIFICAR-WALK-BACK-PROD` OPEN (proximo run scheduled
+con walk-back). Resto sin cambio (06-nov, 10-nov x2, 17-nov, 20-nov,
+INVESTIGAR-TESTS, 2 BLOCKED_EXTERNAL).
+
+**Proximo paso sugerido.** Cierre documental (HANDOFF + 00_ARRANQUE)
+y esperar run scheduled. Al arrancar la proxima sesion, si el ultimo
+run scheduled tiene walk-back, verificar `temporal_coherence` en el
+artifact antes de cualquier otro trabajo.
+
 ### 2026-11-02 — Sesion 26: GUARD-COVERAGE fix + WYCKOFF filtro weight
 
 **Objetivo.** Dos frentes independientes: (1) bug en test que escribia

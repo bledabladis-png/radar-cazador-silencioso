@@ -2960,3 +2960,65 @@ MONKEYPATCH-PATH (8 tests con patron similar, no verificados), y
 los 4 items observacionales con fecha (06-nov, 10-nov x2, 17-nov,
 20-nov). 2 BLOCKED_EXTERNAL sin accion propia.
 
+### 2026-11-03 - TEMPORAL-COHERENCE-WALK-BACK: contrato y estado
+
+**Objetivo.** Resolver bug real detectado al abrir el
+`reporte_diario.md` del run 41575090209: el reporte publicaba
+`temporal_coherence=INCOHERENT` y `validation_gate=11/11
+(INCOHERENT)` aunque el gate lo habia aceptado.
+
+**Causa raiz.** Dos criterios incompatibles sobre el mismo hecho.
+`pipeline_gate`/`guard_coverage`/`write_completion_receipt` aceptan
+walk-back sano (cobertura insuficiente en target, retroceso a
+ultima sesion con `coverage_pct_effective >= 0.90`). El codigo de
+provenance comparaba lag vs `contract_max_lag_days=0` sin conocer
+el walk-back. El propio codigo (H8 2026-10-16) lo marcaba como
+contradiccion sin resolverla. Llevaba mintiendo al usuario desde
+`a692fafb` (2026-10-31, GUARD-COVERAGE-LAST-DATE-PARCIAL).
+
+**Hecho.** 4 commits.
+
+1. `3c488a22` feat(provenance): nuevo estado `WALK_BACK` en
+   `_temporal_coherence`, con precedencia N/D > OK > ANOMALY >
+   WALK_BACK > LAG_ADMITTED > INCOHERENT. Nueva funcion publica
+   `infer_walk_back(effective_meta)`: True si status==OK y
+   lag_days>0. `build_provenance` gana `effective_is_walk_back=False`
+   y lo publica en el dict (trazabilidad). 5 tests.
+2. `e25e051d` feat(pipeline): run.py calcula
+   `_prov_walk_back = infer_walk_back(df_stocks_effective_meta)` y
+   lo pasa a `build_provenance`. 8 tests (7 unitarios + 1 integracion
+   que verifica el cableado en run.py para evitar regresion).
+3. `1abddd73` feat(report): `render_provenance` emite nota
+   explicativa cuando `WALK_BACK`. No contamina OK/INCOHERENT/
+   LAG_ADMITTED/ANOMALY. 4 tests.
+4. `7f1b6e4f` docs(contrato): `temporal_coherence_walk_back_v1.md`
+   (contrato semantico, 7 KB, 6 estados + 6 invariantes + rollback)
+   + `daily_run_gate_enmienda_v1_3.md` (enmienda formal, declara
+   gate y reporte comparten `coverage_pct_effective`). Item
+   `TEMPORAL-COHERENCE-WALK-BACK` FIXED.
+
+**Decision arquitectonica.** No se relaja tolerancia.
+`contract_max_lag_days` sigue 0. La excepcion es un estado nuevo
+con nombre propio (WALK_BACK), no un numero mas alto. `INCOHERENT`
+sigue detectable (test centinela
+`test_coherencia_sin_flag_sigue_incoherent`). `ANOMALY` gana sobre
+WALK_BACK si effective > target.
+
+**Verificacion.** pytest 49 passed (17 nuevos + 32 previos). Probe
+con manifest real 03-11: flag=True -> WALK_BACK + gate 11/11 sin
+marca; flag=False -> INCOHERENT + gate con marca (deteccion
+preservada). ESTADO_SISTEMA regenerado: 4377 -> 4396 (+19; 17
+explicados, +2 sin explicacion cerrada, anotado).
+
+**Falso positivo reconocido.** El commit `7f1b6e4f` dice "18 tests
+nuevos". Son 17. Error de contabilidad ya pusheado. No se enmienda.
+
+**Recuperable.** git log --oneline | grep -E
+'3c488a22|e25e051d|1abddd73|7f1b6e4f|45731e94' devuelve los
+commits completos.
+
+**Pendiente residual (vivo hoy).** `VERIFICAR-WALK-BACK-PROD` OPEN:
+ningun run scheduled post-fix ha publicado. Verificar en el proximo
+scheduled real con walk-back que el reporte sale WALK_BACK y no
+INCOHERENT. Si falla, reabrir TEMPORAL-COHERENCE-WALK-BACK.
+
