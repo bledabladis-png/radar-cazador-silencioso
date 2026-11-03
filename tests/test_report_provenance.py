@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 from src.report.provenance import (
     render_provenance,
     build_provenance,
+    infer_walk_back,
     _compute_validation_gate,
     _is_gate_passed,
 )
@@ -351,3 +352,65 @@ def test_build_provenance_walk_back_no_marca_gate_incoherent():
     assert p["temporal_coherence"] == "WALK_BACK"
     assert p["effective_is_walk_back"] is True
     assert "INCOHERENT" not in p["validation_gate"]
+
+
+# ============================================================
+# infer_walk_back (2026-11-03, TEMPORAL-COHERENCE-WALK-BACK)
+# ============================================================
+def test_infer_walk_back_meta_ok_con_lag():
+    """status OK + lag_days=3 -> True (walk-back sano)."""
+    meta = {
+        "status": "OK", "lag_days": 3,
+        "date": "2026-10-30", "requested_date": "2026-11-02",
+    }
+    assert infer_walk_back(meta) is True
+
+
+def test_infer_walk_back_meta_ok_sin_lag():
+    """status OK + lag_days=0 -> False (sin retroceso)."""
+    meta = {
+        "status": "OK", "lag_days": 0,
+        "date": "2026-11-02", "requested_date": "2026-11-02",
+    }
+    assert infer_walk_back(meta) is False
+
+
+def test_infer_walk_back_insufficient_coverage():
+    """status INSUFFICIENT_COVERAGE -> False (no fue walk-back, fue fallo)."""
+    meta = {"status": "INSUFFICIENT_COVERAGE", "lag_days": 5}
+    assert infer_walk_back(meta) is False
+
+
+def test_infer_walk_back_meta_none():
+    """meta None -> False (sin datos)."""
+    assert infer_walk_back(None) is False
+
+
+def test_infer_walk_back_meta_vacio():
+    """dict vacio -> False."""
+    assert infer_walk_back({}) is False
+
+
+def test_infer_walk_back_lag_string_numerico():
+    """lag_days como string numerico (defensivo) -> True."""
+    assert infer_walk_back({"status": "OK", "lag_days": "3"}) is True
+
+
+def test_infer_walk_back_lag_invalido():
+    """lag_days invalido -> False (no exception)."""
+    assert infer_walk_back({"status": "OK", "lag_days": "x"}) is False
+    assert infer_walk_back({"status": "OK", "lag_days": None}) is False
+
+
+# ============================================================
+# Integracion: run.py cablea infer_walk_back -> build_provenance
+# ============================================================
+def test_run_py_pasa_effective_is_walk_back():
+    """Regresion: si run.py olvidara el kwarg, build_provenance
+    volveria a marcar INCOHERENT con lag>0.
+    """
+    import inspect
+    import run as _run
+    src = inspect.getsource(_run)
+    assert "infer_walk_back(df_stocks_effective_meta)" in src
+    assert "effective_is_walk_back=_prov_walk_back" in src

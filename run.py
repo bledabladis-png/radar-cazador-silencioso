@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from src.report_generator import generate_daily_report
-from src.report.provenance import build_provenance
+from src.report.provenance import build_provenance, infer_walk_back
 from src.market_calendar import last_expected_market_date
 from src.pipeline.data_load import load_all_data
 from src.pipeline.regimes import compute_all_regimes
@@ -281,8 +281,15 @@ def main():
     # H8 (2026-10-16, auditoria externa): bloque de provenance.
     # Identifica commit, run de CI, sesion objetivo y fechas efectivas.
     _prov_effective = None
+    _prov_walk_back = False
     if df_stocks_effective_meta is not None:
         _prov_effective = df_stocks_effective_meta.get('date')
+        # WALK_BACK (2026-11-03, TEMPORAL-COHERENCE-WALK-BACK):
+        # resolve_effective_date puede retroceder a la ultima sesion
+        # con cobertura >= 0.90 si el target aun estaba parcial. El
+        # gate lo acepta (coverage_pct_effective). El reporte lo
+        # publica como WALK_BACK, no como INCOHERENT.
+        _prov_walk_back = infer_walk_back(df_stocks_effective_meta)
     try:
         _prov_target = last_expected_market_date(reference_date).isoformat()
     except Exception:
@@ -292,6 +299,7 @@ def main():
         target_session=_prov_target,
         effective_date_equity=_prov_effective,
         validation_gate_result=vg,
+        effective_is_walk_back=_prov_walk_back,
     )
 
     # H4 B6 (2026-10-31): leer liquidity_state.json una sola vez en el pipeline,

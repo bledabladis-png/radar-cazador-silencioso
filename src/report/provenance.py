@@ -102,6 +102,37 @@ def _temporal_coherence(target_session, effective_date_equity,
     return "INCOHERENT"
 
 
+def infer_walk_back(effective_meta):
+    """Infiere si resolve_effective_date aplico walk-back sano.
+
+    Contrato (TEMPORAL-COHERENCE-WALK-BACK, 2026-11-03):
+      - True  si effective_meta['status'] == 'OK' y lag_days > 0.
+        Significa: habia cobertura insuficiente en target, el pipeline
+        retrocedio a la ultima sesion con cobertura >= umbral, y el
+        gate lo acepto. Se propaga a build_provenance como
+        effective_is_walk_back=True y el reporte lo publica como
+        temporal_coherence=WALK_BACK (no INCOHERENT).
+      - False en cualquier otro caso: effective_meta ausente, status
+        distinto de 'OK' (INSUFFICIENT_COVERAGE -> no hay decision),
+        lag_days=0 (no hubo retroceso), o lag_days invalido.
+
+    Args:
+        effective_meta: dict devuelto por resolve_effective_date con
+            claves date, requested_date, lag_days, status. O None.
+
+    Returns:
+        bool.
+    """
+    if not isinstance(effective_meta, dict):
+        return False
+    if effective_meta.get("status") != "OK":
+        return False
+    try:
+        return int(effective_meta.get("lag_days") or 0) > 0
+    except (TypeError, ValueError):
+        return False
+
+
 def _make_local_run_id(reference_date, commit, generated_at):
     """H2 (2026-10-17): ID determinista 'local-<8 hex>' para
     ejecuciones locales (sin GITHUB_RUN_ID valido)."""
