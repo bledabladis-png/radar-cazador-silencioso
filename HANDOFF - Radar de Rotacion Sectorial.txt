@@ -9,7 +9,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-03, sesion 27)
 
-HEAD: `4bf304a8` (consultar `git log --oneline -1` para el actual).
+HEAD: `803ddddd` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2.
@@ -17,7 +17,7 @@ Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        de tests en S27; el conteo vigente esta en ESTADO_SISTEMA).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 269 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 274 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 
@@ -53,14 +53,29 @@ Sesion 27 (2026-11-03) parte 2: TEMPORAL-COHERENCE-WALK-BACK.
   - 17 tests nuevos (49 passed). ESTADO_SISTEMA 4377 -> 4396
     (+2 sin explicacion cerrada, anotado).
 
+Sesion 27 (2026-11-03) parte 3: auditoria externa 11-03.
+  - Bug 9.3 FIXED (5bbc7681): filtro top_accumulating/
+    top_distributing por consenso (n_increase vs n_decrease), no
+    por sum_delta. 11 tickers clasificados contra sus recuentos:
+    AAPL/GOOGL/GOOG/HD/PG en Acumulando con mas reduciendo;
+    CB/NOW/VLO/WDC/EOG/LHX en Distribuyendo con mas aumentando.
+  - 3 tests centinela + probe con los 11 casos reales del run
+    41575090209. Codigo contradecia su propio docstring desde
+    c0f2a204 (01-11); primer run que publico la seccion fue el
+    03-11.
+  - 3 deudas OPEN del auditor (decision de producto):
+    TEMPORAL-EFFECTIVE-DATE-POR-MODULO (10.1), MTE-DEGRADED-STATE
+    (10.2), FRESHNESS-POR-BLOQUE (10.3).
+
 Docs: 01_METODO dividido (01d_POWERSHELL_AUDITORIA.md). README sin
 cifras caducas. Regla chdir/__file__ en 01_METODO seccion 3.
 
-Pendientes vivos: 1 OPEN verificacion prod (VERIFICAR-WALK-BACK-PROD,
-proximo scheduled con walk-back) + 1 OPEN auditoria (INVESTIGAR-TESTS,
-ROI bajo) + 2 BLOCKED_EXTERNAL + 1 OPEN DICT3 (evidencia) + 4
-observacionales con fecha (06-nov, 10-nov x2, 17-nov, 20-nov) + 1
-prioritaria (a) analista no abierta. Ver seccion 3.
+Pendientes vivos: 2 OPEN verificacion prod (VERIFICAR-WALK-BACK-PROD
+y VERIFICAR-IAE-CONSENSO-PROD, proximo scheduled real) + 1 OPEN
+auditoria (INVESTIGAR-TESTS, ROI bajo) + 2 BLOCKED_EXTERNAL + 1 OPEN
+DICT3 (evidencia) + 4 observacionales con fecha (06-nov, 10-nov x2,
+17-nov, 20-nov) + 1 prioritaria (a) analista + 3 deudas de auditoria
+11-03 sin decision de producto. Ver seccion 3.
 
 ---
 ## 2. SESION 2026-11-03 (sesion 27): detalle
@@ -157,14 +172,24 @@ HEAD `db8ed703`) confirma sesion 26 en produccion.
 - Si sale INCOHERENT: reabrir TEMPORAL-COHERENCE-WALK-BACK.
 - Si sale OK: no fue walk-back, esperar siguiente.
 
-### 3.4. INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH (OPEN, ROI bajo)
+### 3.4. VERIFICAR-IAE-CONSENSO-PROD (OPEN, verificable en proximo scheduled)
+
+- IAE-CONSENSO-VS-SUM-DELTA esta FIXED en codigo (5bbc7681) con 3
+  tests y probe con los 11 casos reales del run 41575090209.
+- Ningun run scheduled post-fix ha publicado la seccion IAE.
+- Verificar en el proximo run real: los 5 casos del auditor
+  (AAPL/GOOGL/GOOG/HD/PG) NO en Acumulando; los 6 (CB/NOW/VLO/WDC/
+  EOG/LHX) NO en Distribuyendo; toda fila cumple el encabezado.
+- Si verde: cerrar FIXED. Si falla: reabrir IAE-CONSENSO-VS-SUM-DELTA.
+
+### 3.5. INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH (OPEN, ROI bajo)
 
 - 8 tests que llaman main() del SUT sin monkeypatch de *_PATH.
 - Auditar caso por caso con evidencia empirica (mtime del artefacto
   real cambia tras pytest). Solo fixear los confirmados.
 - No bloquea CI. Sesion dedicada.
 
-### 3.5. Items OPEN observacionales (fechas)
+### 3.6. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |
 |---|---|---|
@@ -174,7 +199,7 @@ HEAD `db8ed703`) confirma sesion 26 en produccion.
 | RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
 | H5.3 | 2026-11-20 | Verificar cron trimestral 13F |
 
-### 3.6. Prioritaria analista 30-oct no abierta (decision producto)
+### 3.7. Prioritaria analista 30-oct no abierta (decision producto)
 
 - **FASE-A-REGIMEN-ECONOMIA-REAL** (no abierta como item): el analista
   pide bloque macro con datos oficiales (BEA PIB/PCE/renta, BLS IPC/
