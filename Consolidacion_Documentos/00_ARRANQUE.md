@@ -90,22 +90,28 @@ Lo que NUNCA haces:
 
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
-Snapshot al cierre del ultimo commit (2026-11-03, sesion 27 p5):
-- HEAD: `git log --oneline -1`
-- Tests: fuente autoritativa en `Consolidacion_Documentos/ESTADO_SISTEMA.md` (seccion 2). No fijar literal aqui (cambia con cada commit de test); ver ESTADO_SISTEMA.md seccion 2.
+Snapshot al cierre del ultimo commit (2026-11-04, sesion 28):
+- HEAD: `4549576b` (consultar `git log --oneline -1` para el actual)
+- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S28: 4460 passed, 3 failed (test_freshness, datos locales stale, ajenos al codigo), 2 skipped. pyflakes LIMPIO, compileall OK.
 - Validation Gate: 11/11
 - Working tree: limpio
-- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 276 items. Validador reforzado.
+- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 287 items. Validador reforzado.
 - Corpus documental: v3 (Consolidacion_Documentos/00-08)
-- Universo USA (stock_prices): 530 tickers Close. Total (US+EU+expansions): ver `ESTADO_SISTEMA.md`.
-- Scheduled: ultimo run real 41575090209 (2026-11-03 03:55 UTC, 21 min, gate=true, HEAD db8ed703). 6/6 wyckoff CSVs en artifact. Sesion 26 verificada en prod. Ver `gh run list`.
+- Contratos temporales: 13 (`_IMPLEMENTED_CONTRACTS`). 9 originales + 4 nuevos (SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO).
+- Scheduled: ultimo run real 41833890715 (04-11 12:58 UTC, gate=true, head bf384387). Ver `gh run list`.
 - Fase 2 (auditoria por bloques): COMPLETA (B1-B8). Ver HANDOFF seccion 1.
 
 **Contratos vigentes y decisiones estructurales** (los detalles viven en `04_HISTORICO.md`; aqui solo lo que no se puede olvidar):
 
 - **Enmienda contractual v1.1 (2026-10-16).** Validacion compartida en `src/temporal_contracts/validation.py` (OK|WARN|BLOCKED|UNAVAILABLE). `EQUITY_EOD` es `critical=True`: coverage < 0.90 o status INVALID -> BLOCKED. Guard y receipt comparten `validate_artifact_contracts()`; si BLOCKED o UNAVAILABLE, receipt fail-closed. Contrato: `docs/auditoria/daily_run_gate_contrato_v1.md` + `enmienda_v1_1.md` + `enmienda_v1_2.md` (addendum).
 
-- **Wyckoff holdings-based en produccion (2026-10-24, sesion 3).** La clasificacion de fase se hace sobre tickers que componen cada sector/indice, no sobre el ETF. Modulos: `wyckoff_event.py`, `wyckoff_distribution.py`, `wyckoff_accumulation.py`, `wyckoff_orchestrator.py` (`classify_phase` + regla simetrica de vigencia), `wyckoff_v1.py` (features y detectores primitivos). `classify_wyckoff_phase` (legacy) retirado. SLPM, lideres por sector y fase ETF del ranking retirados. Detalle en `04_HISTORICO.md` y `docs/auditoria/wyckoff/62-63`.
+- **Enmienda v1.3 temporal_coherence WALK_BACK (2026-11-03, sesion 27 p2).** Nuevo estado `WALK_BACK` con nombre propio (no se relaja `contract_max_lag_days=0`). Gate y reporte comparten `coverage_pct_effective`. Si BLOCKED o UNAVAILABLE, receipt fail-closed. Enmienda: `docs/auditoria/daily_run_gate_contrato_v1.md` (v1.3). Verificado en prod run 41764334709 (04-11 03:00 UTC).
+
+- **Wyckoff holdings-based en produccion (2026-10-24, sesion 3).** La clasificacion de fase se hace sobre tickers que componen cada sector/indice, no sobre el ETF. Modulos: `wyckoff_event.py`, `wyckoff_distribution.py`, `wyckoff_accumulation.py`, `wyckoff_orchestrator.py` (`classify_phase` + regla simetrica de vigencia), `wyckoff_v1.py` (features y detectores primitivos). `classify_wyckoff_phase` (legacy) retirado. SLPM, lideres por sector y fase ETF del ranking retirados.
+
+- **MTE degraded state (2026-11-04, sesion 28).** `indicators/mte/status.py` con `VALID`/`DEGRADED`/`INVALID` derivado de `futures_status`, `coverage`, `confidence`. `compute_mte` persiste `mte_state` en `outputs/state/mte_state.json` (schema v1->v2, aditivo) y en el return. `render_mte` publica `MTE Status` cuando != VALID. No usa `validation.py` (valida artefactos, no outputs de modulo). 5 tests centinela.
+
+- **Contratos temporales para fuentes no-equity (2026-11-04, sesion 28).** 4 nuevos `TemporalContract`: `SEC_13F` (data/sec_13f/processed/, max_lag 90), `FINRA_DARKPOOL` (darkpool_history.csv, max_lag 45), `SSGA_PRIMARY_FLOW` (etf_primary_flow.csv, max_lag 5), `FRED_MACRO` (liquidity_state.json, max_lag 90). `_IMPLEMENTED_CONTRACTS` pasa de 9 a 13. Justificacion de las 2 fuentes no cubiertas: HoldingsPIT es log PIT append-only (no mide lag); BME/Euronext cubiertos por EQUITY_EOD + INDEX_EOD_EUROPA.
 
 - **Ticker health (2026-10-30, sesion 18).** Registro canonico de estado por ticker (ACTIVE/DELISTED/STALE/TRUNCATED_IPO) en `data/mappings/ticker_health.yaml` + modulo `src/ticker_health.py` (API: get_estado, is_eligible, filter_eligible, exclusion_reason). WBD DELISTED 2026-10-06 (adquirida por Paramount Skydance). `get_stock_list()` filtra DELISTED, `p1_h02` reporta `n_excluidos`, `health_check::check_ticker_health` WARN si ticker ACTIVE stale >=10 sesiones no clasificado. Invariante: ningun ticker ACTIVE pasa 10 sesiones sin datos sin que el operador lo sepa.
 
@@ -117,80 +123,85 @@ Snapshot al cierre del ultimo commit (2026-11-03, sesion 27 p5):
 
 - **CI tests (2026-10-17).** `.github/workflows/ci_tests.yml` corre la suite completa en cada push a main (paths-ignore: `data/`, `outputs/`), independiente del gate del `daily_run`. 2 tests de prevencion: `test_imports_declarados.py` (imports vs requirements) y `test_workflow_fetch_depth.py` (fetch-depth: 0 en jobs con pytest).
 
+- **`generate_estado_sistema.py` con pytest paralelo (2026-11-04, sesion 28).** `run()` acepta `timeout`; `section_tests()` pasa `-n auto --dist loadfile` + `timeout=600`. Sin esto, pytest serial sobre 4460 tests colgaba >10 min. Regenerado S28: 137s. Test centinela `test_generate_estado_usa_xdist.py`.
+
 - **Excepcion `datetime.now()` en `run.py:48` (2026-10-18, justificada).** `reference_date = datetime.now(ZoneInfo("Europe/Madrid"))` es fecha de EJECUCION (para `market_hours.is_session_closed` y `run_id`), no de observacion. La fecha de observacion se deriva del dataset (parquet o CSV por fuente). Auditoria 2026-10-18 reviso y confirmo.
 
 - **`data_quality.csv` con `date` = sesion bursatil (2026-10-18).** `compute_data_quality` escribe `date = last_expected_market_date(reference_date)`. Migracion historica: 155 filas en 9 fechas, 593->464 filas. Commits `4ade7384` + `5ef44486`.
 
 - **Audit post-receipt no bloqueante (2026-10-18).** `scripts/post_receipt_audit.py` compara `writer_receipts.json` vs `outputs/history/*.csv`. Detecta `MISSING` (receipt con `written=True`, CSV sin fila). No bloquea receipts. `health_check::check_receipt_audit()` lee los lunes y WARN si hay anomalias en 7 sesiones.
-
 ## 4. PENDIENTE (DESGLOSE)
 
 **Indice de frentes.** El detalle vive en `05_BITACORA.md` (cronologia reciente) y `04_HISTORICO.md` (tematica). Este documento solo lista estado.
 
 ### 4.1. Frentes de auditoria (cerrados)
 
-A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en `04_HISTORICO.md`; estado por frente en `ESTADO_SISTEMA.md`.
+A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS.
 
-**Cerrados en sesiones 16-21:**
+**Cerrados S16-S21** (detalle en `04_HISTORICO.md` y por item en `ESTADO_SISTEMA.md`):
+ticker health autonomo (WBD delisted), 15 tickers expansions (XLF 78.40 -> 85.11%),
+MTE futures_status STALE/UNAVAILABLE, MTE pending transition, MTE
+state<->return<->render contract, MTE-SCENARIO-CAPITULATION,
+DICT-CONTRACT-FRAMEWORK (11 pares), VALIDATION-GATE-LITERAL-10-10,
+LIQUIDITY-SEVERIDAD-OCULTA, CROSS-PROVIDER-VALIDATION-MUERTO,
+CATALOG-COVERAGE-WARN-PERPETUO, FASE-WYCKOFF-SEMANTICA,
+SECTOR-CONCENTRATION-LOW-COVERAGE, NH-NL-N-VALID-OBSERVABILITY,
+NEGATIVE-ZERO-CROSS-ASSET, O2-COHERENCIA-ANALISIS,
+BRK-NORMALIZACION-RESIDUAL, LIDERAZGO-DOBLE-TAUTOLOGICO (WONT_FIX),
+SOW-HOLDOUT-IMMUTABLE (WONT_FIX), DICT3-REACCUMULATION (WONT_FIX),
+DICT3-H04-INFERENCE-V2 (WONT_FIX), TOP20-USA/EU-INDICES (WONT_FIX),
+EU-HOLDINGS-DOWNLOAD-CAP (FIXED d6c3ebb4).
 
-- **Ticker health autonomo** (`fc6232d8` F1, `38bc1c42` F2, `90e269ff` F3, `78ce37a2` F4): WBD delisted, exclusion en `get_stock_list`, `n_excluidos` en `p1_h02`, `check_ticker_health` WARN. Detalle sesion 18.
-- **15 tickers expansions** (`c879df71`): XLF 9, XLV 4, XLU 1, XLY 1. Cobertura XLF 78.40% -> 85.11% efectiva.
-- **TOP20-FALTANTES-DATOS** -> FIXED (`c879df71`).
-- **MTE futures_status** (`5637d45e` + `5b96192f`): render MTE publica STALE/UNAVAILABLE. Bug proceso: test unit verde, integracion no ejercitada. Detectado por run local.
-- **MTE pending** (`5b96192f` + `db1e0a0f`): "Pending transition" cuando pending != None.
-- **MTE state<->return<->render contract** (`fc6f63c4`): AST guard bidireccional.
-- **MTE-SCENARIO-CAPITULATION** (`4056c033`): render_confirmation leia `mte_scenario` pero ningun productor lo escribia. Bug real. Fix en `compute_mte_confirmation`.
-- **DICT-CONTRACT-FRAMEWORK** (`d100ba01`, `f364ad2e`, `053db86c`, `457742f7`, `4056c033`, `e8a2a4ba`): 11 pares AST/schema + manifiesto + heuristico.
-- **VALIDATION-GATE-LITERAL-10-10** (`090a3439`): N/N dinamico.
-- **LIQUIDITY-SEVERIDAD-OCULTA** (`1fb791ab`): render pinta severity != OK.
-- **CROSS-PROVIDER-VALIDATION-MUERTO** (`fac7d5f1`): script muerto eliminado con step y upload.
-- **CATALOG-COVERAGE-WARN-PERPETUO** (`55a63833`): INFO si COMPLETE, WARN solo si regresion + DELISTED fuera de denominador.
-- **FASE-WYCKOFF-SEMANTICA** (`2c2a1c3e`): header renombrado a "Fase dominante".
-- **SECTOR-CONCENTRATION-LOW-COVERAGE** (`2c2a1c3e`): columna "N valid".
-- **NH-NL-N-VALID-OBSERVABILITY** (`2c2a1c3e`): columna "N valid NH/NL".
-- **NEGATIVE-ZERO-CROSS-ASSET** (`71371872`): `_fmt_signed` (FU-003a).
-- **O2-COHERENCIA-ANALISIS** (`1cb15d52`): universo dinamico en `stock_metrics`.
-- **BRK-NORMALIZACION-RESIDUAL** (`e04b53ff`): BRK.B en `rs_internal` + `sector_concentration`.
-- **LIDERAZGO-DOBLE-TAUTOLOGICO**: WONT_FIX razonado (top-5 por retorno siempre bate).
-- **SOW-HOLDOUT-IMMUTABLE** -> WONT_FIX 2026-10-29 (cohort 99.3% S&P 500 actual, no holdout virgen).
-- **DICT3-REACCUMULATION** -> WONT_FIX 2026-10-29 (C1 y C2 fallan).
-- **DICT3-H04-INFERENCE-V2** -> WONT_FIX 2026-10-29 (2 versiones rechazadas, v3 inviable ROI).
-- **TOP20-USA/EU-INDICES** -> WONT_FIX (ya cubierto por `selection_mode="target_weight"` desde `e7f27cd0`).
-- **EU-HOLDINGS-DOWNLOAD-CAP** -> FIXED `d6c3ebb4` + verificacion end-to-end `P1-H02-EU-VERIFICACION`.
+**Cerrados S27-S28** (los 7 FIXED de hoy + 3 verificaciones prod):
 
+- **3 VERIFICAR-*-PROD (bc7e0db8)**: WALK_BACK, IAE-CONSENSO, WYCKOFF-PHASE.
+  Evidencia run 41764334709 (head 45ba9bc2).
+- **DECISION-EFFECTIVE-DATE-POR-MODULO (B1)**: 4 TemporalContracts nuevos
+  (SEC_13F 568decd5, FINRA_DARKPOOL 3efd8037, SSGA_PRIMARY_FLOW 3fc0746e,
+  FRED_MACRO 7ecd595c). Cierre 324941a4. _IMPLEMENTED_CONTRACTS 9 -> 13.
+- **DECISION-MTE-DEGRADED-STATE (B2)**: indicators/mte/status.py con
+  VALID/DEGRADED/INVALID. mte_state en JSON (schema v2) y render.
+  Commits b73294f7 + cca7a372. 5 tests centinela.
+- **DECISION-FRESHNESS-POR-BLOQUE (B3)**: validation_gate importa
+  FRESHNESS_* de config.settings. Commits 18f77740 + fdd83b34.
+  5 tests centinela.
+- **AUDIT-DOC-70-V2D-PETICIONES (B5)**: cdc0dbcc + 771f5ecc.
+- **INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH**: 729317d7 + 3b6bfc90.
+  7 protegidos, 1 falso positivo, 1 bug real fixeado.
+- **WYCKOFF-5BX-INSTRUMENTACION**: 54d4a23f + f0f21518 + d3a0c09e.
+  11 tests centinela. Primer valor 27/68 (ACC=2, DIST=25).
+- **generate_estado_sistema.py pytest paralelo**: ab75e39c + 778c3089.
+  -n auto + timeout 600s. 137s vs >10 min.
 ### 4.2. Frente Wyckoff (sistema holdings, sesion 3 cerrada)
 
-Sistema holdings-based en produccion desde sesion 3 (2026-10-24).
-Modulos, pre-registros fallidos (docs 60 y 61) y limitaciones
-(PSY/PS dead code, ACCUMULATION=0, cobertura USA 231/504 holdings
-pendiente de ampliacion): detalle en 04_HISTORICO.md. Cobertura
-n_valid_rs por sector: sector_concentration.csv.
+Sistema holdings-based en produccion desde sesion 3 (2026-10-24). Modulos, pre-registros fallidos (docs 60 y 61) y limitaciones (PSY/PS dead code, `ACCUMULATION=0`, cobertura USA 231/504 holdings pendiente de ampliacion): detalle en `04_HISTORICO.md`. Cobertura `n_valid_rs` por sector: `sector_concentration.csv`.
 
 ### 4.3. Pendientes vivos
 
 - **DICT3-TOP20-COBERTURA:** FIXED `0ab436d9` (2026-10-26). A.2c desplegado condicionado. Pendiente respuesta del auditor a doc 70-v2d sobre parte restante.
 - **DICT3-H04-INTERVALS:** OPEN, registro del rechazo del IC95 inferencial. Evidencia del rechazo, no accionable.
 - **C2 (920):** BLOCKED_EXTERNAL. Auditor debe publicar comando + HEAD del valor externo (-4.264.449.932). Sin eso, no reproducible.
-- **WYCKOFF-5BX:** BLOCKED_EXTERNAL. `n_confirmed_H20_complete >= 550` (~2027).
+- **WYCKOFF-5BX:** BLOCKED_EXTERNAL. `n_confirmed_H20_complete >= 550` (~2027). Ahora instrumentado (54d4a23f), primer valor 27/68.
+- **COMMIT-46A3B370-AUDIT:** OPEN. Auditar commit 46a3b370 (27-oct) con mensaje CURRENT-PHASE-BASIS-CSV -> WONT_FIX toca docs/handoffs/HANDOFF.md (archivo obsoleto). Si es huerfano o intencional.
+- **SEMANTICA-SIN-CONTRATO-INVENTARIO:** OPEN. Inventariar conceptos con semantica sin contrato. ROI bajo, no urgente.
+- **CHECK-YAHOO-REVISION-FRECUENCIA:** OPEN. Verificar frecuencia real de check_yahoo_revision desde D2 (2026-09-30).
+- **FORCE-DISPATCH-EMERGENCIA:** OPEN. Documentar procedimiento de force dispatch de emergencia (13:30-20:00 UTC prohibido).
+- **POWERSHELL-TRAMPS-NO-DOCUMENTADAS:** OPEN. Auditar trampas PowerShell no documentadas en 01_METODO seccion 6.
 - **DAILY-RUN-FAIL-40992758129:** 7 dias sin reaparecer -> revisar 06-nov-2026, cerrar WONT_FIX si no.
 - **H5.3:** cron 20-nov-2026 06:17 UTC.
 - **RECEIPT-AUDIT-LAG:** cierre 17-nov-2026 (4 semanas de obs).
 - **CRON-SLOTS-OBS:** revision 10-nov-2026 (runs 20-oct a 10-nov).
 - **SCHEDULER-DELAYS:** p95 delays 10-nov-2026.
-- **VERIFICAR-WALK-BACK-PROD:** OPEN. Proximo scheduled con walk-back: verificar `WALK_BACK` en reporte (no `INCOHERENT`).
-- **VERIFICAR-IAE-CONSENSO-PROD:** OPEN. Proximo scheduled real: los 11 tickers del auditor (9.3) en la tabla correcta.
-- **VERIFICAR-WYCKOFF-PHASE-PROD:** OPEN. Proximo scheduled real: Matriz Regimen con fases con senal (`DIST_FORMING (20%, N=5)`), no RANGE plano.
-- **INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH:** 8 tests con main() sin monkeypatch de *_PATH. Auditar caso por caso. ROI bajo.
+- **VERIFICAR-MTE-STATE-PROD:** OPEN. Proximo scheduled real: confirmar mte_state presente en mte_state.json (schema v2).
+- **INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH:** CERRADO en S28.
 - **2 tests skipped** (`test_freshness.py` network, opt-in).
+- **3 tests failed** en local (test_freshness, datos stale). Ajenos al codigo. Se auto-resuelven con el proximo refresh de parquets.
 
 ### 4.4. Deudas documentadas (sin accion pendiente)
 
 - Modulos no integrados al pipeline: `target_universe`, `timestamps`, `catalog_pit`, `absence`, `validate_membership`, `cusip_resolver.resolve_cusip`.
 - `reporting_dedup` (P65/P66): capa de diagnostico por diseno.
 - `01c_LECCIONES`: lecciones operativas, no deuda.
-
----
-
 ## 5. COMANDOS DE ARRANQUE
 
 Pega este bloque al inicio de cada sesion:
