@@ -22,3 +22,6 @@ date,group,group_type,ticker,name,weight,phase,event_phase,close,basis,coverage_
 2026-10-30,DAXEX,index_eu,RHM.DE,RHEINMETALL AG,2.78,ACCUMULATION_FORMING,RANGE,1037.6,"warm_up_incompleto (n=336): acc formandose: rango activo con contexto de acumulacion, price 1037.6 dentro",91.76056338028168,336,False,
 2026-10-30,ISF.L,index_eu,III.L,3I GROUP FUND PLC,0.91,ACCUMULATION_FORMING,RANGE,2448.0,"acc formandose: rango activo con contexto de acumulacion, price 2448.0 dentro",85.41616980682089,1261,True,
 2026-10-30,ISF.L,index_eu,GLEN.L,GLENCORE PLC,2.13,MARKUP,ACCUMULATION,519.5,markup: price 519.5 > resistance+tol 275.5726164146101+3.533714159718311 (prevalece sobre dist forming/sin señal),85.41616980682089,1258,True,
+2026-11-02,DAXEX,index_eu,RHM.DE,RHEINMETALL AG,2.78,ACCUMULATION_FORMING,RANGE,1000.0,"warm_up_incompleto (n=337): acc formandose: rango activo con contexto de acumulacion, price 1000.0 dentro",91.76056338028168,337,False,
+2026-11-02,ISF.L,index_eu,III.L,3I GROUP FUND PLC,0.91,ACCUMULATION_FORMING,RANGE,2528.0,"acc formandose: rango activo con contexto de acumulacion, price 2528.0 dentro",85.41616980682089,1261,True,
+2026-11-02,ISF.L,index_eu,GLEN.L,GLENCORE PLC,2.13,MARKUP,ACCUMULATION,519.0,markup: price 519.0 > resistance+tol 275.5726164146101+3.533714159718311 (prevalece sobre dist forming/sin señal),85.41616980682089,1258,True,
