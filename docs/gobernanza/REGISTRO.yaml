@@ -7231,20 +7231,40 @@ items:
 - id: DECISION-EFFECTIVE-DATE-POR-MODULO
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
-  estado: OPEN
+  estado: IN_PROGRESS
+  commit: '568decd5'
   descripcion: |
     Contrato de temporalidad bottom-up: cada fuente declara
     as_of_date propia; cada modulo declara effective_date
-    derivada de sus inputs con regla explicita (min/max/otra);
-    el pipeline no propaga una fecha unica (auditoria 11-03,
-    hallazgo 10.1).
+    derivada de sus inputs con regla explicita; el pipeline
+    no propaga una fecha unica (auditoria 11-03, hallazgo
+    10.1).
+    Fuentes identificadas a cubrir: 6 (SEC 13F, FINRA
+    darkpool, SSGA holdings, BME, Euronext, FRED macro).
+    Cubiertas hasta hoy: 1 de 6 (SEC_13F, 568decd5).
   siguiente_accion: |
-    Mapear fuentes con as_of_date propia (src/effective_date.py
-    cubre equities; SEC, FINRA, SSGA, BME, Euronext no) y
-    especificar f por modulo. Documentar el contrato en
-    02_ARQUITECTURA antes de implementar. No hay decision
-    binaria: es rediseno del contrato.
-
+    Anadir TemporalContract para las 5 fuentes restantes
+    (FINRA, SSGA, BME, Euronext, FRED), una por commit.
+    Patron: src/temporal_contracts/<fuente>.py con clase
+    que herede de TemporalContract, entrada en
+    _IMPLEMENTED_CONTRACTS, 5-9 tests centinela.
+    Pendiente decision de diseno: si FINRA/BME/Euronext
+    leen de parquet local (patron SEC_13F) o de un dict
+    en memoria (patron EquityEOD).
+  evidencia: |
+    SEC_13F registrado en 568decd5.
+    src/temporal_contracts/sec_13f.py (4739 B): clase
+    Sec13F(TemporalContract), effective_date = max(
+    PERIODOFREPORT) del quarter mas reciente en
+    data/sec_13f/processed/, expected_date = quarter-end
+    mas reciente con deadline 45d cumplido, max_lag_days
+    = 90, min_coverage = 0.9.
+    9 tests centinela en tests/test_sec_13f_contract.py
+    (9 passed): deadline 45d, quarter esperado por fecha,
+    resolve con/sin datos, INSUFFICIENT si 1 quarter de
+    lag. py_compile OK. smoke: get_contract(
+    SEC_13F) devuelve name=SEC_13F family=SEC max_lag=90.
+  verificacion: FIXED
 - id: DECISION-MTE-DEGRADED-STATE
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
