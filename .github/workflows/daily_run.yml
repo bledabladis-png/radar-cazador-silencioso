@@ -228,6 +228,15 @@ jobs:
         # si la frescura es insuficiente, no se publica el reporte.
         run: python -m pytest tests/test_freshness.py -q --tb=short
 
+      - name: Wyckoff 5BX counter
+        # Instrumentacion de WYCKOFF-5BX (item WYCKOFF-5BX-INSTRUMENTACION).
+        # Cuenta fases confirmadas (ACC/DIST) con >= 20 sesiones de
+        # antiguedad. Lee los 6 CSVs wyckoff_* de outputs/history/ y
+        # escribe outputs/state/wyckoff_5bx_counter.json. Se ejecuta
+        # tras run.py (que genera los CSVs) y antes del upload (para
+        # que el JSON viaje en el artifact daily-report).
+        run: python scripts/wyckoff_h20_counter.py
+
       - name: Upload artifacts (downloadable report)
         uses: actions/upload-artifact@v4
         with:
@@ -248,6 +257,7 @@ jobs:
             outputs/history/sec_nport_position_change_quarterly.csv
             outputs/state/mte_state.json
             outputs/state/liquidity_state.json
+            outputs/state/wyckoff_5bx_counter.json
             outputs/audit/pyflakes_report.txt
             outputs/history/wyckoff_usa_sector_accumulation.csv
             outputs/history/wyckoff_usa_sector_distribution.csv
