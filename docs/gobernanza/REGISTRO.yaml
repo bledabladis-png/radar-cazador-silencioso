@@ -7278,20 +7278,36 @@ items:
 - id: DECISION-FRESHNESS-POR-BLOQUE
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
-  estado: OPEN
+  estado: FIXED
+  commit: '18f77740'
   descripcion: |
     Bloque = fuente de datos, no seccion del reporte. Cada
     fuente declara as_of_date propia; el reporte agrupa por
-    fuente. Formalizar la implementacion existente en
-    src/report/freshness.py y src/pipeline/validation_gate.py
-    (auditoria 11-03, hallazgo 10.3).
-  siguiente_accion: |
-    Documentar en 02_ARQUITECTURA que bloque = fuente de
-    frescura. Enumerar fuentes con as_of_date declarado.
-    Auditar que src/report/freshness.py y
-    src/pipeline/validation_gate.py usan la misma definicion.
-    No implementar seccion-frescura.
-
+    fuente. Auditoria de src/report/freshness.py y
+    src/pipeline/validation_gate.py completada el 2026-11-04.
+  evidencia: |
+    Divergencia encontrada: validation_gate hardcodeaba
+    age > 14 (FINRA) y age > 5 (CBOE) en vez de usar las
+    constantes de config.settings que ya consumia
+    src/report/freshness.py. El 14 de FINRA era mas estricto
+    que el umbral CURRENT de la propia constante
+    FRESHNESS_FINRA = (20, 28, 45): la advertencia de
+    'obsoleto' saltaba cuando el dato aun era CURRENT segun
+    el render. CBOE: (3, 5, 10), el hardcoded 5 coincidia
+    con FRESHNESS_CBOE[1].
+    Fix 18f77740: validation_gate importa FRESHNESS_CBOE y
+    FRESHNESS_FINRA de config.settings y usa [1] (frontera
+    RECENT/STALE) en ambos checks. FINRA 14 -> 28. CBOE
+    5 -> 5 (sin cambio de comportamiento). Elimina la
+    duplicacion: cualquier cambio futuro en las constantes
+    se propaga automaticamente al gate.
+    5 tests centinela en
+    tests/test_validation_gate_freshness_thresholds.py
+    (5 passed): import de config.settings, uso de [1], sin
+    hardcoded 14 ni 5, import fuera de try:, coherencia de
+    tuplas. 122 passed, 2 skipped en el subset de
+    validation_gate + freshness.
+  verificacion: FIXED
 - id: AUDIT-DOC-70-V2D-PETICIONES
   tipo: documentacion
   ciclo: '2026-11-03'
