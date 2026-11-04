@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from src.dependency_tracker import audit_double_counting
+from config.settings import FRESHNESS_CBOE, FRESHNESS_FINRA
 
 
 def _add_check(checks, errors, nombre, ok=True, detalle=""):
@@ -136,7 +137,7 @@ def run_validation_gate(wyckoff_holdings_data, pcr_data, darkpool_data, mte_resu
             try:
                 d = pd.Timestamp(week)
                 age = (_ref - d).days
-                if age > 14:
+                if age > FRESHNESS_FINRA[1]:
                     _add_check(validation_checks, validation_errors, "Freshness Dark Pool", True, f"obsoleto {age} dias (advertencia)")
                 else:
                     _add_check(validation_checks, validation_errors, "Freshness Dark Pool", True, f"{age} dias")
@@ -154,7 +155,7 @@ def run_validation_gate(wyckoff_holdings_data, pcr_data, darkpool_data, mte_resu
             try:
                 d = pd.Timestamp(last_date)
                 age = (_ref - d).days
-                if age > 5:
+                if age > FRESHNESS_CBOE[1]:
                     _add_check(validation_checks, validation_errors, "Freshness PCR", True, f"desactualizado {age} dias (advertencia)")
                 else:
                     _add_check(validation_checks, validation_errors, "Freshness PCR", True, f"{age} dias")
