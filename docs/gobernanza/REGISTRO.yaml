@@ -7232,21 +7232,33 @@ items:
 - id: DECISION-MTE-DEGRADED-STATE
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
-  estado: OPEN
+  estado: FIXED
+  commit: 'b73294f7'
   descripcion: |
-    Introducir taxonomia propia del MTE en
-    indicators/mte/status.py: VALID / DEGRADED / INVALID,
-    separada de src/temporal_contracts/validation.py (que
-    valida artefactos, no outputs de modulo). Derivada de
-    futures_status, pending, coverage y confidence
-    (auditoria 11-03, hallazgo 10.2).
-  siguiente_accion: |
-    Crear indicators/mte/status.py con VALID / DEGRADED /
-    INVALID. Anadir mte_state al dict de compute_mte y a
-    outputs/state/mte_state.json. Renderizar en
-    src/report/volatility_mte.py. Tests centinela para las
-    3 transiciones.
-
+    Taxonomia propia del MTE en indicators/mte/status.py:
+    VALID / DEGRADED / INVALID, separada de
+    src/temporal_contracts/validation.py (que valida
+    artefactos, no outputs de modulo). Derivada de
+    futures_status, coverage y confidence. pending no
+    degrada (transicion en curso). scenario=MIXED no
+    degrada (escenario valido). confidence < 0.5 no
+    degrada (el render ya lo marca UNCONFIRMED).
+  evidencia: |
+    Implementado en b73294f7. indicators/mte/status.py (624 B)
+    con VALID/DEGRADED/INVALID y COVERAGE_MIN=0.90.
+    compute_mte persiste mte_state en outputs/state/
+    mte_state.json (schema_version 1->2, aditivo) y lo
+    publica en el return. render_mte publica MTE Status
+    cuando != VALID. 5 tests centinela en
+    tests/test_mte_status.py (5 passed). Regresion MTE:
+    30 passed (test_mte_return_contract, test_mte_engine,
+    test_mte_state, test_mte_status,
+    test_mte_futures_status_unavailable). Suite completa:
+    4395 passed, 2 skipped (subset sin
+    integration_real_data; los 3 fallos de
+    test_freshness.py son datos locales stale, ajenos al
+    cambio).
+  verificacion: FIXED
 - id: DECISION-FRESHNESS-POR-BLOQUE
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
