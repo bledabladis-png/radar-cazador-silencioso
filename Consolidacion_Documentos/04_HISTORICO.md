@@ -3216,3 +3216,198 @@ siguen OPEN: `VERIFICAR-WALK-BACK-PROD`, `VERIFICAR-IAE-CONSENSO-PROD`,
 `VERIFICAR-WYCKOFF-PHASE-PROD`. Proximo run scheduled real los cierra
 con la misma descarga del artifact.
 
+---
+
+---
+
+## 2026-11-04 (sesion 28) - 7 items FIXED con codigo real
+
+**Objetivo.** Cerrar con codigo real, no solo documentacion, los 4
+items de auditoria 11-03 pendientes (B1/B2/B3/B5) y 2 items
+relacionados (INVESTIGAR-TESTS, WYCKOFF-5BX-INSTRUMENTACION).
+Desbloquear generate_estado_sistema.py, que llevaba 2 sesiones
+sin regenerar por colgarse con pytest serial.
+
+**Contexto previo.** Sesion 27 (03-11) cerro los 3 VERIFICAR-*-PROD
+con evidencia del run 41764334709. B1/B2/B3/B5 reformulados con
+contrato real. INVESTIGAR-TESTS y WYCKOFF-5BX-INSTRUMENTACION abiertos.
+
+### B1 DECISION-EFFECTIVE-DATE-POR-MODULO: FIXED
+
+Contrato de temporalidad bottom-up: cada fuente declara as_of_date
+propia; cada modulo declara effective_date derivada de sus inputs
+con regla explicita; el pipeline no propaga una fecha unica.
+
+4 TemporalContracts nuevos en _IMPLEMENTED_CONTRACTS (9 -> 13):
+
+- **SEC_13F** (568decd5): effective = max(PERIODOFREPORT) del
+  quarter mas reciente en data/sec_13f/processed/. expected =
+  quarter-end con deadline 45d cumplido. max_lag = 90,
+  min_coverage = 0.9. 9 tests centinela.
+- **FINRA_DARKPOOL** (3efd8037): effective = max(week) de
+  darkpool_history.csv. expected = lunes-14d. max_lag = 45
+  (frontera STALE de FRESHNESS_FINRA). 8 tests centinela.
+- **SSGA_PRIMARY_FLOW** (3fc0746e): effective = max(Date) de
+  etf_primary_flow.csv. expected = last_expected_market_date.
+  max_lag = 5. 8 tests centinela.
+- **FRED_MACRO** (7ecd595c): effective = date de
+  liquidity_state.json. expected = last_expected_market_date.
+  max_lag = 90 (frontera STALE de FRESHNESS_FRED). 8 tests
+  centinela.
+
+Cierre del item en REGISTRO: 324941a4.
+
+Justificacion de las 2 fuentes no cubiertas:
+
+- **HoldingsPIT** (holdings_snapshots.csv): no es fuente temporal,
+  es log PIT append-only. Solo se escribe cuando cambia la
+  composicion de holdings (hash distinto). Un max(date) de hace N
+  dias no implica lag: implica que no hubo novedad. Un contrato de
+  lag mediria hace cuanto cambio, no esta fresca la fuente.
+- **BME/Euronext**: no son fuentes de datos propias, son mercados
+  cuyos precios entran via data/stock_prices.parquet (cubierto por
+  EQUITY_EOD) y cuyos indices entran via INDEX_EOD_EUROPA (ya
+  existente). Un contrato separado duplicaria cobertura.
+
+### B2 DECISION-MTE-DEGRADED-STATE: FIXED
+
+indicators/mte/status.py nuevo (624 B): VALID/DEGRADED/INVALID
+derivado de futures_status + coverage + confidence. Separado de
+src/temporal_contracts/validation.py (valida artefactos, no outputs
+de modulo).
+
+Reglas:
+- INVALID: futures_status == UNAVAILABLE AND coverage is None.
+- DEGRADED: no INVALID, y futures_status != OK, o coverage None
+  o < 0.90, o confidence no finito.
+- VALID: futures_status == OK, coverage >= 0.90, confidence finito.
+- pending != None NO degrada (transicion en curso).
+- scenario == MIXED NO degrada (escenario valido).
+- confidence < 0.5 NO degrada (el render ya lo marca UNCONFIRMED).
+
+compute_mte persiste mte_state en outputs/state/mte_state.json
+(schema_version 1 -> 2, aditivo) y lo publica en el return.
+render_mte publica MTE Status cuando != VALID. 5 tests centinela.
+Commits b73294f7 + cca7a372.
+
+### B3 DECISION-FRESHNESS-POR-BLOQUE: FIXED
+
+Divergencia encontrada: validation_gate hardcodeaba age > 14
+(FINRA) y age > 5 (CBOE) en vez de usar las constantes de
+config.settings que ya consumia src/report/freshness.py. El 14 de
+FINRA era mas estricto que el umbral CURRENT de la propia
+constante FRESHNESS_FINRA = (20, 28, 45): la advertencia de
+obsoleto saltaba cuando el dato aun era CURRENT segun el render.
+CBOE: (3, 5, 10), el hardcoded 5 coincidia con FRESHNESS_CBOE[1].
+
+Fix 18f77740: validation_gate importa FRESHNESS_CBOE y
+FRESHNESS_FINRA de config.settings y usa [1] (frontera
+RECENT/STALE). FINRA 14 -> 28. CBOE 5 -> 5. 5 tests centinela.
+Cierre fdd83b34.
+
+Nota sobre la eleccion [1] vs [2]: [1] = frontera RECENT/STALE
+= dato que ya no es reciente. [2] = frontera STALE/ARCHIVAL =
+dato obsoleto. Elegi [1] para consistencia con el render, que
+pinta STALE a partir de [2] pero el umbral de Conf. Frescura Baja
+arranca en [1]. Si en el futuro se prefiere [2], 1 linea de
+cambio.
+
+### B5 AUDIT-DOC-70-V2D-PETICIONES: FIXED
+
+Doc 70-v2d revisado (L82-230). Seccion 5: 5.1
+WYCKOFF-CLASSIFY-PHASE-HANG FALSE_POSITIVE (842c9aaf), 5.2
+WYCKOFF-TICKER-NORMALIZATION FIXED (4e94bf2e), 5.4
+GOVERNANZA-CI-NO-STEP FIXED (6fd537f8); 5.3 limpieza local.
+Seccion 6: 3 solicitudes al auditor ya cubiertas por
+DICT3-TOP20-COBERTURA (FIXED, 0ab436d9). Sin peticiones de
+producto no registradas. Commits 771f5ecc + cdc0dbcc.
+
+### INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH: FIXED
+
+Auditoria de los 8 tests que llaman main() del SUT sin monkeypatch
+de *_PATH a nivel de modulo. Resultado: 7 protegidos, 1 falso
+positivo, 1 bug real.
+
+Protegidos con monkeypatch ya presente: test_download_official_
+list_13f (DEST_DIR), test_generate_estado_failclosed (ROOT/OUT/
+IAE_ROOT), test_iae_validate_crosswalk_openfigi (MAPPINGS/
+OUT_DIR), test_monitor_double_counting_date (OUTPUT_CSV/
+PROJECT_ROOT), test_qqq_returns_yahoo_d1 (OUTPUT),
+test_regenerate_cusip_crosswalk (DATA_DIR/CATALOG/CROSSWALK),
+test_regenerate_radar_catalog (MAPPINGS/SNAPSHOTS/MANIFEST).
+
+Falso positivo: test_verify_actual_pasa llama hm.main([--verify])
+sin monkeypatch, pero --verify no escribe en ninguna rama (L222-
+225 retorna 1 si no hay manifest; L234-237 retorna 0 si coincide;
+L250-252 retorna 1 si difiere). Los write_text solo se alcanzan
+sin --verify o con --update.
+
+Bug real fixeado en 729317d7: test_intersection_main_devuelve_0
+llamaba hi.main() sin monkeypatch; OUT_PATH = ROOT/data/mappings/
+holdout_intersection.json (L28, L79 del script) se reescribia en
+cada pytest local. Fix: monkeypatch de hi.OUT_PATH a tmp_path +
+assert del output en tmp_path. 2 tests passed, 9 deselected tras
+el fix. Cierre 3b6bfc90.
+
+### WYCKOFF-5BX-INSTRUMENTACION: FIXED
+
+Implementado en dos commits atomicos:
+
+- 54d4a23f: indicators/wyckoff_h20.py (count_confirmed_h20_
+  complete, CONFIRMED_PHASES = {ACCUMULATION, DISTRIBUTION},
+  DEFAULT_MIN_SESSIONS = 20, THRESHOLD_5BX = 550). scripts/
+  wyckoff_h20_counter.py (lee 6 CSVs wyckoff_* de outputs/history/,
+  escribe outputs/state/wyckoff_5bx_counter.json). 11 tests
+  centinela. JSON en LF, writer con newline=chr(10).
+- f0f21518: step Wyckoff 5BX counter insertado en daily_run.yml
+  job run-system idx 20, entre Validate freshness post-run (idx
+  19) y Upload artifacts (idx 21). JSON anadido al path del
+  artifact daily-report. Verificado con yaml.safe_load: ORDER_OK,
+  artifact_json_present=True.
+
+Semantica provisional documentada: CONFIRMED = event_phase in
+{ACCUMULATION, DISTRIBUTION}. FORMING y post-break (MARKUP,
+MARKDOWN) NO cuentan. H20_complete = al menos 20 sesiones
+bursatiles entre phase_since y reference_date. Aproximacion con
+pd.bdate_range (ignora festivos NYSE). Revisar si la spec v3 de
+Wyckoff 5b.X exige calendario NYSE exacto.
+
+Primer resultado real (datos run 02-11): n_confirmed_h20_complete
+= 27, n_confirmed_total = 68, by_phase = {ACCUMULATION: 2,
+DISTRIBUTION: 25}, reference_date = 2026-11-02, threshold_5bx =
+550, threshold_reached = False. Coherente con la dependencia
+original (~2027).
+
+Cierre d3a0c09e.
+
+### generate_estado_sistema.py: desbloqueado
+
+Bug: pytest serial sobre 4460 tests colgaba >10 min. Fix ab75e39c:
+run() acepta timeout opcional (captura subprocess.TimeoutExpired
+como mensaje, rc=-1); section_tests() pasa -n auto --dist
+loadfile + timeout=600.
+
+Regenerado ESTADO_SISTEMA.md: 137s (antes >10 min colgado).
+
+5 fixes colaterales (778c3089):
+- pyflakes limpio: 3 imports datetime.date sin usar en
+  finra_darkpool.py, fred_macro.py, ssga_primary_flow.py.
+- test_generate_estado_failclosed: _run(cmd) -> _run(cmd,
+  timeout=None).
+- test_ci_entrypoints_import: scripts/wyckoff_h20_counter.py
+  anadido a CI_ENTRYPOINTS.
+
+**Verificacion.** pyflakes LIMPIO, compileall OK. Suite: 4460
+passed, 3 failed (test_freshness local stale, ajenos al codigo),
+2 skipped. gobernanza [OK], poda [OK]. Los 4 contratos nuevos
+con smoke test: get_contract(<name>) devuelve la clase registrada.
+
+**Deuda activa (anotada, no oculta).** Cierre documental de
+sesion 28 (HANDOFF + 00_ARRANQUE + 05_BITACORA + 04_HISTORICO).
+En el momento de escribir esta seccion, HANDOFF y 00_ARRANQUE ya
+actualizados.
+
+**Recuperable.** git log --oneline | grep -E
+568decd5|3efd8037|3fc0746e|7ecd595c|324941a4|b73294f7|cca7a372|
+18f77740|fdd83b34|729317d7|3b6bfc90|54d4a23f|f0f21518|d3a0c09e|
+ab75e39c|778c3089 devuelve los commits completos.

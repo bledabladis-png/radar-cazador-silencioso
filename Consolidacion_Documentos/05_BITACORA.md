@@ -44,6 +44,61 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-04 — Sesion 28: 7 items FIXED con codigo real
+
+**Objetivo.** Cerrar con codigo real, no solo documentacion, los 4 items
+de auditoria 11-03 pendientes (B1/B2/B3/B5) y 2 items relacionados
+(INVESTIGAR-TESTS, WYCKOFF-5BX-INSTRUMENTACION). Desbloquear
+generate_estado_sistema.py, que llevaba 2 sesiones sin regenerar.
+
+**Hecho (22 commits).**
+
+- VERIFICAR-*-PROD FIXED (`bc7e0db8`). Evidencia run `41764334709`
+  (head `45ba9bc2`). WALK_BACK en reporte L13-15. IAE: 11 tickers del
+  auditor en tabla correcta. WYCKOFF-PHASE: Matriz de Regimen publica
+  fases con senal (`DIST_FORMING (20%, N=5)`).
+- B2 DECISION-MTE-DEGRADED-STATE FIXED (`b73294f7` + `cca7a372`).
+  `indicators/mte/status.py` con VALID/DEGRADED/INVALID. `mte_state`
+  en JSON (schema v1->v2) y en render. 5 tests centinela.
+- INVESTIGAR-TESTS FIXED (`729317d7` + `3b6bfc90`). 7 tests protegidos,
+  1 falso positivo (`test_verify_actual_pasa`), 1 bug real
+  (`test_intersection_main_devuelve_0` escribia en `data/mappings/`).
+- B3 DECISION-FRESHNESS-POR-BLOQUE FIXED (`18f77740` + `fdd83b34`).
+  `validation_gate` hardcodeaba `age > 14` (FINRA) y `age > 5` (CBOE).
+  Fix: importa `FRESHNESS_CBOE`/`FRESHNESS_FINRA` de `config.settings`
+  y usa `[1]` (frontera RECENT/STALE). FINRA 14 -> 28. 5 tests.
+- B1 DECISION-EFFECTIVE-DATE-POR-MODULO FIXED (`568decd5`, `3efd8037`,
+  `3fc0746e`, `7ecd595c`, `324941a4`). 4 TemporalContracts nuevos
+  (SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO).
+  `_IMPLEMENTED_CONTRACTS` 9 -> 13. Justificacion de las 2 fuentes
+  no cubiertas: HoldingsPIT (log PIT append-only, no mide lag);
+  BME/Euronext (cubiertos por EQUITY_EOD + INDEX_EOD_EUROPA).
+- WYCKOFF-5BX-INSTRUMENTACION FIXED (`54d4a23f` + `f0f21518` +
+  `d3a0c09e`). `indicators/wyckoff_h20.py` + `scripts/wyckoff_h20_
+  counter.py`. 11 tests centinela. Wire en `daily_run.yml` job
+  `run-system` idx 20. Primer valor: 27/68 confirmados (ACC=2, DIST=25).
+- generate_estado_sistema.py desbloqueado (`ab75e39c` + `778c3089`).
+  `run()` con timeout, `section_tests()` con `-n auto` + `timeout=600`.
+  Regenerado ESTADO_SISTEMA.md: 137s (antes >10 min colgado). 5 fixes
+  colaterales: pyflakes limpio (3 imports sin usar), `test_generate_
+  estado_failclosed` (`_run` acepta timeout), `test_ci_entrypoints_
+  import` (`wyckoff_h20_counter` en `CI_ENTRYPOINTS`).
+
+**Pendiente al cierre.**
+
+- Cierre documental de sesion 28 (HANDOFF + 00_ARRANQUE + 05_BITACORA +
+  04_HISTORICO). HANDOFF y 00_ARRANQUE ya actualizados.
+- 5 items OPEN de documentacion/investigacion: COMMIT-46A3B370-AUDIT,
+  SEMANTICA-SIN-CONTRATO-INVENTARIO, CHECK-YAHOO-REVISION-FRECUENCIA,
+  FORCE-DISPATCH-EMERGENCIA, POWERSHELL-TRAMPS-NO-DOCUMENTADAS.
+- Verificar `mte_state` en prod (proximo scheduled post-fix).
+
+**Proximo paso sugerido.** Elegir entre: (1) CHECK-YAHOO-REVISION-
+FRECUENCIA (bug real potencial), (2) integrar `timestamps.py` en
+pipeline_contractual (modulo huerfano), (3) FASE-A-REGIMEN-ECONOMIA-
+REAL (3-5 sesiones).
+
+---
 ### 2026-11-03 — Sesion 27 parte 5: consolidacion documental
 
 **Objetivo.** Tras el fix WYCKOFF-PHASE-SEMANTICA, dejar la
@@ -1981,51 +2036,6 @@ y distribucion cableadas al pipeline (Bloque B).
 **Proximo paso sugerido.** Retomar en nuevo chat con
 `docs/handoffs/HANDOFF.md` + `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`
 pegados al inicio.
-
-### 2026-10-23 - Verificacion scheduled target 2026-10-22 + auditoria autonomia
-
-**Objetivo.** Verificar en CI real los 4 fixes criticos de la sesion
-2026-10-22 (target 2026-10-22 en scheduled). Auditar autonomia
-completa del sistema. Documentar.
-
-**Hecho.**
-- **Scheduled target 2026-10-22 verificado**: run `39884468711`
-  (23-10 01:31 UTC, slot 22-10 23:17 UTC, delay 2h14m, `run-system:
-  success`).
-  - Liquidez: `NEUTRAL (Signal Consistency: 90%)`, no N/A.
-  - `sector_correlation_summary` (P7): receipt OK, 2026-10-22.
-  - `pcr_history` (side effect fix): receipt OK, 2026-10-22.
-  - `cboe_vix3m` en origin/main: 4298 filas, 0 no-bursatiles.
-  - `data_quality.date = 2026-10-22` y `receipt_audit.target =
-    2026-10-22`. Contrato temporal integro. 20 writers, 18 OK + 2
-    no-OK esperados (sector_rank_deltas NO_DATE_CHECK,
-    sector_flow_characteristics LAGGED).
-- **Auditoria autonomia (REP-AUDIT-20261022-AUTONOMY-AUDIT)**:
-  FALSE_POSITIVE. Verificado con datos reales:
-  - FRED caido: `download_series` devuelve `None`, no reescribe CSV.
-  - `pipeline_gate` usa probe live (no parquet local). Parquet stale
-    + Yahoo fresco = READY correcto.
-  - 5/5 slots daily_run success 22-10; 2/2 update_macro_manual success.
-  - Cadencia por fuente dentro de ventana (diaria≤3d, semanal≤10d,
-    mensual≤60d).
-- **5 huecos auditoria dia anterior investigados**:
-  - Health Check 19-oct: FALSE_POSITIVE (regla antigua FAIL con 2/5).
-  - ETF/European Holdings 1-oct: FALSE_POSITIVE (fallaron 6h y 4h
-    antes del commit `1bead8ad` con `sys.path.insert`).
-  - Index Holdings 1-oct: FIXED `e54f95b6` (refactor rows.append
-    defensivo, `All arrays must be of the same length`).
-  - cron_slots WARN 3/5: FALSE_POSITIVE (delays GitHub 2-4h, regla
-    actual clasifica WARN correctamente).
-  - manifest close_nan_last: FALSE_POSITIVE (WBD delisted + 19 BME).
-  - iae_section WARN: FIXED `e54f95b6` (heading flexible 13F).
-
-**Commits.** `e54f95b6`, `cdb93364`, `5bf4b4b3`, `2b5b5341`,
-`41855de6`.
-
-**Pendiente.** Ningun bug abierto. Ver HANDOFF.md.
-
-**Proximo paso sugerido.** Retomar en nuevo chat con
-`docs/handoffs/HANDOFF.md` pegado al inicio.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 
