@@ -7373,9 +7373,43 @@ items:
 - id: WYCKOFF-5BX-INSTRUMENTACION
   tipo: observabilidad
   ciclo: '2026-11-03'
-  estado: OPEN
-  descripcion: 'Decidir si instrumentar n_confirmed_H20_complete antes de 2027 o dejar madurar (WYCKOFF-5BX esta BLOCKED_EXTERNAL hasta ~2027)'
-  siguiente_accion: 'Decidir si instrumentar el conteo ahora (observabilidad) o dejar madurar solo hasta >= 550 confirmados.'
+  estado: FIXED
+  commit: '54d4a23f'
+  descripcion: |
+    Instrumentacion de n_confirmed_H20_complete para
+    WYCKOFF-5BX (BLOCKED_EXTERNAL hasta ~2027 con
+    dependencia n_confirmed_H20_complete >= 550
+    post-2026-10-02). El contador se calcula en cada run y
+    se publica en el artifact daily-report.
+  evidencia: |
+    Implementado en dos commits atomicos:
+    - 54d4a23f: indicators/wyckoff_h20.py (funcion
+      count_confirmed_h20_complete, CONFIRMED_PHASES =
+      {ACCUMULATION, DISTRIBUTION}, DEFAULT_MIN_SESSIONS =
+      20, THRESHOLD_5BX = 550), scripts/wyckoff_h20_counter.py
+      (lee los 6 CSVs wyckoff_* de outputs/history/, escribe
+      outputs/state/wyckoff_5bx_counter.json), 11 tests
+      centinela en tests/test_wyckoff_h20_counter.py
+      (11 passed). JSON en LF, writer con newline=n.
+    - f0f21518: step 'Wyckoff 5BX counter' insertado en
+      daily_run.yml job run-system idx 20, entre 'Validate
+      freshness post-run' (idx 19) y 'Upload artifacts'
+      (idx 21). JSON anadido al path del artifact
+      daily-report. Verificado con yaml.safe_load:
+      ORDER_OK, artifact_json_present=True.
+    Primer resultado real (datos run 02-11):
+    n_confirmed_h20_complete = 27, n_confirmed_total = 68,
+    by_phase = {ACCUMULATION: 2, DISTRIBUTION: 25},
+    reference_date = 2026-11-02, threshold_5bx = 550,
+    threshold_reached = False. Coherente: el contador
+    arranca con 27 confirmados, la dependencia de
+    WYCKOFF-5BX (>= 550) se alcanzara aproximadamente en
+    2027 segun la proyeccion original.
+    Limitacion documentada: min_sessions usa
+    pd.bdate_range (ignora festivos NYSE). Si la spec v3
+    de Wyckoff 5b.X exige calendario NYSE exacto, revisar
+    _business_days_between en el commit de la spec.
+  verificacion: FIXED
 - id: CHECK-YAHOO-REVISION-FRECUENCIA
   tipo: observabilidad
   ciclo: '2026-11-03'
