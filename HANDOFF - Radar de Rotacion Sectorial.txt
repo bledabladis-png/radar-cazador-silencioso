@@ -310,7 +310,7 @@ Esperado:
 
 ---
 
-### 5.5. PowerShell / Python (lecciones 2026-11-04)
+### 5.6. PowerShell / Python (lecciones 2026-11-04)
 
 - **if inline en PowerShell no es expresion, es sentencia.**
   No usar como valor asignable. Usar ternario o bloque previo.
