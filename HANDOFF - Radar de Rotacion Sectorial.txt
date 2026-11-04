@@ -7,185 +7,150 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-11-03, sesion 27)
+## 1. ESTADO AL CIERRE (2026-11-04, sesion 28)
 
-HEAD: `386b6fe0` (consultar `git log --oneline -1` para el actual).
+HEAD: '778c3089' (consultar 'git log --oneline -1' para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       Conteo exacto en ESTADO_SISTEMA.md seccion 2.
-       Al cierre sesion 27: sin regeneracion (no se toco codigo
-       de tests en S27; el conteo vigente esta en ESTADO_SISTEMA).
+       4460 passed, 3 failed (test_freshness, datos locales stale),
+       2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 276 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 287 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
+Contratos temporales: 13 (_IMPLEMENTED_CONTRACTS), 5 familias.
 
 Fase 2 (auditoria por bloques): COMPLETA. B1-B8 auditados.
 Fase 0 + Fase 1: COMPLETAS.
 Transversales: cerrados.
 Analisis economico 30-oct (FASE-A): 5 items cerrados.
 
-Sesion 26 (2026-11-02): 2 frentes cerrados end-to-end.
-  - GUARD-COVERAGE-TEST-CONTAMINA-STATE: FIXED (1f935b1d, cd6b5bee).
-  - WYCKOFF-MD-FILTRO-WEIGHT: FIXED (8b57bd73, 0ac42079). Filtro
-    MIN_WEIGHT_PCT=0.5 en .md, CSVs completos como artifact.
+Sesion 28 (2026-11-04): 7 items cerrados FIXED con codigo real.
+  - 3 VERIFICAR-*-PROD (WALK_BACK, IAE-CONSENSO, WYCKOFF-PHASE):
+    FIXED con evidencia run 41764334709 (head 45ba9bc2). Commit bc7e0db8.
+  - DECISION-EFFECTIVE-DATE-POR-MODULO (B1): FIXED. 4 nuevos
+    TemporalContracts (SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW,
+    FRED_MACRO). Commits 568decd5, 3efd8037, 3fc0746e, 7ecd595c.
+    _IMPLEMENTED_CONTRACTS pasa de 9 a 13. Cierre 324941a4.
+    Justificacion de las 2 fuentes no cubiertas: HoldingsPIT es log
+    PIT append-only (no mide lag); BME/Euronext cubiertos por
+    EQUITY_EOD + INDEX_EOD_EUROPA.
+  - DECISION-MTE-DEGRADED-STATE (B2): FIXED. indicators/mte/status.py
+    con VALID/DEGRADED/INVALID. mte_state en JSON (schema v1->v2) y
+    en render. 5 tests centinela. Commits b73294f7 + cca7a372.
+  - DECISION-FRESHNESS-POR-BLOQUE (B3): FIXED. validation_gate
+    hardcodeaba age mayor 14 (FINRA) y age mayor 5 (CBOE); ahora usa
+    FRESHNESS_FINRA[1]/FRESHNESS_CBOE[1] de config.settings.
+    5 tests centinela. Commits 18f77740 + fdd83b34.
+  - AUDIT-DOC-70-V2D-PETICIONES (B5): FIXED con evidencia.
+    Commits 771f5ecc + cdc0dbcc.
+  - INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH: FIXED. 7 protegidos,
+    1 falso positivo, 1 bug real fixeado (test_intersection_main).
+    Commits 729317d7 + 3b6bfc90.
+  - WYCKOFF-5BX-INSTRUMENTACION: FIXED. n_confirmed_H20_complete
+    (indicators/wyckoff_h20.py + scripts/wyckoff_h20_counter.py).
+    Primer resultado: 27/68 confirmados (ACC=2, DIST=25). Step
+    wired en daily_run.yml job run-system idx 20.
+    Commits 54d4a23f + f0f21518 + d3a0c09e.
 
-Sesion 27 (2026-11-03) parte 1: revision de los 10 workflows.
-  - H2+H4 en daily_run.yml: FIXED (e351d486). Glob
-    sec_nport_positions_*.csv + continue-on-error qqq_sec_nport.
-  - H1 en 07_RUNBOOK.md: FIXED (d84ca390). Reestructurada seccion 2
-    (sec_nport semanal, macro_manual + qqq_sec_flow documentados).
-    Centinela tests/test_runbook_vs_workflows.py previene drift.
-  - VERIFICAR-SCHEDULED-387938E6: FIXED con run 41575090209.
+Sesion 28 (2026-11-04) parte 2: desbloqueo generate_estado_sistema.
+  - Bug: pytest serial sobre 4460 tests colgaba mas de 10 min.
+  - Fix: run() con timeout, section_tests() con -n auto +
+    timeout=600. Commit ab75e39c.
+  - Regenerado ESTADO_SISTEMA.md: 137s (antes mas de 10 min colgado).
+  - 5 fixes colaterales: pyflakes limpio (3 imports sin usar),
+    test_generate_estado_failclosed (_run acepta timeout),
+    test_ci_entrypoints_import (wyckoff_h20_counter en CI_ENTRYPOINTS).
+    Commit 778c3089.
 
-Sesion 27 (2026-11-03) parte 2: TEMPORAL-COHERENCE-WALK-BACK.
-  - Bug real detectado al abrir el reporte del run 41575090209:
-    temporal_coherence=INCOHERENT y gate 11/11 (INCOHERENT). Dos
-    criterios incompatibles entre pipeline_gate (acepta walk-back)
-    y provenance (lag estricto vs max_lag=0).
-  - Fix 4 commits: estado WALK_BACK (3c488a22), run.py cablea
-    infer_walk_back (e25e051d), nota render (1abddd73), contrato
-    semantico + enmienda v1.3 + REGISTRO (7f1b6e4f).
-  - contract_max_lag_days sigue 0. No se relaja tolerancia:
-    estado nuevo con nombre propio. Gate y reporte comparten
-    coverage_pct_effective. INCOHERENT sigue detectable.
-  - 17 tests nuevos (49 passed). ESTADO_SISTEMA 4377 -> 4396
-    (+2 sin explicacion cerrada, anotado).
+Deuda activa: cierre documental de sesion 28 (este HANDOFF +
+00_ARRANQUE + 05_BITACORA + 04_HISTORICO). ESTADO_SISTEMA ya
+regenerado.
+## 2. SESION 2026-11-04 (sesion 28): detalle
 
-Sesion 27 (2026-11-03) parte 3: auditoria externa 11-03.
-  - Bug 9.3 FIXED (5bbc7681): filtro top_accumulating/
-    top_distributing por consenso (n_increase vs n_decrease), no
-    por sum_delta. 11 tickers clasificados contra sus recuentos:
-    AAPL/GOOGL/GOOG/HD/PG en Acumulando con mas reduciendo;
-    CB/NOW/VLO/WDC/EOG/LHX en Distribuyendo con mas aumentando.
-  - 3 tests centinela + probe con los 11 casos reales del run
-    41575090209. Codigo contradecia su propio docstring desde
-    c0f2a204 (01-11); primer run que publico la seccion fue el
-    03-11.
-  - 3 deudas OPEN del auditor (decision de producto):
-    TEMPORAL-EFFECTIVE-DATE-POR-MODULO (10.1), MTE-DEGRADED-STATE
-    (10.2), FRESHNESS-POR-BLOQUE (10.3).
+**Objetivo.** Cerrar los 4 items de auditoria 11-03 pendientes
+(B1/B2/B3/B5) + 2 items relacionados (INVESTIGAR-TESTS,
+WYCKOFF-5BX-INSTRUMENTACION) con codigo real, no solo documentacion.
 
-Sesion 27 (2026-11-03) parte 4: fase dominante excluye RANGE.
-  - Usuario detecta que la columna 'Fase dominante' de la Matriz
-    de Regimen Sectorial era RANGE en los 11 sectores. Auditoria:
-    no era bug de calculo (lo retirado en sesion 3 fue clasificar
-    el ETF como entidad; aqui se clasifican holdings) sino
-    problema de informativa. RANGE = ausencia de senal, no fase.
-    Moda bruta siempre RANGE; la senal real (2a fase) quedaba
-    oculta.
-  - Fix a89eb1f5 (schema v2->v3, aditivo): 3 columnas nuevas
-    wyckoff_signal_phase/_share/_n. wyckoff_phase original
-    intacta (historico no se rompe). Desempate determinista:
-    MARKDOWN > DIST > DIST_FORMING > ACC_FORMING > ACC > MARKUP.
-    Render: 'DIST_FORMING (20%, N=5)' o 'RANGE (sin senal)'.
-  - Resultado 30-10: XLK->DIST_FORMING(20%), XLF->MARKDOWN(9%),
-    XLV->MARKUP(12%), XLE->DIST(10%), XLY->DIST_FORMING(10%),
-    XLP->DIST(5%), XLI->MARKDOWN(11%), XLB->DIST(10%),
-    XLU->MARKDOWN(5%), XLRE->DIST(5%), XLC->MARKDOWN(11%).
+**Contexto previo.** Sesion 27 (03-11) cerro los 3 VERIFICAR-*-PROD
+con evidencia del run 41764334709. B1/B2/B3/B5 reformulados con
+contrato real. INVESTIGAR-TESTS y WYCKOFF-5BX-INSTRUMENTACION abiertos.
 
-Sesion 27 (2026-11-03) parte 5: consolidacion documental.
-  - 4 tests adaptados a schema v3 (1335cb72). T1 y T3 esperaban
-    .schema == '2'; T2/T6 cambian v2->v3. La nota de fase dominante
-    actualizada. ESTADO_SISTEMA regenerado: 4396 -> 4403 passed.
-  - Contrato docs/auditoria/sector_regime_matrix_v3.md nuevo
-    (7e4fe196, 4918 B, LF). 3 columnas aditivas, pool de 6 fases
-    con senal, desempate determinista, invariantes I1-I5, ejemplo
-    con datos reales, rollback.
-  - 02_ARQUITECTURA.md L216-224: distingue wyckoff_phase (moda
-    bruta con RANGE, auditoria) vs wyckoff_signal_phase (moda de
-    fases con senal, informativa).
-  - 01_METODO seccion 3: 2 lecciones nuevas. 'Escala pct_*: 0-100,
-    no 0-1' (bug real del render: '2000%' donde era '20%').
-    'Out-String convierte \n a \r\n al capturar' (2 diagnosticos
-    erroneos por verificar EOL de blob con `git cat-file | Out-String`).
-  - Regla documentada: 'si tiene semantica, tiene contrato'. Gap
-    previo: la Matriz de Regimen no tenia contrato. Mismo patron
-    que temporal_coherence vs pipeline_gate antes del fix WALK_BACK.
+**Hecho (22 commits).**
 
-Docs: 01_METODO dividido (01d_POWERSHELL_AUDITORIA.md). README sin
-cifras caducas. Regla chdir/__file__ en 01_METODO seccion 3.
+1. VERIFICAR-*-PROD FIXED (bc7e0db8). Evidencia run 41764334709,
+   head 45ba9bc2. WALK_BACK en reporte L13-15 (no INCOHERENT).
+   IAE: 11 tickers del auditor en tabla correcta. WYCKOFF-PHASE:
+   Matriz de Regimen publica fases con senal (DIST_FORMING (20%, N=5)).
 
-Pendientes vivos: 3 OPEN verificacion prod (VERIFICAR-WALK-BACK-PROD,
-VERIFICAR-IAE-CONSENSO-PROD, VERIFICAR-WYCKOFF-PHASE-PROD, proximo
-scheduled real) + 1 OPEN auditoria (INVESTIGAR-TESTS, ROI bajo) + 2
-BLOCKED_EXTERNAL + 1 OPEN DICT3 (evidencia) + 4 observacionales con
-fecha (06-nov, 10-nov x2, 17-nov, 20-nov) + 1 prioritaria (a)
-analista + 3 deudas de auditoria 11-03 sin decision de producto. Ver
-seccion 3.
+2. B2 DECISION-MTE-DEGRADED-STATE FIXED (b73294f7 + cca7a372).
+   indicators/mte/status.py nuevo: VALID/DEGRADED/INVALID derivado de
+   futures_status + coverage + confidence. compute_mte persiste
+   mte_state en JSON (schema_version v1->v2) y en return.
+   render_mte publica MTE Status cuando != VALID. 5 tests centinela.
 
-DEUDA ACTIVA (no bloquea, anotada): 00_ARRANQUE a 20305 B (margen
-175 B sobre 20480) y 01_METODO a 20369 B (margen 111 B). Proximo
-contenido en cualquiera obliga recorte o division. Candidatos:
-seccion 4.2 del arranque (Wyckoff detallado, ya vive en historico);
-seccion 3 de 01_METODO (lecciones, ya dividida parcialmente en 01c).
+3. INVESTIGAR-TESTS FIXED (729317d7 + 3b6bfc90). Auditoria de
+   los 8 tests: 7 protegidos con monkeypatch, 1 falso positivo
+   (test_verify_actual_pasa no escribe con --verify), 1 bug real
+   (test_intersection_main_devuelve_0 escribia en
+   data/mappings/holdout_intersection.json real). Fix: monkeypatch
+   de hi.OUT_PATH a tmp_path.
 
----
-## 2. SESION 2026-11-03 (sesion 27): detalle
+4. B3 DECISION-FRESHNESS-POR-BLOQUE FIXED (18f77740 + fdd83b34).
+   validation_gate hardcodeaba age mayor 14 (FINRA) y age mayor 5
+   (CBOE). El 14 era mas estricto que FRESHNESS_FINRA[0]=20 (CURRENT):
+   advertencia saltaba con dato aun CURRENT. Fix: importa
+   FRESHNESS_CBOE/FRESHNESS_FINRA de config.settings y usa [1]
+   (frontera RECENT/STALE). FINRA 14 a 28. 5 tests centinela.
 
-**Objetivo.** Revisar los 10 workflows del repo (daily_run, ci_tests,
-health_check, 7 update_*) para detectar drift entre runbook, YAML y
-produccion. Sin cambio de producto.
+5. B1 DECISION-EFFECTIVE-DATE-POR-MODULO FIXED (568decd5,
+   3efd8037, 3fc0746e, 7ecd595c, 324941a4). 4 TemporalContracts:
+   - SEC_13F: data/sec_13f/processed/, effective=max(PERIODOFREPORT),
+     expected=quarter con deadline 45d cumplido, max_lag=90. 9 tests.
+   - FINRA_DARKPOOL: darkpool_history.csv, effective=max(week),
+     expected=lunes-14d, max_lag=45. 8 tests.
+   - SSGA_PRIMARY_FLOW: etf_primary_flow.csv, effective=max(Date),
+     expected=last_expected_market_date, max_lag=5. 8 tests.
+   - FRED_MACRO: liquidity_state.json, effective=date,
+     max_lag=90. 8 tests.
+   _IMPLEMENTED_CONTRACTS pasa de 9 a 13. Justificacion de las 2
+   fuentes no cubiertas: HoldingsPIT (log PIT append-only, no mide
+   lag) y BME/Euronext (cubiertos por EQUITY_EOD + INDEX_EOD_EUROPA).
 
-**Contexto previo.** Al arrancar, pull con 2 commits del bot
-(`db8ed703` update_macro_manual + `532bb4c2` Daily hist/state). El
-run scheduled real 41575090209 (03-11 03:55 UTC, 21 min, gate=true,
-HEAD `db8ed703`) confirma sesion 26 en produccion.
+6. WYCKOFF-5BX-INSTRUMENTACION FIXED (54d4a23f + f0f21518 +
+   d3a0c09e). indicators/wyckoff_h20.py (count_confirmed_h20_complete,
+   CONFIRMED_PHASES={ACCUMULATION,DISTRIBUTION}, min_sessions=20,
+   THRESHOLD_5BX=550). scripts/wyckoff_h20_counter.py (lee 6 CSVs
+   wyckoff_*, escribe outputs/state/wyckoff_5bx_counter.json).
+   11 tests centinela. Wire en daily_run.yml job run-system idx 20,
+   entre freshness y upload. Primer resultado real: 27/68 confirmados
+   (ACC=2, DIST=25), threshold no alcanzado (esperado, ~2027).
 
-**Hecho (3 commits de codigo + 2 docs).**
-
-1. **H2** (`e351d486`). daily_run.yml: el artifact daily-report
-   subia `outputs/history/sec_nport_positions.csv` (sin sufijo),
-   que nunca ha existido. Productor real (update_sec_nport_data.py)
-   escribe `sec_nport_positions_{quarter}.csv`. Existian Q2 y Q3.
-   Fix: glob `sec_nport_positions_*.csv`. Los 2 ficheros existentes
-   empiezan a viajar en el artifact.
-
-2. **H4** (`e351d486`). `validation/qqq_sec_nport_cross_validation.py`
-   es control DESCRIPTIVO (docstring: 'No emite senales'). Corria
-   sin continue-on-error: un schema raro en CSV auxiliar tumbaria
-   el run completo y bloquearia el reporte. Fix: continue-on-error
-   + comentario justificativo.
-
-3. **H1** (`d84ca390`). 07_RUNBOOK.md documentaba `update_sec_nport`
-   como trimestral (dia 20), pero el YAML es semanal (miercoles
-   06:17 UTC) desde 2026-10-16 (dictamen H5). 18 dias mintiendo.
-   Ademas faltaban en el runbook `update_macro_manual` (diario) y
-   `update_qqq_sec_flow` (semestral 15-ene/jul). Seccion 2
-   reestructurada (2.1..2.4 con 2.3.1 nueva). Centinela nuevo
-   `tests/test_runbook_vs_workflows.py` (2 tests) previene drift
-   futuro: compara crons runbook-YAML y exige todos los update_*
-   documentados.
-
-4. **Cierre de VERIFICAR-SCHEDULED** (`041fecc7`). Item cerrado
-   FIXED con evidencia del run real: 41575090209 (21 min, gate=true,
-   HEAD db8ed703, 6/6 wyckoff CSVs, 2 notas *Filtro:*, 0 fallbacks).
-   Los 3 runs pre-cierre del 02-11 fueron gate=false (target
-   2026-10-30 ya publicado). Nuevo REVISION-WORKFLOWS-2026-11-03
-   FIXED documentando H1/H2/H4/H5 + H3 FALSE_POSITIVE.
-
-**Falsos positivos descartados (no ocultos).**
-- H3 (6 API keys parecian huerfanas en grep inicial): falso
-  positivo. Grep no cubria `data/providers/`; cada key tiene usos.
-- H5 (formato L266-287 inconsistente): YAML valido, cosmetico.
-  No accionable (refactor masivo sin valor).
+7. generate_estado_sistema.py desbloqueado (ab75e39c + 778c3089).
+   Bug: pytest serial sobre 4460 tests colgaba mas de 10 min. Fix:
+   run() con timeout, section_tests() con -n auto + timeout=600.
+   Regenerado: 137s. 5 fixes colaterales: pyflakes limpio (3
+   imports sin usar en finra/fred/ssga), test_generate_estado_
+   failclosed (_run acepta timeout), test_ci_entrypoints_import
+   (wyckoff_h20_counter en CI_ENTRYPOINTS).
 
 **Verificacion.**
-- Run real 41575090209: success, gate=true, artifact completo.
-- pytest -k workflow/runbook: 75 passed (40 pre + 35 ampliacion).
-- 2 tests centinela nuevos (runbook vs YAML).
-- yaml.safe_load: 10/10 workflows validos.
-- verifica_gobernanza [OK] tras cada commit.
-- poda_bitacora --check [OK] (11 sesiones + dia, 10-22 podado).
+- pyflakes LIMPIO, compileall OK.
+- Suite: 4460 passed, 3 failed (test_freshness local stale,
+  ajenos al codigo), 2 skipped.
+- gobernanza [OK], poda [OK].
+- Los 4 contratos nuevos con smoke test: get_contract devuelve la
+  clase registrada.
 
 **Pendiente al cierre.**
-- INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH: OPEN (8 tests, ROI
-  bajo, sesion dedicada).
-- DAILY-RUN-FAIL-40992758129: revisar 06-nov.
-- Observacionales: 10-nov x2, 17-nov, 20-nov.
-
----
+- Cierre documental de sesion 28 (este HANDOFF + 00_ARRANQUE +
+  05_BITACORA + 04_HISTORICO).
+- 5 items OPEN de documentacion/investigacion: COMMIT-46A3B370-AUDIT,
+  SEMANTICA-SIN-CONTRATO-INVENTARIO, CHECK-YAHOO-REVISION-FRECUENCIA,
+  FORCE-DISPATCH-EMERGENCIA, POWERSHELL-TRAMPS-NO-DOCUMENTADAS.
+- Observacionales con fecha (06-nov, 10-nov x2, 17-nov, 20-nov).
+- Verificar mte_state en prod (proximo scheduled post-fix).
 ## 3. PENDIENTES VIVOS
 
 ### 3.1. Bloqueados por auditor externo (2)
@@ -194,55 +159,34 @@ HEAD `db8ed703`) confirma sesion 26 en produccion.
   comando + HEAD del valor externo (-4.264.449.932). Sin eso, no
   reproducible.
 
-- **WYCKOFF-5BX**: n_confirmed_H20_complete >= 550 (~2027).
+- **WYCKOFF-5BX**: n_confirmed_H20_complete mayor o igual a 550 (~2027).
+  Ahora instrumentado (54d4a23f), primer valor 27/68. Bloqueado
+  hasta 2027.
 
-### 3.2. OPEN heredado DICT3 (1)
+### 3.2. OPEN heredado DICT3 (2)
 
-- **DICT3-TOP20-COBERTURA**: FIXED `0ab436d9` (2026-10-26). 4 de 6
-  acciones cerradas; A.2c desplegado condicionado. Pendiente
-  respuesta del auditor a doc 70-v2d sobre parte restante.
+- **DICT3-TOP20-COBERTURA**: FIXED 0ab436d9. Pendiente respuesta del
+  auditor a doc 70-v2d sobre parte restante.
+
 - **DICT3-H04-INTERVALS**: OPEN sin accion propia. Registro historico
-  del rechazo del IC95 inferencial (dictamen H-04 2026-10-26).
-  Se mantiene OPEN como evidencia.
+  del rechazo del IC95 inferencial.
 
-### 3.3. VERIFICAR-WALK-BACK-PROD (OPEN, verificable en proximo scheduled)
+### 3.3. OPEN auditoria 11-03 (5, todos documentacion/investigacion)
 
-- TEMPORAL-COHERENCE-WALK-BACK esta FIXED en codigo y contrato
-  (4 commits + contrato semantico + enmienda v1.3).
-- Ningun run scheduled post-fix ha publicado aun. El proximo
-  scheduled con walk-back (Close parcial) es la verificacion real.
-- Verificar: temporal_coherence=WALK_BACK en el reporte (con nota
-  explicativa) y validation_gate=11/11 sin (INCOHERENT).
-- Si sale INCOHERENT: reabrir TEMPORAL-COHERENCE-WALK-BACK.
-- Si sale OK: no fue walk-back, esperar siguiente.
+- **COMMIT-46A3B370-AUDIT**: commit 46a3b370 (27-oct) con mensaje
+  CURRENT-PHASE-BASIS-CSV -> WONT_FIX toca docs/handoffs/HANDOFF.md
+  (archivo obsoleto). Auditar si es huerfano o intencional.
+- **SEMANTICA-SIN-CONTRATO-INVENTARIO**: inventariar conceptos con
+  semantica sin contrato. ROI bajo, no urgente.
+- **CHECK-YAHOO-REVISION-FRECUENCIA**: verificar frecuencia real de
+  check_yahoo_revision desde D2 (2026-09-30). Si nunca dispara,
+  decidir si el check funciona.
+- **FORCE-DISPATCH-EMERGENCIA**: documentar procedimiento de force
+  dispatch de emergencia (13:30-20:00 UTC prohibido).
+- **POWERSHELL-TRAMPS-NO-DOCUMENTADAS**: auditar trampas PowerShell
+  no documentadas en 01_METODO seccion 6.
 
-### 3.4. VERIFICAR-IAE-CONSENSO-PROD (OPEN, verificable en proximo scheduled)
-
-- IAE-CONSENSO-VS-SUM-DELTA esta FIXED en codigo (5bbc7681) con 3
-  tests y probe con los 11 casos reales del run 41575090209.
-- Ningun run scheduled post-fix ha publicado la seccion IAE.
-- Verificar en el proximo run real: los 5 casos del auditor
-  (AAPL/GOOGL/GOOG/HD/PG) NO en Acumulando; los 6 (CB/NOW/VLO/WDC/
-  EOG/LHX) NO en Distribuyendo; toda fila cumple el encabezado.
-- Si verde: cerrar FIXED. Si falla: reabrir IAE-CONSENSO-VS-SUM-DELTA.
-
-### 3.5. VERIFICAR-WYCKOFF-PHASE-PROD (OPEN, verificable en proximo scheduled)
-
-- WYCKOFF-PHASE-SEMANTICA-2026-11-03 esta FIXED en codigo
-  (a89eb1f5) con 4 tests y probe con CSV real 30-10.
-- Proximo run scheduled real: verificar que la Matriz de Regimen
-  Sectorial publica fases con senal ('DIST_FORMING (20%, N=5)') en
-  lugar de RANGE plano. Si algun sector sin senal, 'RANGE (sin
-  senal)'. Si TODOS salen 'RANGE (sin senal)', reabrir.
-
-### 3.6. INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH (OPEN, ROI bajo)
-
-- 8 tests que llaman main() del SUT sin monkeypatch de *_PATH.
-- Auditar caso por caso con evidencia empirica (mtime del artefacto
-  real cambia tras pytest). Solo fixear los confirmados.
-- No bloquea CI. Sesion dedicada.
-
-### 3.7. Items OPEN observacionales (fechas)
+### 3.4. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |
 |---|---|---|
@@ -252,16 +196,13 @@ HEAD `db8ed703`) confirma sesion 26 en produccion.
 | RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
 | H5.3 | 2026-11-20 | Verificar cron trimestral 13F |
 
-### 3.8. Prioritaria analista 30-oct no abierta (decision producto)
+### 3.5. Prioritaria analista 30-oct no abierta (decision producto)
 
 - **FASE-A-REGIMEN-ECONOMIA-REAL** (no abierta como item): el analista
   pide bloque macro con datos oficiales (BEA PIB/PCE/renta, BLS IPC/
   empleo/salarios reales, Fed tipos nominales y reales) separado del
   regimen de mercado. Dos etiquetas independientes. Estimacion: 3-5
   sesiones. Decision de producto.
-
----
-
 ## 4. COMO ARRANCAR
 
     Set-Location D:\Macro_Sectorial
@@ -369,6 +310,21 @@ Esperado:
 
 ---
 
+### 5.5. PowerShell / Python (lecciones 2026-11-04)
+
+- **if inline en PowerShell no es expresion, es sentencia.**
+  No usar como valor asignable. Usar ternario o bloque previo.
+- **exit en PowerShell cierra la sesion completa**, no solo el
+  script. Usar return para abortar un bloque, o throw para error.
+- **var -ne string-vacia es True para array vacio.** Usar
+  if (var) que es falsy para array vacio, null y string vacia.
+- **Escaping de comilla simple en PS no es bash-style.** En
+  single-quoted PS, la comilla se duplica. Alternativa robusta:
+  construir el caracter con chr(39) en Python.
+- **Tests que importan datetime.date sin usarlo**: pyflakes
+  warning real. Quitar el import, no silenciar.
+- **generate_estado_sistema.py: pytest serial colgaba.** Fix:
+  -n auto --dist loadfile + timeout=600. 137s vs mas de 10 min.
 ## 6. REFERENCIAS
 
 Corpus normativo: Consolidacion_Documentos/ (00-08 + 01d).
@@ -379,12 +335,32 @@ Contrato del gate: docs/auditoria/daily_run_gate_contrato_v1.md +
 
 Expediente Wyckoff (docs/auditoria/wyckoff/): 35+ ficheros.
 
+Contratos temporales (13 en _IMPLEMENTED_CONTRACTS):
+  - EQUITY_EOD, INDEX_EOD_USA, INDEX_EOD_EUROPA, INDEX_EOD_COMMODITY,
+    INDEX_EOD_CURRENCY, VOLATILITY_INDEX, RATE_YIELD,
+    FUTURE_SETTLEMENT, FX_DAILY_CUT (9 originales).
+  - SEC_13F (568decd5), FINRA_DARKPOOL (3efd8037),
+    SSGA_PRIMARY_FLOW (3fc0746e), FRED_MACRO (7ecd595c) (4 nuevos).
+
+Modulos nuevos sesion 28:
+  - indicators/mte/status.py (VALID/DEGRADED/INVALID).
+  - indicators/wyckoff_h20.py (count_confirmed_H20_complete).
+  - scripts/wyckoff_h20_counter.py (escribe
+    outputs/state/wyckoff_5bx_counter.json).
+  - tests/test_mte_status.py, tests/test_sec_13f_contract.py,
+    tests/test_finra_darkpool_contract.py,
+    tests/test_ssga_primary_flow_contract.py,
+    tests/test_fred_macro_contract.py,
+    tests/test_wyckoff_h20_counter.py,
+    tests/test_validation_gate_freshness_thresholds.py,
+    tests/test_generate_estado_usa_xdist.py.
+
 Fase 1 (consistencia temporal): item FASE1-CENSO en REGISTRO.
 Fase 2 (auditoria por bloques): items B1-CENSO a B8-CENSO en REGISTRO.
 FASE-A (analisis economico 30-oct): items FASE-A-* en REGISTRO.
 Sesion 26: GUARD-COVERAGE-TEST-CONTAMINA-STATE + WYCKOFF-MD-FILTRO-WEIGHT
-+ VERIFICAR-SCHEDULED-387938E6-2026-11-02 + INVESTIGAR-TESTS-MAIN-SIN-
-MONKEYPATCH-PATH en REGISTRO.
+  + VERIFICAR-SCHEDULED-387938E6-2026-11-02 + INVESTIGAR-TESTS-MAIN-SIN-
+  MONKEYPATCH-PATH en REGISTRO.
 
 ---
 
