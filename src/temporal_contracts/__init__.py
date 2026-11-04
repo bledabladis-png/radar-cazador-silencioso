@@ -41,6 +41,7 @@ from src.temporal_contracts.fx_daily_cut import FxDailyCut
 from src.temporal_contracts.sec_13f import Sec13F
 from src.temporal_contracts.finra_darkpool import FinraDarkpool
 from src.temporal_contracts.ssga_primary_flow import SsgaPrimaryFlow
+from src.temporal_contracts.fred_macro import FredMacro
 from src.temporal_contracts.consolidate import (
     consolidate,
     build_temporal_meta,
@@ -60,6 +61,7 @@ _IMPLEMENTED_CONTRACTS = {
     "SEC_13F": Sec13F,
     "FINRA_DARKPOOL": FinraDarkpool,
     "SSGA_PRIMARY_FLOW": SsgaPrimaryFlow,
+    "FRED_MACRO": FredMacro,
 }
 
 
@@ -120,4 +122,5 @@ __all__ = [
     "Sec13F",
     "FinraDarkpool",
     "SsgaPrimaryFlow",
+    "FredMacro",
 ]
