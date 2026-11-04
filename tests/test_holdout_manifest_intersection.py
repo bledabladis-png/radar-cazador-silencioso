@@ -169,6 +169,12 @@ def test_intersection_nota_auditor():
 
 @_skip_sin_parquets
 def test_intersection_main_devuelve_0(tmp_path, monkeypatch):
-    """main() ejecuta sin error. Solo con parquets presentes (local)."""
+    """main() ejecuta sin error. Solo con parquets presentes (local).
+
+    AUDIT-20261104-INVESTIGAR-TESTS-MAIN: monkeypatch de OUT_PATH
+    para no escribir en data/mappings/holdout_intersection.json real.
+    """
+    monkeypatch.setattr(hi, "OUT_PATH", tmp_path / "holdout_intersection.json")
     rc = hi.main()
     assert rc == 0
+    assert (tmp_path / "holdout_intersection.json").exists()
