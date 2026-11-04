@@ -7231,39 +7231,51 @@ items:
 - id: DECISION-EFFECTIVE-DATE-POR-MODULO
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
-  estado: IN_PROGRESS
-  commit: '568decd5'
+  estado: FIXED
+  commit: '7ecd595c'
   descripcion: |
     Contrato de temporalidad bottom-up: cada fuente declara
     as_of_date propia; cada modulo declara effective_date
     derivada de sus inputs con regla explicita; el pipeline
     no propaga una fecha unica (auditoria 11-03, hallazgo
     10.1).
-    Fuentes identificadas a cubrir: 6 (SEC 13F, FINRA
-    darkpool, SSGA holdings, BME, Euronext, FRED macro).
-    Cubiertas hasta hoy: 1 de 6 (SEC_13F, 568decd5).
-  siguiente_accion: |
-    Anadir TemporalContract para las 5 fuentes restantes
-    (FINRA, SSGA, BME, Euronext, FRED), una por commit.
-    Patron: src/temporal_contracts/<fuente>.py con clase
-    que herede de TemporalContract, entrada en
-    _IMPLEMENTED_CONTRACTS, 5-9 tests centinela.
-    Pendiente decision de diseno: si FINRA/BME/Euronext
-    leen de parquet local (patron SEC_13F) o de un dict
-    en memoria (patron EquityEOD).
+    4 fuentes reales con lag propio cubiertas: SEC_13F,
+    FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO. Las 2
+    restantes del listado inicial no aplican (ver evidencia).
   evidencia: |
-    SEC_13F registrado en 568decd5.
-    src/temporal_contracts/sec_13f.py (4739 B): clase
-    Sec13F(TemporalContract), effective_date = max(
-    PERIODOFREPORT) del quarter mas reciente en
-    data/sec_13f/processed/, expected_date = quarter-end
-    mas reciente con deadline 45d cumplido, max_lag_days
-    = 90, min_coverage = 0.9.
-    9 tests centinela en tests/test_sec_13f_contract.py
-    (9 passed): deadline 45d, quarter esperado por fecha,
-    resolve con/sin datos, INSUFFICIENT si 1 quarter de
-    lag. py_compile OK. smoke: get_contract(
-    SEC_13F) devuelve name=SEC_13F family=SEC max_lag=90.
+    4 TemporalContracts implementados en 4 commits atomicos:
+    - SEC_13F (568decd5): data/sec_13f/processed/,
+      effective = max(PERIODOFREPORT), expected = quarter
+      con deadline 45d cumplido, max_lag = 90. 9 tests.
+    - FINRA_DARKPOOL (3efd8037): darkpool_history.csv,
+      effective = max(week), expected = lunes - 14d,
+      max_lag = 45 (frontera STALE de FRESHNESS_FINRA).
+      8 tests.
+    - SSGA_PRIMARY_FLOW (3fc0746e): etf_primary_flow.csv,
+      effective = max(Date), expected = last_expected_
+      market_date, max_lag = 5. 8 tests.
+    - FRED_MACRO (7ecd595c): liquidity_state.json,
+      effective = date, expected = last_expected_market_
+      date, max_lag = 90 (frontera STALE de FRESHNESS_FRED).
+      8 tests.
+    Total: 33 tests centinela, py_compile OK, smoke
+    get_contract(<name>) devuelve la clase registrada.
+    _IMPLEMENTED_CONTRACTS pasa de 9 a 13 contratos
+    (registro aditivo, sin romper resolve_all_contracts).
+    Justificacion tecnica de las 2 fuentes no cubiertas:
+    - HoldingsPIT (holdings_snapshots.csv): no es fuente
+      temporal, es log PIT append-only. Solo se escribe
+      cuando cambia la composicion de holdings (hash
+      distinto). Un max(date) de hace N dias no implica
+      lag: implica que no hubo novedad. Un contrato de lag
+      mediria 'hace cuanto cambio', no 'esta fresca la
+      fuente'. Falso positivo garantizado.
+    - BME/Euronext: no son fuentes de datos propias, son
+      mercados cuyos precios entran via
+      data/stock_prices.parquet (cubierto por EQUITY_EOD) y
+      cuyos indices entran via INDEX_EOD_EUROPA (ya existente
+      en _IMPLEMENTED_CONTRACTS desde antes de este item).
+      Un contrato separado duplicaria cobertura.
   verificacion: FIXED
 - id: DECISION-MTE-DEGRADED-STATE
   tipo: deuda_tecnica
