@@ -7216,26 +7216,72 @@ items:
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
   estado: OPEN
-  descripcion: 'Decidir si effective_date se propaga del pipeline o cada modulo expone el suyo (auditoria 11-03, hallazgo 10.1)'
-  siguiente_accion: 'Decidir (a) propagar effective_date del pipeline vs (b) cada modulo expone el suyo. Documentar en 02_ARQUITECTURA antes de implementar.'
+  descripcion: |
+    Contrato de temporalidad bottom-up: cada fuente declara
+    as_of_date propia; cada modulo declara effective_date
+    derivada de sus inputs con regla explicita (min/max/otra);
+    el pipeline no propaga una fecha unica (auditoria 11-03,
+    hallazgo 10.1).
+  siguiente_accion: |
+    Mapear fuentes con as_of_date propia (src/effective_date.py
+    cubre equities; SEC, FINRA, SSGA, BME, Euronext no) y
+    especificar f por modulo. Documentar el contrato en
+    02_ARQUITECTURA antes de implementar. No hay decision
+    binaria: es rediseno del contrato.
+
 - id: DECISION-MTE-DEGRADED-STATE
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
   estado: OPEN
-  descripcion: 'Definir taxonomia de estados degradados MTE (auditoria 11-03, hallazgo 10.2)'
-  siguiente_accion: 'Decidir taxonomia DEGRADED (VALID/DEGRADED/INVALID y sub-estados) y auditar strings existentes en src/indicators/mte*.'
+  descripcion: |
+    Introducir taxonomia propia del MTE en
+    indicators/mte/status.py: VALID / DEGRADED / INVALID,
+    separada de src/temporal_contracts/validation.py (que
+    valida artefactos, no outputs de modulo). Derivada de
+    futures_status, pending, coverage y confidence
+    (auditoria 11-03, hallazgo 10.2).
+  siguiente_accion: |
+    Crear indicators/mte/status.py con VALID / DEGRADED /
+    INVALID. Anadir mte_state al dict de compute_mte y a
+    outputs/state/mte_state.json. Renderizar en
+    src/report/volatility_mte.py. Tests centinela para las
+    3 transiciones.
+
 - id: DECISION-FRESHNESS-POR-BLOQUE
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
   estado: OPEN
-  descripcion: 'Definir bloque de frescura: seccion del reporte vs fuente de datos (auditoria 11-03, hallazgo 10.3)'
-  siguiente_accion: 'Decidir bloque = seccion del reporte vs fuente de datos; enumerar secciones candidatas antes de implementar.'
+  descripcion: |
+    Bloque = fuente de datos, no seccion del reporte. Cada
+    fuente declara as_of_date propia; el reporte agrupa por
+    fuente. Formalizar la implementacion existente en
+    src/report/freshness.py y src/pipeline/validation_gate.py
+    (auditoria 11-03, hallazgo 10.3).
+  siguiente_accion: |
+    Documentar en 02_ARQUITECTURA que bloque = fuente de
+    frescura. Enumerar fuentes con as_of_date declarado.
+    Auditar que src/report/freshness.py y
+    src/pipeline/validation_gate.py usan la misma definicion.
+    No implementar seccion-frescura.
+
 - id: AUDIT-DOC-70-V2D-PETICIONES
   tipo: documentacion
   ciclo: '2026-11-03'
-  estado: OPEN
-  descripcion: 'Auditar doc 70-v2d y REGISTRO por peticiones de producto no registradas'
-  siguiente_accion: 'Revisar doc 70-v2d + notas sueltas; abrir items para peticiones no registradas.'
+  estado: FIXED
+  commit: '771f5ecc'
+  descripcion: |
+    Auditar doc 70-v2d y REGISTRO por peticiones de producto
+    no registradas.
+  evidencia: |
+    Doc 70-v2d revisado (L82-230). Seccion 5: 5.1
+    WYCKOFF-CLASSIFY-PHASE-HANG FALSE_POSITIVE (842c9aaf), 5.2
+    WYCKOFF-TICKER-NORMALIZATION FIXED (4e94bf2e), 5.4
+    GOVERNANZA-CI-NO-STEP FIXED (6fd537f8); 5.3 limpieza local.
+    Seccion 6: 3 solicitudes al auditor ya cubiertas por
+    DICT3-TOP20-COBERTURA (FIXED, 0ab436d9). Sin peticiones
+    de producto no registradas.
+  verificacion: FIXED
+
 - id: COMMIT-46A3B370-AUDIT
   tipo: auditoria_interna
   ciclo: '2026-11-03'
