@@ -6963,7 +6963,7 @@ items:
 - id: VERIFICAR-WALK-BACK-PROD
   tipo: frente
   ciclo: '2026-11-03'
-  estado: OPEN
+  estado: FIXED
   descripcion: |
     TEMPORAL-COHERENCE-WALK-BACK esta FIXED en codigo y contrato
     (commits 3c488a22..7f1b6e4f), con 17 tests nuevos y probe con
@@ -6972,27 +6972,14 @@ items:
     produccion que el reporte publica temporal_coherence=WALK_BACK
     (con nota) en lugar de INCOHERENT, y que el gate sale 11/11
     sin marca (INCOHERENT).
-  siguiente_accion: |
-    Cuando el proximo run scheduled real (gate=true) tenga
-    walk-back (Close parcial en target):
-    - gh run list --workflow=daily_run.yml --limit 5 (identificar
-      el run con duracion >= 10 min).
-    - gh run download <id> -n daily-report.
-    - grep 'temporal_coherence' y 'validation_gate' en
-      reporte_diario.md del artifact.
-    - Si temporal_coherence=WALK_BACK y gate=11/11 (sin
-      (INCOHERENT)): cerrar FIXED con databaseId + fecha.
-    - Si temporal_coherence=INCOHERENT: reabrir
-      TEMPORAL-COHERENCE-WALK-BACK (fix no aplicado en prod).
-    - Si temporal_coherence=OK: el run no fue walk-back, no
-      cuenta como verificacion. Esperar el siguiente.
+  commit: '45ba9bc2'
+  verificacion: VERIFIED_IN_PRODUCTION
   evidencia: |
-    Ultimo run real (41575090209, 03-11 03:55 UTC) tiene el bug:
-    INCOHERENT + gate 11/11 (INCOHERENT). Fix commit 3c488a22
-    (estado WALK_BACK), e25e051d (run.py cablea), 1abddd73 (nota
-    render), 7f1b6e4f (contrato + REGISTRO). Probe local con
-    manifest real 03-11 confirma el comportamiento esperado. Falta
-    run real post-fix.
+    Verificado en run scheduled 41764334709 (04-11 03:00 UTC,
+    headSha 45ba9bc2, gate=true). Reporte L13-15: temporal_coherence:
+    WALK_BACK, con nota de walk-back aplicado (effective_date_equity,
+    coverage_pct_effective >= umbral). Gate 11/11 sin marca
+    (INCOHERENT). Fix 7f1b6e4f en produccion.
 
 - id: IAE-CONSENSO-VS-SUM-DELTA
   tipo: bug
@@ -7131,7 +7118,7 @@ items:
 - id: VERIFICAR-IAE-CONSENSO-PROD
   tipo: frente
   ciclo: '2026-11-03'
-  estado: OPEN
+  estado: FIXED
   descripcion: |
     IAE-CONSENSO-VS-SUM-DELTA esta FIXED en codigo (5bbc7681) con
     probe sobre los 11 casos del run 41575090209. Ningun run
@@ -7139,28 +7126,16 @@ items:
     por ticker (13F)' con el codigo nuevo. Falta confirmar en
     produccion que los 11 tickers del auditor salen en la tabla
     correcta y que el encabezado es coherente con las columnas.
-  siguiente_accion: |
-    Proximo run scheduled real (gate=true, duracion >= 10 min):
-    - gh run list --workflow=daily_run.yml --limit 5 (identificar
-      el run con duracion >= 10 min).
-    - gh run download <id> -n daily-report.
-    - Localizar 'Cambio neto por ticker (13F)' en reporte_diario.md.
-    - Verificar los 5 casos: AAPL, GOOGL, GOOG, HD, PG NO en
-      'Acumulando'.
-    - Verificar los 6 casos: CB, NOW, VLO, WDC, EOG, LHX NO en
-      'Distribuyendo'.
-    - Verificar que toda fila de Acumulando cumple n_inc > n_dec
-      y toda fila de Distribuyendo n_inc < n_dec.
-    - Si verde: cerrar FIXED con databaseId + fecha.
-    - Si falla: reabrir IAE-CONSENSO-VS-SUM-DELTA.
+  commit: '45ba9bc2'
+  verificacion: VERIFIED_IN_PRODUCTION
   evidencia: |
-    Ultimo run real (41575090209, 03-11 03:55 UTC) publico el bug:
-    11 tickers clasificados contra sus propios recuentos. Fix
-    commit 5bbc7681 + 3 tests centinela. Probe con los 11 casos
-    reales del run confirma el swap correcto (5 casos de
-    Acumulando pasan a Distribuyendo; 6 de Distribuyendo pasan a
-    Acumulando; controles MSFT/NVDA/HON/CAT se mantienen). Falta
-    run real post-fix.
+    Verificado en run scheduled 41764334709 (04-11 03:00 UTC,
+    headSha 45ba9bc2, gate=true). Reporte L1157-1205: tabla
+    Acumulando (20 tickers, L1161-1180) sin AAPL/GOOGL/GOOG/HD/PG;
+    tabla Distribuyendo (20 tickers, L1186-1205) sin
+    CB/NOW/VLO/WDC/EOG/LHX. Toda fila de Acumulando cumple
+    aumentan > reducen; toda fila de Distribuyendo cumple
+    aumentan < reducen. Fix 5bbc7681 en produccion.
 
 - id: WYCKOFF-PHASE-SEMANTICA-2026-11-03
   tipo: deuda_tecnica
@@ -7210,29 +7185,23 @@ items:
 - id: VERIFICAR-WYCKOFF-PHASE-PROD
   tipo: frente
   ciclo: '2026-11-03'
-  estado: OPEN
+  estado: FIXED
   descripcion: |
     WYCKOFF-PHASE-SEMANTICA-2026-11-03 esta FIXED en codigo
     (a89eb1f5) con 4 tests y probe con CSV real del 30-10. Ningun
     run scheduled post-fix ha publicado la Matriz de Regimen
     Sectorial con las columnas signal.
-  siguiente_accion: |
-    Proximo run scheduled real (gate=true, duracion >= 10 min):
-    - gh run download <id> -n daily-report.
-    - Localizar '## Matriz de Regimen Sectorial' en reporte_diario.md.
-    - Verificar que la columna 'Fase dominante' publica fases con
-      senal: DIST_FORMING, MARKDOWN, DISTRIBUTION, MARKUP o similar,
-      con formato 'FASE (X%, N=Y)'.
-    - Si algun sector sin senal: 'RANGE (sin senal)'.
-    - Si TODOS los sectores salen 'RANGE (sin senal)', reabrir
-      WYCKOFF-PHASE-SEMANTICA-2026-11-03 (fix no aplicado en prod o
-      pool vacio por dato real).
-    - Si sale 'RANGE' plano (sin la marca 'sin senal'), el render
-      viejo esta activo: reabrir.
+  commit: '45ba9bc2'
+  verificacion: VERIFIED_IN_PRODUCTION
   evidencia: |
-    Ultimo run real (41575090209, 03-11) tiene el bug: los 11
-    sectores RANGE en la columna. Fix a89eb1f5 + probe con datos
-    reales. Falta run scheduled post-fix.
+    Verificado en run scheduled 41764334709 (04-11 03:00 UTC,
+    headSha 45ba9bc2, gate=true). Reporte L351-369: Matriz de
+    Regimen Sectorial publica fases con senal en formato
+    'FASE (X%, N=Y)': XLF MARKDOWN (9%, N=3), XLV
+    MARKUP (12%, N=3), XLY MARKDOWN (5%, N=1), XLI MARKDOWN
+    (11%, N=5), XLU MARKDOWN (5%, N=1), XLC MARKDOWN (11%,
+    N=2). No hay RANGE plano en ningun sector. Fix a89eb1f5
+    en produccion.
 
 - id: HANDOFF-DOCS-HISTORICO-SUPERSEDED
   tipo: documentacion
