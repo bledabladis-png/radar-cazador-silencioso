@@ -19,7 +19,7 @@ from scripts import generate_estado_sistema as ges
 def _fake_run(pytest_rc=0, compileall_rc=0, pyflakes_rc=0, pytest_out=None, pyflakes_out=""):
     if pytest_out is None:
         pytest_out = "3739 passed, 5 skipped in 100s"
-    def _run(cmd):
+    def _run(cmd, timeout=None):
         if 'pytest' in cmd:
             return pytest_out, pytest_rc
         if 'compileall' in cmd:

@@ -11,7 +11,7 @@
 # PENDING si el CSV no existe o esta vacio.
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 import pandas as pd

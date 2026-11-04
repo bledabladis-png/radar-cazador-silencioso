@@ -59,6 +59,7 @@ CI_ENTRYPOINTS = [
     "validation/validate_history_quality.py",
     "data/providers/qqq_nport_flow.py",
     "data/providers/sec_nport_quarters_position_change.py",
+    "scripts/wyckoff_h20_counter.py",
 ]
 
 

@@ -10,7 +10,6 @@
 # INSUFFICIENT solo si el lag supera 5 dias. PENDING si no hay CSV.
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
 
 import pandas as pd
