@@ -6844,22 +6844,38 @@ items:
 - id: INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH
   tipo: auditoria_interna
   ciclo: '2026-11-02'
-  estado: OPEN
+  estado: FIXED
+  commit: '729317d7'
   descripcion: |
-    Tras cerrar GUARD-COVERAGE-TEST-CONTAMINA-STATE, el barrido detecto 8
-    tests que llaman main() del SUT sin monkeypatchear ningun *_PATH a nivel
-    de modulo: test_download_official_list_13f.py,
-    test_generate_estado_failclosed.py, test_holdout_manifest_intersection.py,
-    test_iae_validate_crosswalk_openfigi.py, test_monitor_double_counting_date.py,
-    test_qqq_returns_yahoo_d1.py, test_regenerate_cusip_crosswalk.py,
-    test_regenerate_radar_catalog.py. Sospecha, no hecho: algunos pueden
-    escribir via otro path, no escribir, o usar fixtures con monkeypatch
-    interno. Requiere auditoria caso por caso.
-  siguiente_accion: |
-    Auditar cada uno con el patron del bug confirmado (ROOT = Path(__file__).resolve()
-    en import-time + main() del SUT sin monkeypatch de *_PATH + escritura real).
-    Solo fixear los que se confirmen con evidencia empirica (mtime del artefacto
-    real cambia tras pytest). Bajo ROI: no bloquea CI.
+    Auditoria de los 8 tests que llaman main() del SUT sin
+    monkeypatch de *_PATH a nivel de modulo (barrido tras
+    GUARD-COVERAGE-TEST-CONTAMINA-STATE). Auditoria caso por
+    caso completada el 2026-11-04.
+  evidencia: |
+    Resultado: 7 protegidos, 1 falso positivo, 1 bug real.
+    Protegidos con monkeypatch de *_PATH/DIR/ROOT ya presente:
+    test_download_official_list_13f (DEST_DIR),
+    test_generate_estado_failclosed (ROOT/OUT/IAE_ROOT),
+    test_iae_validate_crosswalk_openfigi (MAPPINGS/OUT_DIR),
+    test_monitor_double_counting_date (OUTPUT_CSV/PROJECT_ROOT),
+    test_qqq_returns_yahoo_d1 (OUTPUT),
+    test_regenerate_cusip_crosswalk (DATA_DIR/CATALOG/CROSSWALK),
+    test_regenerate_radar_catalog (MAPPINGS/SNAPSHOTS/MANIFEST).
+    Falso positivo: test_verify_actual_pasa en
+    test_holdout_manifest_intersection llama hm.main([
+    --verify]) sin monkeypatch, pero --verify no escribe en
+    ninguna rama (L222-225 retorna 1 si no hay manifest;
+    L234-237 retorna 0 si coincide; L250-252 retorna 1 si
+    difiere). Los write_text (L227, L244) solo se alcanzan
+    sin --verify o con --update.
+    Bug real fixeado en 729317d7:
+    test_intersection_main_devuelve_0 llamaba hi.main() sin
+    monkeypatch; OUT_PATH = ROOT/data/mappings/
+    holdout_intersection.json (L28, L79 del script) se
+    reescribia en cada pytest local. Fix: monkeypatch de
+    hi.OUT_PATH a tmp_path + assert del output en tmp_path.
+    2 tests passed, 9 deselected tras el fix.
+  verificacion: FIXED
 - id: WYCKOFF-MD-FILTRO-WEIGHT
   tipo: frente
   ciclo: '2026-11-02'
