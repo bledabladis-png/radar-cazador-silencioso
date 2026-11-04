@@ -53,9 +53,19 @@ MAPPINGS_IAE = [
 # omitia tres reales. El recorrido dinamico evita esa clase de drift.
 EVIDENCE_ROOT = ROOT / 'docs' / 'auditoria' / 'iae' / 'evidence'
 
-def run(cmd):
-    r = subprocess.run(cmd, cwd=str(ROOT), capture_output=True, text=True)
-    return r.stdout.strip(), r.returncode
+def run(cmd, timeout=None):
+    # 2026-11-04: timeout opcional. Sin timeout, pytest serial de la
+    # suite completa (>4400 tests) cuelga el proceso. TimeoutExpired
+    # se reporta como (mensaje, -1) para no bloquear el script; el
+    # llamador decide si section_tests debe regenerarse o marcar rc=-1.
+    try:
+        r = subprocess.run(
+            cmd, cwd=str(ROOT), capture_output=True, text=True,
+            timeout=timeout,
+        )
+        return r.stdout.strip(), r.returncode
+    except subprocess.TimeoutExpired:
+        return "[TIMEOUT: {0}s]".format(timeout), -1
 
 def sha256_bytes(b):
     return hashlib.sha256(b).hexdigest()
@@ -81,7 +91,10 @@ def section_git():
 
 def section_tests():
     lines = ['## 2. Tests (pytest real)', '']
-    out, rc = run(['py', '-m', 'pytest', 'tests/', '-q', '--tb=no', '--no-header'])
+    out, rc = run([
+        'py', '-m', 'pytest', 'tests/', '-q', '--tb=no', '--no-header',
+        '-n', 'auto', '--dist', 'loadfile',
+    ], timeout=600)
     # Resumen
     summary = None
     for line in out.splitlines():
