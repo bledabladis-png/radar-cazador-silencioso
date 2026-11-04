@@ -103,6 +103,16 @@ def render_mte(mte_result):
         out.append(f"- **Safe Haven Score:** {_f(mte_result.get("shs", 0), ".2f")}\n")
         out.append(f"- **Credit Stress Score:** {_f(mte_result.get("cls", 0), ".2f")} (orientacion: positivo = mayor estres crediticio)\n")
         out.append(f"- **Inflation Pressure Score:** {_f(mte_result.get("ips", 0), ".2f")}\n")
+        # Fix 2026-11-04: exponer mte_state si no es VALID (hallazgo 10.2).
+        # El state interno persiste VALID/DEGRADED/INVALID. El render
+        # publica el estado cuando no es VALID para que el lector sepa
+        # que el escenario se calculo con inputs degradados.
+        _mte_state = mte_result.get('mte_state')
+        if _mte_state and _mte_state != 'VALID':
+            out.append(
+                f"- **MTE Status:** {_mte_state} "
+                "*(escenario calculado con inputs degradados o insuficientes; "
+                "ver Futures Status y cobertura para detalle)*\n")
         # Fix 2026-10-30: exponer futures_status si no es OK. El state
         # interno (outputs/state/mte_state.json) declara STALE/UNAVAILABLE
         # cuando los precios de futuros no estan frescos, pero el reporte

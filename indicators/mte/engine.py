@@ -23,6 +23,7 @@ from .scoring import (
     compute_ipi,
 )
 from .decision import classify_mte
+from .status import derive_mte_state
 
 
 def compute_mte(df_market, financial_conditions_score, credit_signal,
@@ -132,6 +133,12 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
         )
 
 
+        mte_state = derive_mte_state(
+            futures_status,
+            (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('coverage'),
+            confidence,
+        )
+
         # Guardar estado en JSON para trazabilidad
 
 
@@ -147,7 +154,7 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
                 json.dump({
 
 
-                    'schema_version': 1,
+                    'schema_version': 2,
                     'temporal_contract_version': _mte_state.CURRENT_TEMPORAL_CONTRACT_VERSION,
                     'effective_date': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('effective_date'),
                     'expected_date': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('expected_date'),
@@ -159,6 +166,7 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
                     # para evidencia insuficiente (src/temporal_contracts/
                     # validation.py, STATUS_UNAVAILABLE).
                     'futures_status': futures_status,
+                    'mte_state': mte_state,
                     'scenario': scenario,
                     'confidence': confidence,
 
@@ -215,6 +223,7 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
             'ips': ips,
             'futures_status': futures_status,
+            'mte_state': mte_state,
             'pending': pending_out
 
 
