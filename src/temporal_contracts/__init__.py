@@ -38,6 +38,7 @@ from src.temporal_contracts.volatility_index import VolatilityIndex
 from src.temporal_contracts.rate_yield import RateYield
 from src.temporal_contracts.future_settlement import FutureSettlement
 from src.temporal_contracts.fx_daily_cut import FxDailyCut
+from src.temporal_contracts.sec_13f import Sec13F
 from src.temporal_contracts.consolidate import (
     consolidate,
     build_temporal_meta,
@@ -54,6 +55,7 @@ _IMPLEMENTED_CONTRACTS = {
     "RATE_YIELD": RateYield,
     "FUTURE_SETTLEMENT": FutureSettlement,
     "FX_DAILY_CUT": FxDailyCut,
+    "SEC_13F": Sec13F,
 }
 
 
@@ -111,4 +113,5 @@ __all__ = [
     "RateYield",
     "FutureSettlement",
     "FxDailyCut",
+    "Sec13F",
 ]
