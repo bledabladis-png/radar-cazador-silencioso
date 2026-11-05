@@ -7361,9 +7361,10 @@ items:
 - id: COMMIT-46A3B370-AUDIT
   tipo: auditoria_interna
   ciclo: '2026-11-03'
-  estado: OPEN
+  estado: WONT_FIX
   descripcion: 'Commit 46a3b370 (27-oct) con mensaje CURRENT-PHASE-BASIS-CSV -> WONT_FIX toca docs/handoffs/HANDOFF.md (obsoleto)'
-  siguiente_accion: 'Auditar commit 46a3b370; decidir si es huerfano o intencional. Buscar mas commits con patron (mensaje distinto al fichero tocado).'
+  razon: 'Auditado 2026-11-05. docs/handoffs/HANDOFF.md esta declarado obsoleto en su propio contenido y en REGISTRO.yaml (SUPERSEDED 353bcea8, 231f78c6). grep de docs/handoffs/HANDOFF.md en el repo: 10 hits, todos documentales (4 en consolidados 00_ARRANQUE/01_METODO/04_HISTORICO/05_BITACORA; 6 en REGISTRO.yaml). Cero hits en src/ o scripts/. Sin bug funcional.'
+  evidencia: 'grep 2026-11-05: 0 referencias vivas en codigo Python. El commit edito un archivo declarado obsoleto.'
 - id: SEMANTICA-SIN-CONTRATO-INVENTARIO
   tipo: documentacion
   ciclo: '2026-11-03'
@@ -7428,3 +7429,31 @@ items:
   estado: OPEN
   descripcion: 'Auditar trampas PowerShell conocidas no documentadas en 01_METODO seccion 6'
   siguiente_accion: 'Auditar trampas PowerShell conocidas; anadir a 01_METODO seccion 6 solo las verificadas empiricamente.'
+- id: TEMPORAL-CONTRACTS-NO-WIRED
+  tipo: deuda_tecnica
+  ciclo: '2026-11-05'
+  estado: FIXED
+  commit: '1644adb3'
+  descripcion: 'S28 registro 4 contratos nuevos (SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO) en _IMPLEMENTED_CONTRACTS, pero CONTRACTS_REGISTRY seguia siendo un dict literal de 9 entradas. resolve_all_contracts itera list_contracts() -> CONTRACTS_REGISTRY, asi que los 4 nuevos se instanciaban pero no se resolvian en produccion. El log real decia 9 contratos resueltos.'
+  test: tests/test_temporal_contracts_registry.py
+  evidencia: 'E2E 2026-11-05 00:48 UTC (py run.py, 17.1 min): 13 contratos resueltos con los 4 nuevos (SEC_13F=OK FINRA_DARKPOOL=STALE SSGA_PRIMARY_FLOW=STALE FRED_MACRO=STALE). Gate 11/11. validation_gate_result.json: passed=true, errors_n=0.'
+  verificacion: VERIFIED_IN_PRODUCTION
+- id: CHECK-API-KEYS-HUERFANAS
+  tipo: observabilidad
+  ciclo: '2026-11-05'
+  estado: FALSE_POSITIVE
+  descripcion: 'Hipotesis: ALPHA_VANTAGE_API_KEY y TWELVE_DATA_API_KEY huerfanas tras retirar cross_provider_validation en S27. Auditado 2026-11-05: las 6 API keys (POLYGON, ALPHA_VANTAGE, TWELVE_DATA, FINNHUB, FMP, TIINGO) tienen consumidor real.'
+  razon: 'Grep 2026-11-05 confirma 6 consumidores reales (5 en data/providers/backup_providers.py L94-114, 1 en data/providers/polygon.py:16). La hipotesis del saliente (ALPHA_VANTAGE y TWELVE_DATA huerfanas tras S27) es falsa: ambas son DataRouter fallback. No hay deuda.'
+  evidencia: 'Grep 2026-11-05 en src/, data/providers/, scripts/: ALPHA_VANTAGE data/providers/backup_providers.py:109; TWELVE_DATA data/providers/backup_providers.py:99; POLYGON data/providers/polygon.py:16; FINNHUB data/providers/backup_providers.py:94; FMP data/providers/backup_providers.py:104; TIINGO data/providers/backup_providers.py:114. Las 5 de backup_providers.py son el DataRouter fallback; POLYGON tiene provider dedicado.'
+- id: TEST-FRESHNESS-UMBRAL-VS-CADENCIA
+  tipo: observabilidad
+  ciclo: '2026-11-05'
+  estado: OPEN
+  descripcion: 'Los 3 tests failed de tests/test_freshness.py (test_market_data_fresh, test_stock_prices_fresh, test_european_tickers_recent) NO se auto-resuelven con el refresh de parquets del bot. Hipotesis: umbral max 4 dias demasiado estricto para la cadencia real del bot (slots 23:17, 03:17, 05:17, 07:17, 11:17 UTC).'
+  siguiente_accion: 'Medir gap real entre last_date del parquet y expected_session en runs scheduled durante 5 dias; decidir si ajustar umbral en tests/test_freshness.py o si el gap es sintoma de otro problema. No modificar el test sin evidencia empirica.'
+- id: REPORT-ENCODING-MOJIBAKE-BITACORA
+  tipo: documentacion
+  ciclo: '2026-11-05'
+  estado: OPEN
+  descripcion: 'Mojibake real (no copy/paste) en Consolidacion_Documentos/05_BITACORA.md seccion 2 (formato de entrada). Doble/triple UTF-8 -> latin-1 -> UTF-8. Afecta al ejemplo de cabecera de sesion (em-dash) y a la referencia al parrafo 5 (section sign). No rompe parser (es markdown) pero invita a error de lectura.'
+  siguiente_accion: 'Reescribir las 2 lineas con los caracteres correctos (em-dash y section sign). Cabe en el commit docs de S28+1.'
