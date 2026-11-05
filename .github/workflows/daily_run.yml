@@ -228,6 +228,17 @@ jobs:
         # si la frescura es insuficiente, no se publica el reporte.
         run: python -m pytest tests/test_freshness.py -q --tb=short
 
+      - name: Check yahoo revision (post-run)
+        # K-LSE-YAHOO-REVISION-01 + CHECK-YAHOO-REVISION-FRECUENCIA.
+        # Compara el manifest del working tree (recien escrito por
+        # run.py) contra el manifest en HEAD (run anterior). Si el
+        # last_date es el mismo pero el sha256 cambio, Yahoo reescribio
+        # el OHLC de la misma sesion: WARN (no bloqueante).
+        # Antes vivia solo en health_check.yml, donde el checkout
+        # limpio hace current == head y el check nunca dispara.
+        continue-on-error: true
+        run: python scripts/check_yahoo_revision.py
+
       - name: Wyckoff 5BX counter
         # Instrumentacion de WYCKOFF-5BX (item WYCKOFF-5BX-INSTRUMENTACION).
         # Cuenta fases confirmadas (ACC/DIST) con >= 20 sesiones de

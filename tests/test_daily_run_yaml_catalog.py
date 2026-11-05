@@ -77,3 +77,40 @@ def test_step_build_catalog_csvs_no_enmascara_exit_code():
         )
         return
     raise AssertionError("step build_catalog_csvs.py no encontrado")
+
+# ---------------------------------------------------------------------------
+# CHECK-YAHOO-REVISION-FRECUENCIA (2026-11-05): el check de revision
+# retrospectiva de Yahoo debe ejecutarse en daily_run.yml post-run.py,
+# donde current (working tree) != head (HEAD). En health_check.yml
+# current == head por checkout limpio y el check nunca dispara.
+# ---------------------------------------------------------------------------
+
+STEP_YAHOO = "Check yahoo revision (post-run)"
+
+
+def _step_by_name(name):
+    for s in _steps():
+        if s.get("name") == name:
+            return s
+    return None
+
+
+def test_step_check_yahoo_revision_existe():
+    assert STEP_YAHOO in _step_names()
+
+
+def test_step_check_yahoo_revision_despues_de_run_macro_sectorial():
+    names = _step_names()
+    assert names.index(STEP_YAHOO) > names.index("Run Macro Sectorial")
+
+
+def test_step_check_yahoo_revision_antes_de_commit():
+    names = _step_names()
+    assert names.index(STEP_YAHOO) < names.index("Commit and push hist/state")
+
+
+def test_step_check_yahoo_revision_continue_on_error():
+    step = _step_by_name(STEP_YAHOO)
+    assert step is not None
+    assert step.get("continue-on-error") is True
+    assert "check_yahoo_revision.py" in (step.get("run") or "")
