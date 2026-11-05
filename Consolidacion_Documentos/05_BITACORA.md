@@ -44,6 +44,112 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-05 — Sesion 29: 3 bugs reales (D1, HON, BKNG) + 5 items del saliente
+
+**Objetivo.** Cerrar los 5 items del saliente (FORCE-DISPATCH,
+POWERSHELL-TRAMPS, CHECK-YAHOO-REVISION, SEMANTICA-SIN-CONTRATO,
+TEST-FRESHNESS) + investigar los 2 que quedaban OPEN sin causa raiz
+(COMMIT-46A3B370, CHECK-API-KEYS). Durante la investigacion se
+descubrieron 3 bugs reales.
+
+**Hecho (20+ commits pusheados).**
+
+Bugs reales (todos con E2E y test que cierra la clase):
+
+- **D1 TEMPORAL-CONTRACTS-NO-WIRED** (`1644adb3`). CONTRACTS_REGISTRY
+  era dict paralelo de 9 entradas a _IMPLEMENTED_CONTRACTS (13).
+  resolve_all_contracts iteraba list_contracts() -> 9. Fix: derivar
+  de _IMPLEMENTED_CONTRACTS + atributos de clase. Test anti-drift.
+  E2E run 42020621979: 13 contratos resueltos.
+- **HON-REVERSE-SPLIT-CUSIP** (`cc576403`). CUSIP pre/post reverse
+  split 2026-06-29. 507 filings Q2 con CUSIP viejo caian a
+  UNRESOLVED_IDENTITY -> EXIT artificial. Fix: 2 entries en
+  cusip_equivalence.csv. n_exit HON 902 -> 784. Residual 784: 690
+  venta real, 42 sin filing, 11 CUSIP raro. 6 tests nuevos.
+- **BKNG-SPLIT-DELTA** (`0dbddfcc`). Split 24:1 entre Q1 y Q2. delta
+  artificial +688M acciones. Fix: nuevo split_detection.py con
+  deteccion por doble ratio (precio y shares), exclusion de bonos y
+  ETFs apalancados. sum_delta +688M -> -27.7M. 8 splits detectados.
+  14 tests.
+- **VERIFICAR-MTE-STATE-PROD** (`b73294f7`, item creado FIXED).
+  Run 42020621979 confirma schema v2, mte_state=DEGRADED,
+  futures_status=STALE.
+
+Items del saliente cerrados (5):
+
+- FORCE-DISPATCH-EMERGENCIA (`29688163`): runbook §4.5 reescrito
+  con causa real (force salta el if: del job, no bypassea
+  pipeline_gate.py), backup PRE_SHA, procedimiento 8 pasos, 2
+  opciones de reversion.
+- POWERSHELL-TRAMPS-NO-DOCUMENTADAS (`63af55dc`): §6quater en 01d
+  con 5 trampas verificadas (if inline, exit, array vacio, comilla
+  simple, git checkout LASTEXITCODE=0).
+- CHECK-YAHOO-REVISION-FRECUENCIA (`e1f8090e`): bug de ubicacion.
+  check_yahoo_revision estaba en health_check.yml (current==head,
+  nunca dispara). Movido a daily_run.yml post-run.py pre-commit.
+  Verificado: [OK] sesion nueva (2026-11-03 -> 2026-11-04).
+- SEMANTICA-SIN-CONTRATO-INVENTARIO (`bce81bf4`, OPEN con inventario
+  parcial). 6 candidatos auditados: 3 con contrato, 3 sin
+  (FRESHNESS_*, confidence<0.5, SATURATED/MAD0_SAME). Decision
+  contrato vs WONT_FIX pendiente.
+- TEST-FRESHNESS-UMBRAL-VS-CADENCIA (`76bd01e1`, hipotesis REFUTADA).
+  Los 3 tests failed NO eran umbral. Tras refresh real del bot
+  (3172eaf5): 4469 passed, 0 failed. Observatorio
+  freshness_gap_observer.py recoge serie hasta 11-10.
+
+Incidente CI corregido (`340bfadc`): los 2 scheduled del 05-11
+fallaron en Run tests porque los scripts nuevos no estaban en
+CI_ENTRYPOINTS ni cubiertos por _local_names(). Fix + extension.
+Autocritica: la regla 01_METODO §3 existe por esto.
+
+Items del saliente aclarados:
+
+- COMMIT-46A3B370-AUDIT (`fbc60969`, WONT_FIX): 10 hits
+  documentales, 0 en codigo. Commit edito archivo declarado obsoleto.
+- CHECK-API-KEYS-HUERFANAS (`fbc60969`, FALSE_POSITIVE): las 6 API
+  keys tienen consumidor real.
+
+Bugs de coherencia documental:
+
+- HEAD literal stale por auto-referencia en 00_ARRANQUE y HANDOFF.
+- 22 commits -> 31 (27 contenido + 4 cierre).
+- "Se auto-resuelven con el proximo refresh" falso. Corregido a
+  hipotesis refutada.
+- 4 mojibakes en 05_BITACORA (triple UTF-8 -> latin-1 -> UTF-8).
+- COMMIT-46A3B370-AUDIT seguia OPEN en 00_ARRANQUE tras cerrarlo.
+- 9f59365a (HON) quedo huerfano tras rebase. SHA real: cc576403.
+
+**Verificacion.**
+
+- pyflakes LIMPIO, compileall OK.
+- Suite completa: 4469 passed, 0 failed, 2 skipped.
+- gobernanza [OK], poda [OK].
+- E2E run.py local: 17.1 min, gate 11/11, 13 contratos.
+- Run scheduled 42020621979 (head 5055a2f3): success. 3 cambios
+  nuevos verificados (Observe freshness gap, Check yahoo revision,
+  13 contratos). Reporte auditado: 0 strings de modulos retirados,
+  0 mojibakes, 0 nan%/-0.00, N/D 8 (normal).
+
+**Pendiente.**
+
+- Cierre documental de sesion 29 (HANDOFF + 05_BITACORA +
+  04_HISTORICO). 00_ARRANQUE y REGISTRO ya actualizados.
+- SEMANTICA-SIN-CONTRATO-INVENTARIO: decision 3 conceptos.
+- 06-nov: DAILY-RUN-FAIL-40992758129 (si no vuelve, WONT_FIX).
+- 10-nov: CRON-SLOTS-OBS, SCHEDULER-DELAYS, TEST-FRESHNESS
+  (>=5 filas observatorio).
+- 17-nov: RECEIPT-AUDIT-LAG. 20-nov: H5.3.
+
+**Commits.** `1644adb3`, `fbc60969`, `4a8987da`, `3aa295fb`,
+`29688163`, `af33648d`, `63af55dc`, `f47db432`, `e1f8090e`,
+`44ef1ca8`, `bce81bf4`, `76bd01e1`, `f4684b33`, `340bfadc`,
+`5055a2f3`, `c707a1ee`, `cc576403`, `0dbddfcc`, `87e09b73`,
+`f1202d9e`, `90a78259`.
+
+**Proximo paso sugerido.** 2026-11-06: revisar DAILY-RUN-FAIL-40992758129
+(si no reaparece, WONT_FIX). 2026-11-10: los 3 observacionales +
+TEST-FRESHNESS con >=5 filas. Decision SEMANTICA cuando haya margen.
+
 ### 2026-11-04 — Sesion 28: 7 items FIXED con codigo real
 
 **Objetivo.** Cerrar con codigo real, no solo documentacion, los 4 items
