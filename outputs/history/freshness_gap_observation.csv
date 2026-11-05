@@ -1,2 +1,3 @@
 target_session,expected_session,effective_session,last_date,gap_days_calendar,gap_days_business,coverage_pct_effective,n_tickers_missing,manifest_status,test_would_fail
 2026-11-03,2026-11-03,2026-11-03,2026-11-03,0,0,0.994671,3,VALID_WITH_MISSING,False
+2026-11-04,2026-11-04,2026-11-04,2026-11-04,0,0,0.994671,3,VALID_WITH_MISSING,False
