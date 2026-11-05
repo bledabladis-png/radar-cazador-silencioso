@@ -39,6 +39,8 @@ CI_ENTRYPOINTS = [
     "scripts/guard_coverage.py",
     "scripts/issue_manager.py",
     "scripts/pipeline_gate.py",
+    "scripts/check_yahoo_revision.py",
+    "scripts/freshness_gap_observer.py",
     "scripts/post_receipt_audit.py",
     "scripts/qqq_returns_yahoo.py",
     "scripts/regenerate_radar_catalog.py",

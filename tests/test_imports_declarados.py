@@ -68,6 +68,15 @@ def _local_names():
                 names.add(p.name)
             elif p.suffix == ".py" and p.stem != "__init__":
                 names.add(p.stem)
+    # scripts/ contiene entry points invocados con "py scripts/foo.py",
+    # que pone scripts/ en sys.path[0]. Un script puede importar a otro
+    # con "from health_check import ..." (caso check_yahoo_revision.py).
+    # Sin este bloque, esos imports se resuelven como pip y el test falla.
+    scripts = ROOT / "scripts"
+    if scripts.is_dir():
+        for p in scripts.iterdir():
+            if p.suffix == ".py" and p.stem != "__init__":
+                names.add(p.stem)
     return names
 
 
