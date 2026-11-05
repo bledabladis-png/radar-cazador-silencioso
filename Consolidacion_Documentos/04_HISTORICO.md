@@ -3411,3 +3411,224 @@ actualizados.
 568decd5|3efd8037|3fc0746e|7ecd595c|324941a4|b73294f7|cca7a372|
 18f77740|fdd83b34|729317d7|3b6bfc90|54d4a23f|f0f21518|d3a0c09e|
 ab75e39c|778c3089 devuelve los commits completos.
+
+## Sesion 2026-11-05 (sesion 29) - Tres bugs estructurales con la misma firma
+
+La sesion cerro 5 items del saliente sin incidencias. Los 3 bugs reales
+que aparecieron durante la investigacion comparten una firma comun:
+**una afirmacion del sistema que no cuadraba con la realidad, silenciada
+porque nadie la miraba**. Cada uno cubre una clase de bug distinta.
+
+### D1 - Un registro derivado no puede ser una lista paralela
+
+**Causa.** `TEMPORAL-CONTRACTS-NO-WIRED`. S28 anadio 4 contratos
+(`SEC_13F`, `FINRA_DARKPOOL`, `SSGA_PRIMARY_FLOW`, `FRED_MACRO`) a
+`_IMPLEMENTED_CONTRACTS` (13 entradas). Pero `CONTRACTS_REGISTRY` seguia
+siendo un dict literal de 9 entradas, mantenido a mano. `resolve_all_contracts`
+iteraba `list_contracts()` -> `CONTRACTS_REGISTRY`, asi que solo 9 se
+resolvian en produccion. El log real decia "9 contratos resueltos".
+Los documentos (HANDOFF §1, 00_ARRANQUE §3, 04_HISTORICO S28) afirmaban
+"13 contratos activos". Falso.
+
+**Por que no se detecto en S28.** Los 4 contratos estaban registrados,
+instanciables (`get_contract` funciona) y testeados (33 tests unitarios).
+El gap estaba **entre** `_IMPLEMENTED_CONTRACTS` y `CONTRACTS_REGISTRY`,
+sin test que lo cubriera. El E2E de S28 no se ejecuto.
+
+**Fix (1644adb3).** `CONTRACTS_REGISTRY` se **deriva** de
+`_IMPLEMENTED_CONTRACTS` y de los atributos de clase (`family`,
+`session_calendar`, `max_lag_days`, `min_coverage`, `per_ticker_lag`,
+`per_pair_max_lag`, `activation_req`, `critical`). Anadir un contrato =
+anadir la clase + registrarla en `_IMPLEMENTED_CONTRACTS`. Sin lista
+paralela. Test anti-drift: `set(CONTRACTS_REGISTRY) == set(_IMPLEMENTED_CONTRACTS)`
+que falla si alguien anade una clase sin que aparezca en el registro.
+
+**Leccion.** Dos listas paralelas que deben estar sincronizadas es una
+clase de bug, no una instancia. La solucion durable es derivar una de la
+otra. Test de drift que falla en CI es la red de seguridad. Aplicable a
+cualquier estructura del sistema con duplicacion: `DICT_CONTRACT_PAIRS`
+(11 pares), `MARKET_TO_CONTRACT`, los 5 contratos de `_IMPLEMENTED_CONTRACTS`
+originales vs los 4 nuevos.
+
+### HON - Un split no es solo un precio distinto
+
+**Causa.** `HON-REVERSE-SPLIT-CUSIP`. HON hizo reverse split 2026-06-29.
+El CUSIP viejo (`438516106`) tenia `valid_to=2026-03-31` en el crosswalk
+y el nuevo (`438516205`) solo aparecia en `etf_holdings.csv` (sin
+vigencia temporal). 507 filings Q2 con el CUSIP viejo caian a
+`OBSERVED_ONLY` -> `UNRESOLVED_IDENTITY` -> `EXIT` artificial en el delta.
+El reporte publicaba `n_exit HON = 902` y `pct_exit = 30.7%`. Los 902
+no eran ventas reales: eran gestores migrando de CUSIP.
+
+**Por que no se detecto.** El filtro `MOSTLY_EXITS` exige `pct_exit >= 0.50`.
+Al fusionarse los 3 CUSIPs (`438516106` residual, `438516205` nuevo,
+`43849R105` HONA spin-off), el denominador crecia y `pct_exit` bajaba a
+0.307. HON pasaba el filtro. El reporte publicaba el dato sin `filter_reason`.
+
+**Fix (cc576403).** 2 entries en `cusip_equivalence.csv`, que tiene
+prioridad sobre crosswalk: `438516106 -> HON [2025-12-31, 2026-09-30]`
+(ventana Q1+Q2+1 trimestre de margen para filings tardios),
+`438516205 -> HON [2026-06-29, null)`. En Q2, los 507 filings con el
+CUSIP viejo resuelven a `equity:HON` y matchean con Q1 como BOTH.
+`n_exit 902 -> 784`. Residual: 690 venta real, 42 sin filing Q2, 11
+CUSIP raro no mapeado.
+
+**Leccion.** `cusip_equivalence.csv` es la autoridad #1 para cambios de
+identidad con vigencia temporal. El crosswalk es autoridad #2 con
+`valid_from/valid_to` que debe respetarse. Cualquier corporate action que
+cambie CUSIP requiere entry en equivalence. El sistema NO resuelve
+heuristicamente por NAMEOFISSUER ni proximidad de CUSIP (prohibicion
+explicita del resolver). Esto es contrato, no convencion.
+
+### BKNG - El 13F compara trimestres sin ajustar splits
+
+**Causa.** `BKNG-SPLIT-DELTA`. BKNG hizo split 24:1 entre 2026Q1 y 2026Q2.
+Los filings 13F pre-split reportan shares pre-split y precio pre-split
+(implied_price ~$4210). Los post-split, post-split (~$178).
+`compute_delta_shares` comparaba `SSHPRNAMT` sin ajustar. Resultado:
+`sum_delta +688M acciones` en el reporte, 24x el float real (~33M).
+Fisicamente imposible.
+
+**Por que no se detecto.** El `market_data.parquet` ya estaba ajustado
+por Yahoo retroactivamente (BKNG aparece a $57 en 2016 y $170 hoy, ambos
+post-split). El precio del sistema era coherente. Solo los filings 13F,
+que reportan lo declarado en su momento, rompian la comparacion.
+El reporte publica "Delta (M acciones)" como bruto sin advertir el
+double-counting del 13F ni los splits.
+
+**Fix (0dbddfcc).** Nuevo `aggregation/split_detection.py` con deteccion
+robusta SIN lista de splits, SIN fuente externa: para cada CUSIP en ambos
+trimestres con >= `MIN_FILERS=5`, comparar dos ratios independientes
+(`ratio_precio = mediana(VALUE/SSHPRNAMT) prev / curr`,
+`ratio_shares = sum_shares_curr / sum_shares_prev`). Si AMBOS coinciden
+con un entero K >= 2 (o 1/K reverse) dentro de tolerancia, marcar split.
+Ajustar `sshprnamt_total` en `units_prev` por K antes del delta.
+Exclusiones: bonos (`TITLEOFCLASS` NOTE/BOND/DEB/PFD) y ETFs apalancados
+(2X/3X/DAILY/LEVERAGED/INVERSE/SHORT/BULL/BEAR). "ETF" a secas NO se
+excluye porque VUG/SPY/QQQ pueden hacer splits reales (VUG 5x detectado).
+Reverse splits exigen `n_filers >= 20` (evita ETFs apalancados con pocos
+filers cuyo rebalanceo diario coincide por casualidad).
+Resultado: 8 splits detectados. `sum_delta BKNG +688M -> -27.7M`.
+
+**Leccion.** La deteccion de eventos societarios sin fuente externa es
+posible si se usan dos senales independientes que deben coincidir. Un
+solo ratio (precio o shares) es ambiguo: crecimiento organico o movimiento
+de precio pueden disparar falsos positivos. La coincidencia de ambos
+elimina el ruido. La tolerancia debe ser asimetrica: laxa para splits
+directos (10%), estricta para reverse (5%) y exigir mas filers en reverse
+(20 vs 5), porque los ETFs apalancados son la principal fuente de falsos
+positivos. Los bonos no hacen split aunque `SSHPRNAMTTYPE="SH"`:
+`TITLEOFCLASS` es la fuente de verdad del tipo de instrumento.
+
+### CHECK-YAHOO-REVISION - Un check correcto en el workflow equivocado es un check muerto
+
+**Causa.** `CHECK-YAHOO-REVISION-FRECUENCIA`. El check compara el manifest
+del working tree contra `git show HEAD:...`. Vive en `health_check.yml`
+(lunes), que solo hace checkout y corre `health_check.py`. Como el
+checkout es limpio, `current == head` siempre. El check sale `OK, sin
+revision` en cada ejecucion. Los 3 logs scheduled desde D2 (2026-09-30)
+lo confirman. El check nunca podia disparar.
+
+**Por que no se detecto.** El check esta bien implementado y bien testeado
+(8 tests cubren los 5 caminos de `_yahoo_revision_status` + 3 casos de
+manifest). El bug estaba en el **workflow donde vive**, no en el codigo.
+
+**Fix (e1f8090e).** Mover el check a `daily_run.yml` post-`run.py`
+pre-commit. Ahi `current` (manifest recien escrito por `run.py`) != `head`
+(ultimo commit de main del run anterior). Nuevo script
+`scripts/check_yahoo_revision.py` (40 lineas, importa de health_check,
+exit 0 siempre). Step con `continue-on-error: true`, no bloqueante.
+4 tests centinelas en `test_daily_run_yaml_catalog.py`: existencia, orden
+post-Run-pre-Commit, `continue-on-error`. Verificado en prod run
+42020621979: `[OK] sesion nueva (2026-11-03 -> 2026-11-04)`.
+
+**Leccion.** Un check que pasa en CI siempre puede estar pasando porque
+no puede fallar. Si el workflow donde vive garantiza el estado que el
+check asume correcto, el check es decorativo. La solucion es moverlo al
+workflow donde el estado es potencialmente incorrecto (aqui, post-run,
+donde el manifest es nuevo y HEAD es viejo). El check en si no cambia:
+cambia donde corre. Al verificar un check, la pregunta no es "funciona?"
+sino "puede fallar en produccion?".
+
+### TEST-FRESHNESS - Un test que falla en local no es un bug del test
+
+**Causa.** `TEST-FRESHNESS-UMBRAL-VS-CADENCIA`. Los 3 tests de
+`test_freshness.py` (`market_data_fresh`, `stock_prices_fresh`,
+`european_tickers_recent`) fallaban con parquets locales stale. La
+hipotesis inicial del saliente (umbral `MAX_DAILY_AGE=4` demasiado
+estricto para la cadencia del bot) apuntaba al test. Tras el refresh real
+del bot (`3172eaf5`), `test_freshness: 37 passed, 2 skipped, 0 failed`.
+Suite completa: `4469 passed, 0 failed`. Hipotesis REFUTADA.
+
+**Por que no se detecto antes.** Los parquets locales llevaban dias sin
+actualizarse. Los tests pasaban en CI (porque el workflow corre `run.py`
+antes) y fallaban en local. Nadie ejecutaba `run.py` localmente para
+refrescar el parquet. El fallo era de datos, no de umbral.
+
+**Fix (76bd01e1).** Observatorio `freshness_gap_observer.py` wireado en
+`daily_run.yml` idx 19 (antes de Validate freshness post-run). Append-only
+a `outputs/history/freshness_gap_observation.csv` con: target_session,
+expected_session, effective_session, last_date, gap_calendar,
+gap_business, coverage_pct_effective, test_would_fail (True si
+gap_business > MAX_DAILY_AGE=4). Verificado en prod run 42020621979:
+`[OK] freshness_gap: target=2026-11-04 gap_bus=0 test_would_fail=False`.
+Cierre formal 11-10 con >=5 filas. Decision: WONT_FIX razonado si todos
+gap=0 (hipotesis descartada con datos), o ajustar umbral si aparece gap>4.
+
+**Leccion.** Antes de tocar un test que falla, verificar el estado del
+input. Un test puede fallar por datos, no por logica. El observatorio
+convierte la hipotesis en serie empirica: 5 dias de `gap_bus` real deciden
+con datos, no con intuicion. La distincion "test falla porque el dato es
+stale" vs "test falla porque el umbral es incorrecto" no se puede hacer
+sin ver el gap real durante varias sesiones.
+
+### Incidente CI - La suite completa antes de commitear no es opcional
+
+**Causa.** `INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH`. Los 2 scheduled
+del 05-11 (`41961991490` 03:30, `42014568033` 10:54) fallaron en
+"Run tests" antes de "Run Macro Sectorial". Los scripts nuevos
+(`check_yahoo_revision.py`, `freshness_gap_observer.py`) estaban en
+`daily_run.yml` pero no en `CI_ENTRYPOINTS` ni cubiertos por
+`_local_names()` de `test_imports_declarados`. Los 2 tests de prevencion
+lo detectaron exactamente como fueron disenados.
+
+**Por que ocurrio.** Ejecute solo los tests especificos de los scripts
+nuevos, no la suite completa. `01_METODO §3` exige la suite completa
+antes de cualquier commit. Los 2 tests de prevencion son baratos (~6s)
+y estaban en el bloque de verificacion. No los ejecute.
+
+**Fix (340bfadc).** Anadir los 2 scripts a `CI_ENTRYPOINTS` + extender
+`_local_names()` con `scripts/*.py` (los entry points se invocan con
+`py scripts/foo.py` que pone `scripts/` en `sys.path[0]`). Los scripts
+pueden importar entre si con `from health_check import ...` sin falsos
+positivos de pip.
+
+**Leccion.** La regla existe por esto. La suite completa es 3-4 min;
+un push que rompe CI bloquea produccion hasta que se arregla. Los 2
+tests de prevencion estan disenados para detectar esta clase de bug;
+ejecutarlos es barato. "Local pasa, CI falla" es siempre un fallo de
+verificacion, no una rareza.
+
+### Commits
+
+`1644adb3` (D1), `fbc60969` (REGISTRO 3 items), `4a8987da` (docs
+coherencia), `3aa295fb` (REGISTRO mojibake), `29688163` (runbook §4.5),
+`af33648d` (REGISTRO FORCE), `63af55dc` (01d §6quater), `f47db432`
+(REGISTRO PS), `e1f8090e` (check_yahoo), `44ef1ca8` (REGISTRO CHECK),
+`bce81bf4` (SEMANTICA inventario), `76bd01e1` (freshness_gap),
+`f4684b33` (retira COMMIT-46A3B370), `340bfadc` (CI fix), `5055a2f3`
+(ESTADO_SISTEMA), `c707a1ee` (TEST-FRESHNESS refutada), `cc576403`
+(HON), `0dbddfcc` (BKNG), `87e09b73` (SHA HON), `f1202d9e`
+(00_ARRANQUE), `90a78259` (HANDOFF S29), `9e38dc69` + `fac289be`
+(bitacora).
+
+### Referencias
+
+- Bug D1: `src/temporal_contracts/registry.py`, `tests/test_temporal_contracts_registry.py`.
+- Bug HON: `data/mappings/cusip_equivalence.csv`, `tests/test_sec_13f_security_identity.py`.
+- Bug BKNG: `src/institutional_accumulation/aggregation/split_detection.py`,
+  `tests/test_sec_13f_split_detection.py`.
+- CHECK-YAHOO: `scripts/check_yahoo_revision.py`, `tests/test_daily_run_yaml_catalog.py`.
+- TEST-FRESHNESS: `scripts/freshness_gap_observer.py`,
+  `outputs/history/freshness_gap_observation.csv`.
+- Incidente CI: `tests/test_ci_entrypoints_import.py`, `tests/test_imports_declarados.py`.
