@@ -91,7 +91,7 @@ Lo que NUNCA haces:
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
 Snapshot al cierre del ultimo commit (2026-11-04, sesion 28):
-- HEAD: `87e09b73` (consultar `git log --oneline -1` para el actual)
+- HEAD: `4a7bd8ce` (consultar `git log --oneline -1` para el actual)
 - Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S28: 4460 passed, 3 failed (test_freshness, datos locales stale, ajenos al codigo), 2 skipped. pyflakes LIMPIO, compileall OK.
 - Validation Gate: 11/11
 - Working tree: limpio
@@ -254,6 +254,16 @@ del rediseno del modulo Wyckoff. Indice en `docs/auditoria/wyckoff/03_plan_migra
 ---
 
 ## 7. CONFIRMACION
+
+**Orden de pegado en chat nuevo (obligatorio):**
+
+1. `00_ARRANQUE.md` (este fichero).
+2. `HANDOFF - Radar de Rotacion Sectorial.txt` (raiz del repo).
+3. `Consolidacion_Documentos/ESTADO_SISTEMA.md`.
+
+Los 3 son autosuficientes juntos. `01-08` son referencia on-demand:
+no se pegan. El chat nuevo confirma asimilacion (HEAD, tests,
+gate) antes de proponer tareas.
 
 Al recibir este documento, responde exactamente:
 

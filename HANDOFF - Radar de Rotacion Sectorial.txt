@@ -9,7 +9,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-05, sesion 29)
 
-HEAD: `f1202d9e` (consultar `git log --oneline -1` para el actual).
+HEAD: `4a7bd8ce` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        4469 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
