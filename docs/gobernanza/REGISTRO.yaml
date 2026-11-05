@@ -7420,9 +7420,11 @@ items:
 - id: FORCE-DISPATCH-EMERGENCIA
   tipo: documentacion
   ciclo: '2026-11-03'
-  estado: OPEN
-  descripcion: 'Documentar procedimiento de force dispatch de emergencia (13:30-20:00 UTC prohibido; backup no documentado)'
-  siguiente_accion: 'Documentar (a) por que force=true corrompe en market open; (b) backup pre-force; (c) procedimiento paso a paso.'
+  estado: FIXED
+  commit: '29688163'
+  descripcion: 'Procedimiento de force dispatch de emergencia en 07_RUNBOOK.md seccion 4.5. Causa real verificada 2026-11-05: force=true no bypassea pipeline_gate.py (args --now/--target-session/--slot); lo que hace es saltarse el veredicto del gate en el if del job run-system. Documentados: ficheros contaminados que se pushean (auto-push del step Commit), backup pre-force (PRE_SHA + tag opcional), procedimiento de 8 pasos, y 2 opciones de reversion (git revert completo o restauracion quirurgica desde PRE_SHA).'
+  evidencia: 'Commit 29688163 reescribe seccion 4.5: 130 inserciones, 12 deleciones. Corrige la causa falsa previa (el gate bypassea should_run). Caso real 2026-10-29 19:19 UTC documentado con matiz. Verificacion post-fix: 0 ocurrencias de la causa falsa, 6 anchors nuevos presentes, gobernanza OK.'
+  verificacion: FIXED
 - id: POWERSHELL-TRAMPS-NO-DOCUMENTADAS
   tipo: documentacion
   ciclo: '2026-11-03'
