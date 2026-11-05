@@ -91,7 +91,7 @@ Lo que NUNCA haces:
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
 Snapshot al cierre del ultimo commit (2026-11-04, sesion 28):
-- HEAD: `fbc60969` (consultar `git log --oneline -1` para el actual)
+- HEAD: `87e09b73` (consultar `git log --oneline -1` para el actual)
 - Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S28: 4460 passed, 3 failed (test_freshness, datos locales stale, ajenos al codigo), 2 skipped. pyflakes LIMPIO, compileall OK.
 - Validation Gate: 11/11
 - Working tree: limpio
@@ -181,17 +181,16 @@ Sistema holdings-based en produccion desde sesion 3 (2026-10-24). Modulos, pre-r
 - **DICT3-TOP20-COBERTURA:** FIXED `0ab436d9` (2026-10-26). A.2c desplegado condicionado. Pendiente respuesta del auditor a doc 70-v2d sobre parte restante.
 - **DICT3-H04-INTERVALS:** OPEN, registro del rechazo del IC95 inferencial. Evidencia del rechazo, no accionable.
 - **C2 (920):** BLOCKED_EXTERNAL. Auditor debe publicar comando + HEAD del valor externo (-4.264.449.932). Sin eso, no reproducible.
-- **WYCKOFF-5BX:** BLOCKED_EXTERNAL. `n_confirmed_H20_complete >= 550` (~2027). Ahora instrumentado (54d4a23f), primer valor 27/68.
+- **WYCKOFF-5BX:** BLOCKED_EXTERNAL. `n_confirmed_H20_complete >= 550` (~2027). Instrumentado (54d4a23f). Valores: 27/68 (02-11) -> 31/73 (04-11). Ver `outputs/state/wyckoff_5bx_counter.json`.
 - **SEMANTICA-SIN-CONTRATO-INVENTARIO:** OPEN. Inventariar conceptos con semantica sin contrato. ROI bajo, no urgente.
 - **DAILY-RUN-FAIL-40992758129:** 7 dias sin reaparecer -> revisar 06-nov-2026, cerrar WONT_FIX si no.
 - **H5.3:** cron 20-nov-2026 06:17 UTC.
 - **RECEIPT-AUDIT-LAG:** cierre 17-nov-2026 (4 semanas de obs).
 - **CRON-SLOTS-OBS:** revision 10-nov-2026 (runs 20-oct a 10-nov).
 - **SCHEDULER-DELAYS:** p95 delays 10-nov-2026.
-- **VERIFICAR-MTE-STATE-PROD:** OPEN. Proximo scheduled real: confirmar mte_state presente en mte_state.json (schema v2).
 - **INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH:** CERRADO en S28.
 - **2 tests skipped** (`test_freshness.py` network, opt-in).
-- **3 tests failed** en local (test_freshness, datos stale). Ver item OPEN `TEST-FRESHNESS-UMBRAL-VS-CADENCIA` en REGISTRO: hipotesis umbral (4d) vs cadencia real del bot. No se auto-resuelven con el refresh del bot (verificado 2026-11-05: los 3 fallan tambien tras refresh).
+- **test_freshness**: hipotesis inicial refutada 2026-11-05. Los 3 tests se auto-resuelven con un refresh real del bot (post-3172eaf5: 4469 passed, 0 failed). Item OPEN `TEST-FRESHNESS-UMBRAL-VS-CADENCIA` en REGISTRO: observatorio `freshness_gap_observer.py` recoge serie hasta 11-10; cierre formal con >=5 filas.
 
 ### 4.4. Deudas documentadas (sin accion pendiente)
 
