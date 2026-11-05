@@ -7455,8 +7455,8 @@ items:
   tipo: observabilidad
   ciclo: '2026-11-05'
   estado: OPEN
-  descripcion: 'Los 3 tests failed de tests/test_freshness.py (test_market_data_fresh, test_stock_prices_fresh, test_european_tickers_recent) NO se auto-resuelven con el refresh de parquets del bot. Hipotesis: umbral max 4 dias demasiado estricto para la cadencia real del bot (slots 23:17, 03:17, 05:17, 07:17, 11:17 UTC).'
-  siguiente_accion: 'Medir gap real entre last_date del parquet y expected_session en runs scheduled durante 5 dias; decidir si ajustar umbral en tests/test_freshness.py o si el gap es sintoma de otro problema. No modificar el test sin evidencia empirica.'
+  descripcion: 'Los 3 tests failed de tests/test_freshness.py (test_market_data_fresh, test_stock_prices_fresh, test_european_tickers_recent) NO se auto-resuelven con el refresh de parquets del bot. Hipotesis: umbrales MAX_DAILY_AGE=4, MAX_DAILY_AGE_EU=5, MAX_DQ_AGE=3 demasiado estrictos para la cadencia real del bot (5 slots/dia UTC).'
+  siguiente_accion: 'Observatorio wireado 2026-11-05: scripts/freshness_gap_observer.py registra por sesion target, expected, effective, last_date, gap_calendar, gap_business, coverage_pct_effective, test_would_fail (True si gap_business > MAX_DAILY_AGE=4). Append-only a outputs/history/freshness_gap_observation.csv, pusheado por el bot diariamente. Revisar 2026-11-10 con >=5 filas: si >=3 de 5 dias test_would_fail=True, umbral demasiado estricto, ajustar con justificacion (tolerar festivo + latencia real); si <2 de 5, el gap es sintoma de otra cosa (latencia Yahoo/FRED), investigar por otro lado. NO tocar el umbral sin la serie de 5 dias.'
 - id: REPORT-ENCODING-MOJIBAKE-BITACORA
   tipo: documentacion
   ciclo: '2026-11-05'

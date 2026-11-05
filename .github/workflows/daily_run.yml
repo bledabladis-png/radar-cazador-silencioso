@@ -220,6 +220,15 @@ jobs:
         continue-on-error: true
         run: python validation/qqq_sec_nport_cross_validation.py
 
+      - name: Observe freshness gap (post-run)
+        # TEST-FRESHNESS-UMBRAL-VS-CADENCIA: registra gap real por
+        # sesion para decidir si los umbrales de test_freshness (4d)
+        # son correctos. Append-only a outputs/history/. No bloquea.
+        # Va ANTES de Validate freshness para registrar el gap incluso
+        # cuando los tests fallen.
+        continue-on-error: true
+        run: python scripts/freshness_gap_observer.py
+
       - name: Validate freshness post-run
         # 2026-09-30: los tests de frescura en la fase 'Run tests' saltan
         # porque los parquets aun no existen (gitignored, CI fresco).
