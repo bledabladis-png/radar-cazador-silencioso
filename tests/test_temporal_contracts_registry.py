@@ -79,6 +79,9 @@ class TestRegistryShape:
             assert entry["session_calendar"] == cls.session_calendar, name
             assert entry["max_lag_days"] == cls.max_lag_days, name
             assert entry["min_coverage"] == cls.min_coverage, name
+            assert entry["per_ticker_lag"] == cls.per_ticker_lag, name
+            assert entry["per_pair_max_lag"] == cls.per_pair_max_lag, name
+            assert entry["activation_req"] == cls.activation_req, name
 
     def test_critical_solo_equity_eod(self):
         """Solo EQUITY_EOD bloquea la publicacion (enmienda v1.1)."""
