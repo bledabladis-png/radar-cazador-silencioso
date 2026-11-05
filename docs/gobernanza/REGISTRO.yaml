@@ -7369,8 +7369,8 @@ items:
   tipo: documentacion
   ciclo: '2026-11-03'
   estado: OPEN
-  descripcion: 'Inventariar conceptos con semantica sin contrato escrito (regla de que si tiene semantica, tiene contrato)'
-  siguiente_accion: 'Inventariar conceptos con semantica sin contrato. ROI bajo, no urgente. No implementar hasta inventario completo.'
+  descripcion: 'Inventariar conceptos con semantica sin contrato escrito (regla: si tiene semantica, tiene contrato).'
+  siguiente_accion: 'Inventario 2026-11-05: 6 conceptos auditados, 3 con contrato (pipeline_gate/validation_gate via enmiendas v1.1-v1.3, structure_ratio via doc 08, coverage_pct_effective via enmienda v1.3), 3 sin contrato: (1) FRESHNESS_FINRA/CBOE/FRED/YAHOO: umbrales de frescura por bloque en 5 modulos (indicators/data_quality.py, src/pipeline/validation_gate.py, src/report/freshness.py, src/report/helpers.py, src/temporal_contracts/finra_darkpool.py). Razon: cada modulo importa las constantes de config.settings pero ninguno declara formalmente la semantica de las 3 bandas (CURRENT/RECENT/STALE) ni como se eligen. (2) confidence < 0.5 en src/report/helpers.py para UNCONFIRMED del MTE: umbral sin contrato de que significa exactamente ni por que 0.5. (3) SATURATED y MAD0_SAME en etf_flows.py y flows_international.py: etiquetas de estado del z-score sin contrato de cuando se aplican ni como se consumen. Decision pendiente: escribir contrato para los 3 o WONT_FIX razonado con coste-beneficio. No implementar hasta esa decision.'
 - id: WYCKOFF-5BX-INSTRUMENTACION
   tipo: observabilidad
   ciclo: '2026-11-03'
