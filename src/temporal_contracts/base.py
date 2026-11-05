@@ -104,7 +104,7 @@ class MarketDataBundle:
 
 
 class TemporalContract(ABC):
-    """Interfaz comun de los 10 contratos temporales (FU-021-5 A.1)."""
+    """Interfaz comun de los contratos temporales (FU-021-5 A.1)."""
 
     name: str
     family: str
@@ -116,6 +116,9 @@ class TemporalContract(ABC):
     per_pair_max_lag: Optional[dict] = None
     activation_req: Optional[dict] = None
     settlement_semantics: Optional[str] = None
+    # Enmienda v1.1 (2026-10-16): critical=True solo en EQUITY_EOD.
+    # validation.py usa este flag para bloquear la publicacion si n=0.
+    critical: bool = False
 
     @abstractmethod
     def resolve(

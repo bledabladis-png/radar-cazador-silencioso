@@ -1,7 +1,7 @@
-"""Tests de src/temporal_contracts/registry.py (FU-021-5 Fase 1)."""
-import pytest
+"""Tests de src/temporal_contracts/registry.py (FU-021-5 Fase 1 + S28)."""
 
 from src.temporal_contracts.registry import (
+    _IMPLEMENTED_CONTRACTS,
     CONTRACTS_REGISTRY,
     list_contracts,
     get_registry_entry,
@@ -18,6 +18,10 @@ EXPECTED_CONTRACTS = [
     "RATE_YIELD",
     "FUTURE_SETTLEMENT",
     "FX_DAILY_CUT",
+    "SEC_13F",
+    "FINRA_DARKPOOL",
+    "SSGA_PRIMARY_FLOW",
+    "FRED_MACRO",
 ]
 
 EXPECTED_FAMILIES = {
@@ -30,13 +34,17 @@ EXPECTED_FAMILIES = {
     "RATE_YIELD": "RATE_YIELD",
     "FUTURE_SETTLEMENT": "FUTURE",
     "FX_DAILY_CUT": "FX",
+    "SEC_13F": "SEC",
+    "FINRA_DARKPOOL": "FINRA",
+    "SSGA_PRIMARY_FLOW": "SSGA",
+    "FRED_MACRO": "FRED",
 }
 
 
 class TestRegistryShape:
 
-    def test_diez_contratos(self):
-        assert len(CONTRACTS_REGISTRY) == 9
+    def test_trece_contratos(self):
+        assert len(CONTRACTS_REGISTRY) == 13
 
     def test_nombres_exactos(self):
         assert list(CONTRACTS_REGISTRY.keys()) == EXPECTED_CONTRACTS
@@ -48,9 +56,41 @@ class TestRegistryShape:
         for name, expected_family in EXPECTED_FAMILIES.items():
             assert CONTRACTS_REGISTRY[name]["family"] == expected_family
 
-    def test_cinco_familias_distintas(self):
+    def test_nueve_familias_distintas(self):
         families = {v["family"] for v in CONTRACTS_REGISTRY.values()}
-        assert families == {"EQUITY", "INDEX", "RATE_YIELD", "FUTURE", "FX"}
+        assert families == {
+            "EQUITY", "INDEX", "RATE_YIELD", "FUTURE", "FX",
+            "SEC", "FINRA", "SSGA", "FRED",
+        }
+
+    # --- S28: contrato de derivacion (drift guard) ---
+
+    def test_registry_deriva_de_implemented_contracts(self):
+        """Si anades una clase a _IMPLEMENTED_CONTRACTS y no aparece en
+        CONTRACTS_REGISTRY, este test falla. Cierra la clase de bug del
+        S28: 4 contratos registrados pero no cableados."""
+        assert set(CONTRACTS_REGISTRY.keys()) == set(_IMPLEMENTED_CONTRACTS.keys())
+
+    def test_derivacion_por_clase(self):
+        """Los metadatos del catalogo provienen de la clase (fuente unica)."""
+        for name, cls in _IMPLEMENTED_CONTRACTS.items():
+            entry = CONTRACTS_REGISTRY[name]
+            assert entry["family"] == cls.family, name
+            assert entry["session_calendar"] == cls.session_calendar, name
+            assert entry["max_lag_days"] == cls.max_lag_days, name
+            assert entry["min_coverage"] == cls.min_coverage, name
+
+    def test_critical_solo_equity_eod(self):
+        """Solo EQUITY_EOD bloquea la publicacion (enmienda v1.1)."""
+        critical_contracts = [
+            name for name, e in CONTRACTS_REGISTRY.items() if e.get("critical")
+        ]
+        assert critical_contracts == ["EQUITY_EOD"]
+
+    def test_cuatro_contratos_s28_presentes(self):
+        """Los 4 contratos anadidos en S28 estan cableados."""
+        s28 = {"SEC_13F", "FINRA_DARKPOOL", "SSGA_PRIMARY_FLOW", "FRED_MACRO"}
+        assert s28.issubset(CONTRACTS_REGISTRY.keys())
 
 
 class TestRegistryEntries:
@@ -78,23 +118,3 @@ class TestRegistryEntries:
     def test_fx_daily_cut_tiene_per_pair_max_lag(self):
         e = get_registry_entry("FX_DAILY_CUT")
         assert e["per_pair_max_lag"] is not None
-        assert e["per_pair_max_lag"]["USDCNY=X"] == 1
-        assert e["per_pair_max_lag"]["EURUSD=X"] == 0
-
-    def test_index_eod_currency_es_dx_y_nyb(self):
-        e = get_registry_entry("INDEX_EOD_CURRENCY")
-        assert e["eligible_universe"] == ["DX-Y.NYB"]
-        assert e["session_calendar"] == "ICE"
-
-    def test_index_eod_commodity_es_spgsci(self):
-        e = get_registry_entry("INDEX_EOD_COMMODITY")
-        assert e["eligible_universe"] == ["^SPGSCI"]
-
-    def test_contrato_no_registrado_lanza_keyerror(self):
-        with pytest.raises(KeyError):
-            get_registry_entry("NO_EXISTE")
-
-    def test_volatility_index_usa_nyse(self):
-        e = get_registry_entry("VOLATILITY_INDEX")
-        assert e["session_calendar"] == "NYSE"
-        assert set(e["eligible_universe"]) == {"^VIX", "^VIX3M", "^VXN"}

@@ -25,6 +25,8 @@ class EquityEOD(TemporalContract):
     per_ticker_lag = None
     per_pair_max_lag = None
     activation_req = None
+    # Enmienda v1.1: EQUITY_EOD es el unico contrato critical=True.
+    critical = True
 
     def __init__(self) -> None:
         self.eligible_universe: list = []

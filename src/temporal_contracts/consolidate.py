@@ -22,7 +22,7 @@ def build_temporal_meta(
     reference_date: datetime,
     run_id: str = "",
 ) -> dict:
-    """Construye temporal_meta desde las resoluciones de los 9 contratos.
+    """Construye temporal_meta desde las resoluciones de los contratos implementados.
 
     Estructura:
         {

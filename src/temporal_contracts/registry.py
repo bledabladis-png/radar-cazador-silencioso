@@ -1,10 +1,20 @@
-"""Catalogo declarativo de los 9 contratos temporales (FU-021-5 Fase 1).
+"""Catalogo declarativo de los contratos temporales (FU-021-5 Fase 1).
 
-Fase 1 solo declara el catalogo. Las clases con resolve() se anaden en Fase 2.
+S28 (2026-11-04): el catalogo se DERIVA de `_IMPLEMENTED_CONTRACTS` y de
+los atributos de clase. Antes de S28 habia dos fuentes de verdad
+(CONTRACTS_REGISTRY con 9 entradas literales y _IMPLEMENTED_CONTRACTS
+con 13); los 4 contratos anadidos en S28 quedaban registrados pero no
+resueltos en produccion. El fix elimina la lista paralela: anadir un
+contrato = anadir la clase + registrarla en `_IMPLEMENTED_CONTRACTS`.
 
-Enmienda v1.1 (2026-10-16): anadido campo `critical` por contrato.
-Los contratos marcados critical=True gobiernan el bloqueo de la
-finalizacion del pipeline.
+Enmienda v1.1 (2026-10-16): campo `critical` por contrato. Solo
+EQUITY_EOD es critical=True.
+
+Nota: `EQUITY_EOD` declara su universo dinamicamente (`self.eligible_universe`
+en `__init__` via `get_universe_by_class`). El catalogo omite
+`eligible_universe` para ese contrato. Los 4 contratos anadidos en S28
+tambien lo omiten (universo no es lista de tickers). El campo legacy
+`eligible_universe_count` se retira: 0 consumidores verificados en S28.
 
 Fuente: docs/auditoria/FU-021-5_ESPECIFICACION_CONTRATO_TEMPORAL.md (Parte A v2)
         docs/auditoria/FU-021-5_ESPECIFICACION_CONTRATO_TEMPORAL_PARTE_B.md
@@ -12,113 +22,73 @@ Fuente: docs/auditoria/FU-021-5_ESPECIFICACION_CONTRATO_TEMPORAL.md (Parte A v2)
 """
 from __future__ import annotations
 
+from src.temporal_contracts.base import TemporalContract
+from src.temporal_contracts.equity_eod import EquityEOD
+from src.temporal_contracts.finra_darkpool import FinraDarkpool
+from src.temporal_contracts.fred_macro import FredMacro
+from src.temporal_contracts.future_settlement import FutureSettlement
+from src.temporal_contracts.fx_daily_cut import FxDailyCut
+from src.temporal_contracts.index_eod import (
+    IndexEODCommodity,
+    IndexEODCurrency,
+    IndexEODEuropa,
+    IndexEODUSA,
+)
+from src.temporal_contracts.rate_yield import RateYield
+from src.temporal_contracts.sec_13f import Sec13F
+from src.temporal_contracts.ssga_primary_flow import SsgaPrimaryFlow
+from src.temporal_contracts.volatility_index import VolatilityIndex
+
+
+_IMPLEMENTED_CONTRACTS = {
+    "EQUITY_EOD": EquityEOD,
+    "INDEX_EOD_USA": IndexEODUSA,
+    "INDEX_EOD_EUROPA": IndexEODEuropa,
+    "INDEX_EOD_COMMODITY": IndexEODCommodity,
+    "INDEX_EOD_CURRENCY": IndexEODCurrency,
+    "VOLATILITY_INDEX": VolatilityIndex,
+    "RATE_YIELD": RateYield,
+    "FUTURE_SETTLEMENT": FutureSettlement,
+    "FX_DAILY_CUT": FxDailyCut,
+    "SEC_13F": Sec13F,
+    "FINRA_DARKPOOL": FinraDarkpool,
+    "SSGA_PRIMARY_FLOW": SsgaPrimaryFlow,
+    "FRED_MACRO": FredMacro,
+}
+
+
+def _build_registry_entry(cls: type) -> dict:
+    """Deriva la entrada del catalogo desde los atributos de clase.
+
+    Fuente unica de verdad: la clase. El registro es una vista derivada.
+    `eligible_universe` se omite cuando la clase no lo declara como
+    atributo (universo dinamico via `__init__` o lista vacia).
+    """
+    entry = {
+        "family": cls.family,
+        "session_calendar": cls.session_calendar,
+        "max_lag_days": cls.max_lag_days,
+        "min_coverage": cls.min_coverage,
+        "per_ticker_lag": cls.per_ticker_lag,
+        "per_pair_max_lag": cls.per_pair_max_lag,
+        "activation_req": cls.activation_req,
+        "critical": cls.critical,
+    }
+    _eu = getattr(cls, "eligible_universe", None)
+    if _eu:
+        entry["eligible_universe"] = _eu
+    return entry
+
 
 CONTRACTS_REGISTRY = {
-    "EQUITY_EOD": {
-        "family": "EQUITY",
-        "eligible_universe_count": 539,
-        "session_calendar": "NYSE",
-        "max_lag_days": 0,
-        "min_coverage": 0.90,
-        "per_ticker_lag": None,
-        "per_pair_max_lag": None,
-        "activation_req": None,
-        "critical": True,
-    },
-    "INDEX_EOD_USA": {
-        "family": "INDEX",
-        "eligible_universe": ["^GSPC", "^DJI", "^NDX", "^RUT"],
-        "session_calendar": "NYSE",
-        "max_lag_days": 1,
-        "min_coverage": 1.0,
-        "per_ticker_lag": {"^GSPC": 1, "^DJI": 1, "^NDX": 1, "^RUT": 1},
-        "per_pair_max_lag": None,
-        "activation_req": None,
-        "critical": False,
-    },
-    "INDEX_EOD_EUROPA": {
-        "family": "INDEX",
-        "eligible_universe": ["^FTSE", "^GDAXI", "^IBEX", "^STOXX50E"],
-        "session_calendar": "LSE|XETRA|BME|EURONEXT",
-        "max_lag_days": 5,
-        "min_coverage": 1.0,
-        "per_ticker_lag": {"^FTSE": 1, "^GDAXI": 2, "^IBEX": 2, "^STOXX50E": 2},
-        "per_pair_max_lag": None,
-        "activation_req": None,
-        "critical": False,
-    },
-    "INDEX_EOD_COMMODITY": {
-        "family": "INDEX",
-        "eligible_universe": ["^SPGSCI"],
-        "session_calendar": "NYSE",
-        "max_lag_days": 1,
-        "min_coverage": 1.0,
-        "per_ticker_lag": {"^SPGSCI": 1},
-        "per_pair_max_lag": None,
-        "activation_req": None,
-        "critical": False,
-    },
-    "INDEX_EOD_CURRENCY": {
-        "family": "INDEX",
-        "eligible_universe": ["DX-Y.NYB"],
-        "session_calendar": "ICE",
-        "max_lag_days": 1,
-        "min_coverage": 1.0,
-        "per_ticker_lag": {"DX-Y.NYB": 1},
-        "per_pair_max_lag": None,
-        "activation_req": None,
-        "critical": False,
-    },
-    "VOLATILITY_INDEX": {
-        "family": "INDEX",
-        "eligible_universe": ["^VIX", "^VIX3M", "^VXN"],
-        "session_calendar": "NYSE",
-        "max_lag_days": 1,
-        "min_coverage": 1.0,
-        "per_ticker_lag": {"^VIX": 1, "^VIX3M": 1, "^VXN": 1},
-        "per_pair_max_lag": None,
-        "activation_req": None,
-        "critical": False,
-    },
-    "RATE_YIELD": {
-        "family": "RATE_YIELD",
-        "eligible_universe": ["^FVX", "^TNX"],
-        "session_calendar": "NYSE",
-        "max_lag_days": 1,
-        "min_coverage": 1.0,
-        "per_ticker_lag": {"^FVX": 1, "^TNX": 1},
-        "per_pair_max_lag": None,
-        "activation_req": None,
-        "critical": False,
-    },
-    "FUTURE_SETTLEMENT": {
-        "family": "FUTURE",
-        "eligible_universe": ["BZ=F", "CL=F", "GC=F", "HG=F", "NG=F"],
-        "session_calendar": "CME|NYMEX|COMEX",
-        "max_lag_days": 1,
-        "min_coverage": 1.0,
-        "per_ticker_lag": {"BZ=F": 1, "CL=F": 1, "GC=F": 1, "HG=F": 1, "NG=F": 1},
-        "per_pair_max_lag": None,
-        "activation_req": None,
-        "critical": False,
-    },
-    "FX_DAILY_CUT": {
-        "family": "FX",
-        "eligible_universe": ["EURUSD=X", "USDCNY=X", "USDJPY=X"],
-        "session_calendar": "FX_24h",
-        "max_lag_days": {"EURUSD=X": 0, "USDJPY=X": 0, "USDCNY=X": 1},
-        "min_coverage": 0.5,
-        "per_ticker_lag": None,
-        "per_pair_max_lag": {"EURUSD=X": 0, "USDJPY=X": 0, "USDCNY=X": 1},
-        "activation_req": None,
-        "critical": False,
-    },
+    name: _build_registry_entry(cls)
+    for name, cls in _IMPLEMENTED_CONTRACTS.items()
 }
 
 
 def list_contracts() -> list:
-    """Devuelve los nombres de los 9 contratos registrados."""
-    return list(CONTRACTS_REGISTRY.keys())
+    """Devuelve los nombres de los contratos implementados."""
+    return list(_IMPLEMENTED_CONTRACTS.keys())
 
 
 def get_registry_entry(name: str) -> dict:
@@ -131,3 +101,13 @@ def get_registry_entry(name: str) -> dict:
 def is_critical(name: str) -> bool:
     """True si el contrato es obligatorio (bloquea la finalizacion)."""
     return bool(get_registry_entry(name).get("critical", False))
+
+
+def get_contract(name: str) -> TemporalContract:
+    """Devuelve una nueva instancia del contrato name."""
+    if name not in _IMPLEMENTED_CONTRACTS:
+        raise KeyError(
+            "Contrato no registrado: " + name
+            + ". Implementados: " + str(sorted(_IMPLEMENTED_CONTRACTS))
+        )
+    return _IMPLEMENTED_CONTRACTS[name]()

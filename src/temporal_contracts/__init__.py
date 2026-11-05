@@ -16,6 +16,20 @@ from src.temporal_contracts.registry import (
     list_contracts,
     get_registry_entry,
     is_critical,
+    get_contract,
+    EquityEOD,
+    IndexEODUSA,
+    IndexEODEuropa,
+    IndexEODCommodity,
+    IndexEODCurrency,
+    VolatilityIndex,
+    RateYield,
+    FutureSettlement,
+    FxDailyCut,
+    Sec13F,
+    FinraDarkpool,
+    SsgaPrimaryFlow,
+    FredMacro,
 )
 from src.temporal_contracts.validation import (
     validate_artifact_contracts,
@@ -27,56 +41,14 @@ from src.temporal_contracts.validation import (
     STATUS_BLOCKED as VALIDATION_BLOCKED,
     STATUS_UNAVAILABLE as VALIDATION_UNAVAILABLE,
 )
-from src.temporal_contracts.equity_eod import EquityEOD
-from src.temporal_contracts.index_eod import (
-    IndexEODUSA,
-    IndexEODEuropa,
-    IndexEODCommodity,
-    IndexEODCurrency,
-)
-from src.temporal_contracts.volatility_index import VolatilityIndex
-from src.temporal_contracts.rate_yield import RateYield
-from src.temporal_contracts.future_settlement import FutureSettlement
-from src.temporal_contracts.fx_daily_cut import FxDailyCut
-from src.temporal_contracts.sec_13f import Sec13F
-from src.temporal_contracts.finra_darkpool import FinraDarkpool
-from src.temporal_contracts.ssga_primary_flow import SsgaPrimaryFlow
-from src.temporal_contracts.fred_macro import FredMacro
 from src.temporal_contracts.consolidate import (
     consolidate,
     build_temporal_meta,
 )
 
 
-_IMPLEMENTED_CONTRACTS = {
-    "EQUITY_EOD": EquityEOD,
-    "INDEX_EOD_USA": IndexEODUSA,
-    "INDEX_EOD_EUROPA": IndexEODEuropa,
-    "INDEX_EOD_COMMODITY": IndexEODCommodity,
-    "INDEX_EOD_CURRENCY": IndexEODCurrency,
-    "VOLATILITY_INDEX": VolatilityIndex,
-    "RATE_YIELD": RateYield,
-    "FUTURE_SETTLEMENT": FutureSettlement,
-    "FX_DAILY_CUT": FxDailyCut,
-    "SEC_13F": Sec13F,
-    "FINRA_DARKPOOL": FinraDarkpool,
-    "SSGA_PRIMARY_FLOW": SsgaPrimaryFlow,
-    "FRED_MACRO": FredMacro,
-}
-
-
-def get_contract(name: str) -> TemporalContract:
-    """Devuelve una nueva instancia del contrato name."""
-    if name not in _IMPLEMENTED_CONTRACTS:
-        raise KeyError(
-            "Contrato no registrado: " + name
-            + ". Implementados: " + str(sorted(_IMPLEMENTED_CONTRACTS))
-        )
-    return _IMPLEMENTED_CONTRACTS[name]()
-
-
 def resolve_all_contracts(df_market, reference_date) -> dict:
-    """Resuelve los 9 contratos. Devuelve dict[str, TemporalResolution]."""
+    """Resuelve los contratos implementados. Devuelve dict[str, TemporalResolution]."""
     result = {}
     for name in list_contracts():
         result[name] = get_contract(name).resolve(df_market, reference_date)

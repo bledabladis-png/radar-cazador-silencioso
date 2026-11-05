@@ -159,9 +159,9 @@ class TestFxDailyCut:
 
 class TestResolveAllContracts:
 
-    def test_devuelve_nueve_resoluciones(self, df_real):
+    def test_devuelve_resoluciones_de_todos_los_contratos(self, df_real):
         resoluciones = resolve_all_contracts(df_real, _ref_from_df(df_real))
-        assert len(resoluciones) == 9
+        assert len(resoluciones) == len(list_contracts())
 
     def test_claves_iguales_a_list_contracts(self, df_real):
         resoluciones = resolve_all_contracts(df_real, _ref_from_df(df_real))
