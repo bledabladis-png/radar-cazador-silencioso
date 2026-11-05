@@ -145,8 +145,12 @@ def test_resolve_cusip_vacio_unresolved():
     assert r["canonical_security_kind"] == si.KIND_UNRESOLVED
 
 
-def test_resolve_sin_fuentes_observed_only():
-    r = si.resolve_security_identity("037833100", "2026-03-31")
+def test_resolve_sin_fuentes_explicitas_observed_only():
+    r = si.resolve_security_identity(
+        "037833100", "2026-03-31",
+        equivalence_df=pd.DataFrame(),
+        crosswalk_internal_df=pd.DataFrame(),
+    )
     assert r["security_resolution_status"] == si.STATUS_OBSERVED_ONLY
     assert r["canonical_security"] is None
     assert r["canonical_security_kind"] == si.KIND_OBSERVED_CUSIP_ONLY
@@ -381,7 +385,11 @@ def test_p61_crosswalk_da_temporal_unverified():
 
 
 def test_p61_sin_resolucion_da_unresolved():
-    r = si.resolve_security_identity("A1", "2026-03-31")
+    r = si.resolve_security_identity(
+        "A1", "2026-03-31",
+        equivalence_df=pd.DataFrame(),
+        crosswalk_internal_df=pd.DataFrame(),
+    )
     assert r["operational_mapping_status"] == "UNRESOLVED"
 
 
@@ -568,3 +576,11 @@ def test_hon_reverse_split_hona_no_se_contamina():
     assert r["canonical_security"] == "equity:HONA"
     assert r["canonical_security"] != "equity:HON"
 
+
+
+# ---- S30: guard contra resolve_security_identity sin fuentes ----
+
+def test_resolve_sin_kwargs_raise():
+    import pytest
+    with pytest.raises(ValueError, match="sin fuentes declaradas"):
+        si.resolve_security_identity("037833100", "2026-03-31")

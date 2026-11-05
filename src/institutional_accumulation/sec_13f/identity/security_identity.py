@@ -464,6 +464,22 @@ def _resolve_identity_inner(
     if not cusip_s:
         return result
 
+    # Guard (2026-11-05, S30): OBSERVED_ONLY silencioso por omision de
+    # fuentes enmascara bugs de wiring (HON 2026-11-05). Sin ninguna
+    # fuente declarada no hay decision: raise. Pasar pd.DataFrame() para
+    # declarar explicitamente sin-datos. figi_lookup cuenta como
+    # fuente declarada.
+    if (equivalence_df is None
+            and crosswalk_internal_df is None
+            and figi_lookup is None):
+        raise ValueError(
+            "resolve_security_identity: sin fuentes declaradas. "
+            "Pasa equivalence_df y/o crosswalk_internal_df "
+            "(pd.DataFrame() para sin-datos) o figi_lookup. "
+            "El default silencioso OBSERVED_ONLY enmascara bugs de "
+            "wiring (ver HON 2026-11-05)."
+        )
+
     # 1. equivalence
     eq_canon = _find_active_equivalence(cusip_s, report_period, equivalence_df)
     if len(eq_canon) > 1:
