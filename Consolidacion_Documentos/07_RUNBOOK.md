@@ -229,22 +229,140 @@ YAML. Si sigue sin explicacion, workflow_dispatch manual.
 ### 4.5. workflow_dispatch force=true fuera de horario de mercado
 
 Sintoma: run lanzado con `gh workflow run daily_run.yml -f force=true`
-a media sesion USA contamina `outputs/` con un snapshot distinto al
-que publicara el scheduled de la noche.
+a media sesion USA contamina `outputs/` y `data/` con un snapshot
+distinto al que publicara el scheduled de la noche. El snapshot
+contaminado se **pushea a main** automaticamente (step "Commit and
+push hist/state"), asi que el siguiente scheduled no lo revierte:
+lo encuentra como base.
 
-Causa: el gate `pipeline_gate.py` con force=true bypassea `should_run`.
-Si se lanza entre 13:30 y 20:00 UTC (apertura y cierre NYSE), el run
-procesa datos a medio dia: precios intradiarios, Yahoo sin cierre
-definitivo, FRED con lag indeterminado. El snapshot no es el definitivo
-de la sesion.
+Causa real (verificada 2026-11-05): el gate `pipeline_gate.py` corre
+siempre y decide `should_run` (CURRENT -> False, READY -> True). El
+input `force` NO se pasa al gate (sus args son `--now`,
+`--target-session`, `--slot`). Lo que hace `force=true` es saltarse
+el resultado del gate en el `if:` del job `run-system`:
 
-Accion: **no lanzar force=true entre 13:30 y 20:00 UTC**. Verificar
-`(Get-Date).ToUniversalTime()` antes. Ventanas seguras: pre-apertura
-(< 13:30 UTC) o post-cierre (> 20:00 UTC).
+    if: needs.gate.outputs.should_run == 'true' || github.event.inputs.force == 'true'
+
+El gate no se bypassea: el job de ejecucion ignora su veredicto. Por
+eso el run corre aunque el gate diga CURRENT (receipt ya emitido para
+la target_session) o NOT_READY (probe coverage insuficiente).
+
+Por que corrompe. Si el run corre entre 13:30 y 20:00 UTC (apertura y
+cierre NYSE), procesa datos a medio dia: precios intradiarios, Yahoo
+sin cierre definitivo, FRED con lag indeterminado. Los writers
+publican con la fecha efectiva resuelta (habitualmente la sesion
+anterior), pero los CSV y manifests reflejan el snapshot intradiario.
+El step `Commit and push hist/state` hace:
+
+    git add -u
+    git add -A outputs/history
+    git add -u outputs/state
+    git add data/cboe_vix3m.parquet data/cboe_vix3m.parquet.manifest.json
+    git add data/market_data.parquet.manifest.json data/stock_prices.parquet.manifest.json
+    git add data/mappings/radar_target_catalog.csv data/mappings/catalog_manifest.json
+    git add data/mappings/catalog_snapshots/
+    git add data/lse_close_provenance.json
+    git commit -m "Daily hist/state "
+    git pull --rebase origin main
+    git push   # 3 intentos con backoff
+
+El commit contaminado llega a `main`. Ficheros que se contaminan y
+se pushean:
+
+- `outputs/history/*.csv` (appends y reescrituras del run).
+- `outputs/state/*.json` excepto los gitignored
+  (`completion_receipt.json`, `validation_gate_result.json`).
+- `data/market_data.parquet.manifest.json` (sha256 del parquet
+  intradiario).
+- `data/stock_prices.parquet.manifest.json` (idem).
+- `data/cboe_vix3m.parquet` + `data/cboe_vix3m.parquet.manifest.json`.
+- `data/lse_close_provenance.json`.
+- `data/mappings/radar_target_catalog.csv`.
+- `data/mappings/catalog_manifest.json`.
+- `data/mappings/catalog_snapshots/`.
+
+Backup pre-force. Como el step auto-pushea, el backup no es opcional:
+es el SHA de `main` antes de lanzar.
+
+    Set-Location D:\Macro_Sectorial
+    git fetch
+    git rev-parse origin/main   # -> PRE_SHA, anotar
+
+Opcional: tag de referencia local y remoto.
+
+    $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    git tag "pre-force-$stamp" origin/main
+    git push origin "pre-force-$stamp"
+
+Procedimiento de emergencia (paso a paso):
+
+1. Verificar ventana UTC. Si 13:30-20:00 UTC, NO lanzar. Esperar a
+   pre-apertura (< 13:30) o post-cierre (> 20:00).
+
+       (Get-Date).ToUniversalTime()
+
+2. Anotar el SHA de retorno.
+
+       git fetch
+       git rev-parse origin/main   # -> PRE_SHA
+
+3. Lanzar el dispatch y seguirlo.
+
+       gh workflow run daily_run.yml -f force=true
+       gh run list --workflow=daily_run.yml --limit 1
+       gh run watch <run-id>
+
+4. Verificar el resultado. Si el run termino OK, mirar el commit
+   `Daily hist/state ` que acaba de pushear el bot:
+
+       git fetch
+       git log --oneline -5 origin/main
+
+   Si aparece un commit nuevo del bot con timestamp del force
+   dispatch, comparar los `outputs/history/*.csv` contra el
+   snapshot previo (PRE_SHA).
+
+5. Si el snapshot es correcto (raro en horario intradiario, posible
+   en post-cierre): nada que hacer. El bot ya lo pusheo y es el
+   nuevo estado.
+
+6. Si el snapshot es incorrecto (habitual en horario intradiario):
+
+       # Opcion A: revert completo del commit contaminado
+       git revert <sha_del_bot> --no-edit
+       git push
+
+       # Opcion B: restauracion quirurgica (mas preciso si el bot
+       # commitio otros cambios legitimos entre medias)
+       git checkout PRE_SHA -- outputs/history outputs/state \
+           data/market_data.parquet.manifest.json \
+           data/stock_prices.parquet.manifest.json \
+           data/cboe_vix3m.parquet \
+           data/cboe_vix3m.parquet.manifest.json \
+           data/lse_close_provenance.json \
+           data/mappings/radar_target_catalog.csv \
+           data/mappings/catalog_manifest.json \
+           data/mappings/catalog_snapshots
+       git add -A
+       git commit -m "revert: descarta snapshot intra-sesion del force dispatch <stamp>"
+       git push
+
+7. Regenerar ESTADO_SISTEMA y verificar gobernanza.
+
+       py scripts\generate_estado_sistema.py
+       py scripts\verifica_gobernanza.py
+
+8. El proximo scheduled (slot 23:17 UTC) reescribira el snapshot
+   correcto. Verificar en `outputs/history/data_quality.csv` que la
+   fila de la fecha efectiva es la esperada y que no hay filas con
+   fecha no-bursatil.
 
 Caso real: 2026-10-29 19:19 UTC. Lanzado y cancelado a los pocos
-minutos tras detectar el error. Sin side effects (el step Commit no
-llego a ejecutarse).
+minutos tras detectar el error. Sin side effects: el step Commit no
+llego a ejecutarse. Si hubiera llegado, el commit `Daily hist/state `
+habria pusheado un snapshot intra-sesion a `main`; el slot 23:17 UTC
+lo habria sobreescrito con el correcto, pero el commit intermedio
+queda en historia (ruido de auditoria).
 
 ### 4.6. git push sin verificacion de exit code
 
