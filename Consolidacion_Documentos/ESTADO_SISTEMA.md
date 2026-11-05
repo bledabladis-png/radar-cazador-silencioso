@@ -22,8 +22,11 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 4469 passed, 2 skipped (sin filtro; suite completa)
-- **Exit code:** 0
+- **Resumen:** 1 failed, 4488 passed, 2 skipped (sin filtro; suite completa)
+- **Exit code:** 1
+
+**Tests fallidos (nombre completo):**
+- `FAILED tests/test_anclas_temporales.py::test_anclas_apuntan_a_sitios_existentes`
 
 **Tests skip:**
 - `SKIPPED [1] tests\test_freshness.py:382: requiere --run-network`
@@ -48,6 +51,7 @@ porque el commit que lo contiene cambia HEAD.
 | `src/institutional_accumulation/aggregation/nipc.py` | 398 |
 | `src/institutional_accumulation/aggregation/per_ticker.py` | 253 |
 | `src/institutional_accumulation/aggregation/reporting_dedup.py` | 890 |
+| `src/institutional_accumulation/aggregation/split_detection.py` | 182 |
 | `src/institutional_accumulation/catalog_pit.py` | 232 |
 | `src/institutional_accumulation/identity/__init__.py` | 15 |
 | `src/institutional_accumulation/identity/catalog_key.py` | 395 |
@@ -57,7 +61,7 @@ porque el commit que lo contiene cambia HEAD.
 | `src/institutional_accumulation/identity/target_builder.py` | 210 |
 | `src/institutional_accumulation/identity/target_universe.py` | 180 |
 | `src/institutional_accumulation/operational_universe.py` | 259 |
-| `src/institutional_accumulation/pipeline_contractual.py` | 265 |
+| `src/institutional_accumulation/pipeline_contractual.py` | 273 |
 | `src/institutional_accumulation/sec_13f/__init__.py` | 22 |
 | `src/institutional_accumulation/sec_13f/downloader.py` | 250 |
 | `src/institutional_accumulation/sec_13f/identity/__init__.py` | 161 |
@@ -75,7 +79,7 @@ porque el commit que lo contiene cambia HEAD.
 | `src/institutional_accumulation/security_type.py` | 407 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 162 |
-| **TOTAL** | **37 ficheros, 8720 LOC** |
+| **TOTAL** | **38 ficheros, 8910 LOC** |
 
 ## 5. Datos IAE
 
@@ -88,9 +92,9 @@ porque el commit que lo contiene cambia HEAD.
   - bytes: 22491
   - lineas: 246
 - `data/mappings/cusip_equivalence.csv`
-  - sha256: `21a88790aad50e8b44fbfdaa87c394ef3a782319adaf4208b9cb244dac39b322`
-  - bytes: 103
-  - lineas: 1
+  - sha256: `688e7d4996bd1a2bfc0dddeab5389d554148466ec606cb55d07e5bf3bc0e0de8`
+  - bytes: 430
+  - lineas: 3
 
 ## 6. Scripts IAE
 
