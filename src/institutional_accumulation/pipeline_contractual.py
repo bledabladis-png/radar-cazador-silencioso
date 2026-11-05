@@ -34,6 +34,8 @@ from .identity.target_builder import build_target, TargetUniverse
 from .aggregation import catalog_p38_adapter as ca
 from .aggregation.delta_shares import (
     compute_reported_position_units, compute_delta_shares)
+from .aggregation.split_detection import (
+    detect_splits, adjust_units_for_splits)
 from .aggregation.nipc import compute_nipc_contractual
 from .aggregation.per_ticker import aggregate_by_ticker
 
@@ -140,6 +142,12 @@ def run_contractual_nipc(
         s_curr["INFOTABLE"], s_curr["SUBMISSION"],
         report_period=iso_curr, identity_results=i_curr,
         official_df=off_curr)
+
+    # 3b. Deteccion de splits/reverse-splits entre trimestres (2026-11-05).
+    # BKNG hizo split 24:1 entre Q1 y Q2 2026. Sin ajuste, delta inflado 24x.
+    _splits = detect_splits(s_prev["INFOTABLE"], s_curr["INFOTABLE"])
+    if _splits:
+        u_prev = adjust_units_for_splits(u_prev, _splits)
 
     # 4. Delta full
     delta = compute_delta_shares(u_curr, u_prev)
