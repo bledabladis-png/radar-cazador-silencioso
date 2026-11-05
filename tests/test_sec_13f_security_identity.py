@@ -486,3 +486,85 @@ def test_s03c_invariante_canonical_implica_security_no_none():
         if r["security_resolution_status"] == si.STATUS_CANONICAL:
             assert r["canonical_security"] is not None, (
                 f"invariante violada para ticker={tk!r}")
+
+# ---- Reverse split HON 2026-06-29 (fix 2026-11-05) ----
+# Bug: 507 filings Q2 reportaban CUSIP viejo 438516106 (expirado en crosswalk
+# 2026-03-31) y caian a OBSERVED_ONLY -> UNRESOLVED_IDENTITY -> EXIT artificial.
+# Fix: cusip_equivalence.csv con 2 entries que mapean ambos CUSIPs a equity:HON.
+
+def _mk_hon_equivalence():
+    """Equivalence del fix HON 2026-06-29."""
+    return _mk_equivalence([
+        ("438516106", "HON", "2025-12-31", "2026-09-30", "SEC-EDGAR", "pre-split", "SEC"),
+        ("438516205", "HON", "2026-06-29", None, "SEC-EDGAR", "post-split", "SEC"),
+    ])
+
+
+def _mk_hon_crosswalk():
+    """Crosswalk con entry expirada del CUSIP viejo."""
+    return _mk_crosswalk([
+        ("438516106", "HON", "2025-12-31", "2026-03-31", "cusip_ticker_exceptions"),
+        ("43849R105", "HONA", None, None, "etf_holdings"),
+    ])
+
+
+def test_hon_reverse_split_cusip_pre_resuelve_en_q1():
+    """Q1: CUSIP viejo 438516106 resuelve a HON (dentro de ventana equivalence)."""
+    eq = _mk_hon_equivalence()
+    cw = _mk_hon_crosswalk()
+    r = si.resolve_security_identity("438516106", "2026-03-31",
+                                     equivalence_df=eq, crosswalk_internal_df=cw)
+    assert r["canonical_security"] == "equity:HON"
+    assert r["security_resolution_status"] == si.STATUS_CANONICAL
+
+
+def test_hon_reverse_split_cusip_pre_resuelve_en_q2():
+    """Q2: CUSIP viejo 438516106 sigue resolviendo a HON (ventana ampliada)."""
+    eq = _mk_hon_equivalence()
+    cw = _mk_hon_crosswalk()
+    r = si.resolve_security_identity("438516106", "2026-06-30",
+                                     equivalence_df=eq, crosswalk_internal_df=cw)
+    assert r["canonical_security"] == "equity:HON"
+    assert r["security_resolution_status"] == si.STATUS_CANONICAL
+
+
+def test_hon_reverse_split_cusip_pre_fuera_de_ventana_no_resuelve():
+    """Post 2026-09-30: CUSIP viejo NO resuelve (extinto)."""
+    eq = _mk_hon_equivalence()
+    cw = _mk_hon_crosswalk()
+    r = si.resolve_security_identity("438516106", "2026-10-01",
+                                     equivalence_df=eq, crosswalk_internal_df=cw)
+    assert r["canonical_security"] is None
+    assert r["security_resolution_status"] == si.STATUS_OBSERVED_ONLY
+
+
+def test_hon_reverse_split_cusip_post_resuelve_en_q2():
+    """Q2: CUSIP nuevo 438516205 resuelve a HON (post-split)."""
+    eq = _mk_hon_equivalence()
+    cw = _mk_hon_crosswalk()
+    r = si.resolve_security_identity("438516205", "2026-06-30",
+                                     equivalence_df=eq, crosswalk_internal_df=cw)
+    assert r["canonical_security"] == "equity:HON"
+    assert r["security_resolution_status"] == si.STATUS_CANONICAL
+
+
+def test_hon_reverse_split_ambos_cusips_mismo_canonical():
+    """Invariante: pre y post split convergen a equity:HON."""
+    eq = _mk_hon_equivalence()
+    cw = _mk_hon_crosswalk()
+    r_pre = si.resolve_security_identity("438516106", "2026-06-30",
+                                         equivalence_df=eq, crosswalk_internal_df=cw)
+    r_post = si.resolve_security_identity("438516205", "2026-06-30",
+                                          equivalence_df=eq, crosswalk_internal_df=cw)
+    assert r_pre["canonical_security"] == r_post["canonical_security"] == "equity:HON"
+
+
+def test_hon_reverse_split_hona_no_se_contamina():
+    """HONA (43849R105) sigue resolviendo a HONA, no a HON."""
+    eq = _mk_hon_equivalence()
+    cw = _mk_hon_crosswalk()
+    r = si.resolve_security_identity("43849R105", "2026-06-30",
+                                     equivalence_df=eq, crosswalk_internal_df=cw)
+    assert r["canonical_security"] == "equity:HONA"
+    assert r["canonical_security"] != "equity:HON"
+
