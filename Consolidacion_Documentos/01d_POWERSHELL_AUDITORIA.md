@@ -156,6 +156,38 @@ coherencia con la intencion del autor. Lecciones observadas 2026-10-22:
   (lag 5d) sobre CSVs diarios → `liquidity.py` N/A + `fls.py` OK.
   Item: REP-AUDIT-20261022-LIQUIDITY-ROUTER-PRIORITY.
 
+### 6quater. TRAMPAS S28 (2026-11-05)
+
+Cinco trampas verificadas empiricamente (4 pisadas en S28, 1 en S28+1).
+
+- **`if` inline en PowerShell no es expresion, es sentencia.**
+  No se puede usar como valor asignable. `$x = if ($cond) { 1 } else { 2 }`
+  falla. Alternativa: ternario `$x = $cond ? 1 : 2` (PS 7+) o bloque
+  previo que asigne antes. Tropiezo confirmado S28 (1 vez).
+- **`exit` en PowerShell cierra la sesion completa, no solo el script.**
+  Si el script se ejecuta en la sesion interactiva (`. .\script.ps1` o
+  pegando el bloque), `exit` mata el shell. Usar `return` para abortar
+  el bloque actual, o `throw` para error recuperable por el llamante.
+  Tropiezo confirmado S28 (2 veces).
+- **`$array -ne ""` es `True` si el array esta vacio.** El operador
+  `-ne` compara elemento a elemento; un array vacio no tiene elementos,
+  la comparacion devuelve array vacio, y PowerShell lo evalua como
+  `$True` en contexto booleano. Usar `if ($var)` (falsy para array
+  vacio, `$null` y string vacia) o `if ($var.Count -gt 0)` si es
+  explicito. Tropiezo confirmado S28 (2 veces).
+- **El escape de comilla simple no es bash-style.** En PowerShell,
+  dentro de single-quoted (`'...'`), la comilla simple se duplica
+  (`''` -> `'`). El backslash (`\'`) NO funciona. Alternativa robusta
+  cuando el caracter se construye dinamicamente: `[char]39` o
+  `chr(39)` en Python. Tropiezo confirmado S28 (1 vez).
+- **`git checkout -- <path>` devuelve `$LASTEXITCODE = 0` aunque el
+  pathspec no exista.** El error va a stderr como "pathspec 'X' did
+  not match any file(s) known to git", pero el exit code es 0. Un
+  bloque que use `if ($LASTEXITCODE -ne 0) { throw }` como guard no
+  detecta el fallo. Verificar con `git status -sb` post-comando y
+  listar los `M` esperados explicitamente, no con `LASTEXITCODE`.
+  Tropiezo confirmado S28+1 (2026-11-05, 2 paths mal nombrados).
+
 ---
 
 ## 7. AUDITORIA - METODO
