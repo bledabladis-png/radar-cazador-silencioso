@@ -7454,6 +7454,8 @@ items:
 - id: REPORT-ENCODING-MOJIBAKE-BITACORA
   tipo: documentacion
   ciclo: '2026-11-05'
-  estado: OPEN
-  descripcion: 'Mojibake real (no copy/paste) en Consolidacion_Documentos/05_BITACORA.md seccion 2 (formato de entrada). Doble/triple UTF-8 -> latin-1 -> UTF-8. Afecta al ejemplo de cabecera de sesion (em-dash) y a la referencia al parrafo 5 (section sign). No rompe parser (es markdown) pero invita a error de lectura.'
-  siguiente_accion: 'Reescribir las 2 lineas con los caracteres correctos (em-dash y section sign). Cabe en el commit docs de S28+1.'
+  estado: FIXED
+  commit: '4a8987da'
+  descripcion: 'Mojibake real (no copy/paste) en Consolidacion_Documentos/05_BITACORA.md: 4 secuencias de triple UTF-8 -> latin-1 -> UTF-8 en 3 lineas. L25 (em-dash en formato de sesion), L41 (section sign en referencia al parrafo 5), L1777 (o-aguda y e-aguda en Clasificacion y Credito). El ## Andices de L1836 es un ejemplo documentado de mojibake y no se toca.'
+  evidencia: 'Commit 4a8987da corrige las 4 secuencias con bytes.replace() exactos (preservando los section sign legitimos). Verificacion post-fix: 0 ocurrencias de los 4 needles en el fichero. No afecta parser (markdown) pero invita a error de lectura.'
+  verificacion: FIXED
