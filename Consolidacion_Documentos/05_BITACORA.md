@@ -22,7 +22,7 @@ Bitacora de las ultimas sesiones. Contiene:
 
 Cada sesion se registra asi:
 
-    ### YYYY-MM-DD Ã¢â‚¬â€ Titulo corto
+    ### YYYY-MM-DD — Titulo corto
 
     **Objetivo.** Que se pretendia hacer.
 
@@ -38,7 +38,7 @@ Cada sesion se registra asi:
 
     **Proximo paso sugerido.** Que deberia hacerse a continuacion.
 
-Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay mas de 10 fuera del dia en curso, la mas antigua se elimina o se resume en el historico. Ver reglas completas en Ã‚Â§5.
+Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay mas de 10 fuera del dia en curso, la mas antigua se elimina o se resume en el historico. Ver reglas completas en §5.
 
 ---
 
@@ -1774,7 +1774,7 @@ sesion 3).
   SLPM en reporte, cero "Acciones lideres".
 - Nueva deuda `REPORT-ENCODING-MOJIBAKE-ADC` (OPEN): mojibake [FALSE_POSITIVE 2026-10-25: reporte en UTF-8 correcto, mojibake era consola PowerShell]
   preexistente en el bloque clasificacion de evidencia del
-  Anti-Double-Counting ("ClasificaciÃ³n", "CrÃ©dito"). Detectado
+  Anti-Double-Counting ("Clasificación", "Crédito"). Detectado
   en A5 del run real. No introducido por C4.5.
 
 **Commits.** `c1e4af2e` (codigo).

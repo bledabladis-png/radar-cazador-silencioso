@@ -9,7 +9,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-04, sesion 28)
 
-HEAD: '778c3089' (consultar 'git log --oneline -1' para el actual).
+HEAD: 'fbc60969' (consultar 'git log --oneline -1' para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        4460 passed, 3 failed (test_freshness, datos locales stale),

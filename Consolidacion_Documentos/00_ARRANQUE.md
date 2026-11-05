@@ -91,7 +91,7 @@ Lo que NUNCA haces:
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
 Snapshot al cierre del ultimo commit (2026-11-04, sesion 28):
-- HEAD: `4549576b` (consultar `git log --oneline -1` para el actual)
+- HEAD: `fbc60969` (consultar `git log --oneline -1` para el actual)
 - Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S28: 4460 passed, 3 failed (test_freshness, datos locales stale, ajenos al codigo), 2 skipped. pyflakes LIMPIO, compileall OK.
 - Validation Gate: 11/11
 - Working tree: limpio
@@ -195,7 +195,7 @@ Sistema holdings-based en produccion desde sesion 3 (2026-10-24). Modulos, pre-r
 - **VERIFICAR-MTE-STATE-PROD:** OPEN. Proximo scheduled real: confirmar mte_state presente en mte_state.json (schema v2).
 - **INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH:** CERRADO en S28.
 - **2 tests skipped** (`test_freshness.py` network, opt-in).
-- **3 tests failed** en local (test_freshness, datos stale). Ajenos al codigo. Se auto-resuelven con el proximo refresh de parquets.
+- **3 tests failed** en local (test_freshness, datos stale). Ver item OPEN `TEST-FRESHNESS-UMBRAL-VS-CADENCIA` en REGISTRO: hipotesis umbral (4d) vs cadencia real del bot. No se auto-resuelven con el refresh del bot (verificado 2026-11-05: los 3 fallan tambien tras refresh).
 
 ### 4.4. Deudas documentadas (sin accion pendiente)
 
