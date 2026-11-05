@@ -7415,7 +7415,7 @@ items:
   tipo: observabilidad
   ciclo: '2026-11-03'
   estado: FIXED
-  commit: 'PENDING'
+  commit: 'e1f8090e'
   descripcion: 'check_yahoo_revision estaba en health_check.yml (lunes), donde el checkout limpio hace working_tree == HEAD y el check nunca podia disparar (los 3 logs de runs scheduled lo confirman: [OK] sin revision siempre). Movido a daily_run.yml post-run.py pre-commit, donde current (manifest recien escrito por run.py) != head (ultimo commit de main del run anterior). No bloqueante (continue-on-error: true).'
   evidencia: 'Commit <SHA>: nuevo scripts/check_yahoo_revision.py + step Check yahoo revision (post-run) en daily_run.yml entre Validate freshness post-run y Wyckoff 5BX counter. 4 tests centinelas en test_daily_run_yaml_catalog.py validan existencia, orden (despues de Run Macro Sectorial, antes de Commit and push) y continue-on-error: true. El check en si no cambia: _yahoo_revision_status ya cubria los 5 caminos (8 tests existentes).'
   verificacion: FIXED
