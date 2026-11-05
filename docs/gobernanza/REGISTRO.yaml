@@ -7465,3 +7465,30 @@ items:
   descripcion: 'Mojibake real (no copy/paste) en Consolidacion_Documentos/05_BITACORA.md: 4 secuencias de triple UTF-8 -> latin-1 -> UTF-8 en 3 lineas. L25 (em-dash en formato de sesion), L41 (section sign en referencia al parrafo 5), L1777 (o-aguda y e-aguda en Clasificacion y Credito). El ## Andices de L1836 es un ejemplo documentado de mojibake y no se toca.'
   evidencia: 'Commit 4a8987da corrige las 4 secuencias con bytes.replace() exactos (preservando los section sign legitimos). Verificacion post-fix: 0 ocurrencias de los 4 needles en el fichero. No afecta parser (markdown) pero invita a error de lectura.'
   verificacion: FIXED
+- id: HON-REVERSE-SPLIT-CUSIP
+  tipo: deuda_tecnica
+  ciclo: '2026-11-05'
+  estado: FIXED
+  commit: 'cc576403'
+  test: tests/test_sec_13f_security_identity.py
+  descripcion: 'HON reverse split 2026-06-29. CUSIP 438516106 tenia valid_to=2026-03-31 en cusip_radar_crosswalk.csv y CUSIP nuevo 438516205 solo en etf_holdings. 507 filings Q2 con el CUSIP viejo caian a OBSERVED_ONLY -> UNRESOLVED_IDENTITY -> EXIT artificial. Reporte publicaba n_exit HON = 902 (spurious).'
+  evidencia: 'Fix: 2 entries en cusip_equivalence.csv (prioridad sobre crosswalk): 438516106 -> HON [2025-12-31,2026-09-30]; 438516205 -> HON [2026-06-29,null). E2E Q1->Q2: n_exit HON 902 -> 784 (-118 EXITs artificiales). Residual 784: 690 venta real, 42 sin filing Q2, 11 CUSIP raro no mapeado. 6 tests nuevos en test_sec_13f_security_identity.py cubren Q1/Q2/2026-09-30/2026-10-01/convergencia pre-post/HONA no contaminado.'
+  verificacion: VERIFIED_IN_PRODUCTION
+- id: BKNG-SPLIT-DELTA
+  tipo: deuda_tecnica
+  ciclo: '2026-11-05'
+  estado: FIXED
+  commit: '0dbddfcc'
+  test: tests/test_sec_13f_split_detection.py
+  descripcion: 'BKNG split 24:1 entre 2026Q1 y 2026Q2. Filings pre y post split comparados sin ajustar. delta artificial +688M acciones (20x float real ~33M). compute_delta_shares no detectaba splits.'
+  evidencia: 'Nuevo modulo aggregation/split_detection.py: detecta split por doble ratio (precio y shares), con exclusion de bonos (TITLEOFCLASS NOTE/BOND/DEB/PFD) y ETFs apalancados (2X/3X/DAILY/LEVERAGED/INVERSE/SHORT/BULL/BEAR). Wiring en pipeline_contractual.py entre units y delta. E2E Q1->Q2: BKNG sum_delta +688,410,346 -> -27,766,667. 8 splits detectados (BKNG 24x, Carvana 5x, Gossamer 2x, Nocera 2x, OSR 2x, Vanguard 500 Growth 5x, VUG 5x, PS INTL 5x). 14 tests en test_sec_13f_split_detection.py.'
+  verificacion: VERIFIED_IN_PRODUCTION
+- id: VERIFICAR-MTE-STATE-PROD
+  tipo: observabilidad
+  ciclo: '2026-11-04'
+  estado: FIXED
+  commit: 'b73294f7'
+  test: tests/test_mte_status.py
+  descripcion: 'Verificar en scheduled real que mte_state schema v2 aparece en outputs/state/mte_state.json y que render_mte publica MTE Status cuando != VALID.'
+  evidencia: 'Run 42020621979 (2026-11-05 12:00 UTC, head 5055a2f3): mte_state.json contiene {schema_version:2, mte_state:DEGRADED, futures_status:STALE, confidence:0.507, scenario:RECESSION, ...}. Reporte L153-154 publica MTE Status: DEGRADED y Futures Status: STALE. Coherente con indicators/mte/status.py (futures_status=STALE, no UNAVAILABLE -> DEGRADED, no INVALID).'
+  verificacion: VERIFIED_IN_PRODUCTION
