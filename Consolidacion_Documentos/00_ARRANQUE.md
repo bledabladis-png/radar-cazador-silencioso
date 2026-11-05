@@ -185,7 +185,6 @@ Sistema holdings-based en produccion desde sesion 3 (2026-10-24). Modulos, pre-r
 - **COMMIT-46A3B370-AUDIT:** OPEN. Auditar commit 46a3b370 (27-oct) con mensaje CURRENT-PHASE-BASIS-CSV -> WONT_FIX toca docs/handoffs/HANDOFF.md (archivo obsoleto). Si es huerfano o intencional.
 - **SEMANTICA-SIN-CONTRATO-INVENTARIO:** OPEN. Inventariar conceptos con semantica sin contrato. ROI bajo, no urgente.
 - **CHECK-YAHOO-REVISION-FRECUENCIA:** OPEN. Verificar frecuencia real de check_yahoo_revision desde D2 (2026-09-30).
-- **POWERSHELL-TRAMPS-NO-DOCUMENTADAS:** OPEN. Auditar trampas PowerShell no documentadas en 01_METODO seccion 6.
 - **DAILY-RUN-FAIL-40992758129:** 7 dias sin reaparecer -> revisar 06-nov-2026, cerrar WONT_FIX si no.
 - **H5.3:** cron 20-nov-2026 06:17 UTC.
 - **RECEIPT-AUDIT-LAG:** cierre 17-nov-2026 (4 semanas de obs).

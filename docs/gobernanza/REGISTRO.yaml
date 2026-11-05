@@ -7428,9 +7428,11 @@ items:
 - id: POWERSHELL-TRAMPS-NO-DOCUMENTADAS
   tipo: documentacion
   ciclo: '2026-11-03'
-  estado: OPEN
-  descripcion: 'Auditar trampas PowerShell conocidas no documentadas en 01_METODO seccion 6'
-  siguiente_accion: 'Auditar trampas PowerShell conocidas; anadir a 01_METODO seccion 6 solo las verificadas empiricamente.'
+  estado: FIXED
+  commit: '63af55dc'
+  descripcion: 'Nueva seccion 6quater en 01d_POWERSHELL_AUDITORIA.md con 5 trampas verificadas empiricamente: (1) if inline no es expresion es sentencia; (2) exit cierra la sesion completa no solo el script; (3) $array -ne "" es True con array vacio; (4) escape de comilla simple no es bash-style (se duplica); (5) git checkout -- <path> devuelve LASTEXITCODE=0 aunque el pathspec no exista. Las 4 primeras pisadas en S28; la 5a en S28+1 (2026-11-05).'
+  evidencia: 'Commit 63af55dc: 32 inserciones, 0 deleciones. Seccion 6quater entre 6ter (limites de gates, 2026-10-22) y ## 7. 6ter y seccion 7 intactas. Tamano 01d: 12531 -> 14409 bytes (bajo el limite de 40 KB de 01_METODO seccion 11). Verificacion: 6 anchors presentes, seccion 7 unica.'
+  verificacion: FIXED
 - id: TEMPORAL-CONTRACTS-NO-WIRED
   tipo: deuda_tecnica
   ciclo: '2026-11-05'
