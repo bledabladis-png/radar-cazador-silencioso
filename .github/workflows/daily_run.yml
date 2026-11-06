@@ -77,6 +77,7 @@ jobs:
     timeout-minutes: 90
     permissions:
       contents: write
+      issues: write
 
     steps:
       - name: Checkout repo
@@ -246,7 +247,9 @@ jobs:
         # Antes vivia solo en health_check.yml, donde el checkout
         # limpio hace current == head y el check nunca dispara.
         continue-on-error: true
-        run: python scripts/check_yahoo_revision.py
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/check_yahoo_revision.py --with-issues
 
       - name: Wyckoff 5BX counter
         # Instrumentacion de WYCKOFF-5BX (item WYCKOFF-5BX-INSTRUMENTACION).
