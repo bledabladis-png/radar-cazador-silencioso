@@ -7508,3 +7508,75 @@ items:
   descripcion: 'Verificar en scheduled real que mte_state schema v2 aparece en outputs/state/mte_state.json y que render_mte publica MTE Status cuando != VALID.'
   evidencia: 'Run 42020621979 (2026-11-05 12:00 UTC, head 5055a2f3): mte_state.json contiene {schema_version:2, mte_state:DEGRADED, futures_status:STALE, confidence:0.507, scenario:RECESSION, ...}. Reporte L153-154 publica MTE Status: DEGRADED y Futures Status: STALE. Coherente con indicators/mte/status.py (futures_status=STALE, no UNAVAILABLE -> DEGRADED, no INVALID).'
   verificacion: VERIFIED_IN_PRODUCTION
+- id: REPORT-NEGATIVE-ZERO
+  tipo: bug
+  ciclo: '2026-11-06'
+  estado: FIXED
+  commit: 'a37e1a9a'
+  test: tests/test_no_negative_zero.py
+  descripcion: 'Reporte 2026-11-06 publico z=-0.00 en Alertas de Divergencia (Financials). f-string con format_spec +.2f sobre z=-0.001 produce -0.00. Bug cosmetico pero visible: dos secciones distintas del reporte podian mostrar -0.00 en columnas de z-score.'
+  evidencia: 'Nueva utility src/formatting.py:format_signed_float normaliza -0.0 -> +0.0 tras redondeo. 5 sitios migrados: indicators/price_flow_divergence.py:41,48 y src/report/alerts.py:57,67,74. tests/test_formatting.py (18 param + 6 unit) y tests/test_no_negative_zero.py (2 integracion con productores reales + 1 AST centinela que prohibe format_spec +.Nf directo en src/indicators/regimes/config). Sin hardcode: cualquier f-string futuro con +.2f falla el AST guard.'
+
+- id: SECTOR-BREADTH-WARN-STALE-CAUSE
+  tipo: bug
+  ciclo: '2026-11-06'
+  estado: FIXED
+  commit: '7d2724b6'
+  test: tests/test_breadth_stale_context.py
+  descripcion: 'WARN de Sector Breadth decia sesion NYSE pendiente de datos en stock_prices aunque la causa real fuera LSE 18.6% de cobertura (70/86 tickers FTSE 250 sin cierre 05-11). NYSE US estaba al 98.55%. Texto fijado en src/report/sectorial.py sin consultar manifest.quality.by_market.'
+  evidencia: 'Nuevo helper _compute_stale_context en src/pipeline/breadth_metrics.py deriva el mercado con menor coverage_at_session desde _compute_by_market (filtrando SKIP/INVALID/PENDING). compute_breadth_metrics propaga sector_breadth_stale_context solo en DATA_PENDING. run.py -> generate_daily_report -> render_sector_breadth publica cobertura insuficiente en {worst_market} ({coverage:.1%}) con fallback al texto legacy si no llega contexto. Sin hardcode: cualquier mercado con cobertura baja aparece solo. 10 tests nuevos. test_pipeline_breadth_metrics actualizado a 5 keys. Docstring sincronizado (test_audit_contracts).'
+
+- id: DATA-FRESHNESS-WALK-BACK-NOTE
+  tipo: observabilidad
+  ciclo: '2026-11-06'
+  estado: FIXED
+  commit: '7d0c6732'
+  test: tests/test_freshness_walk_back_note.py
+  descripcion: 'Data Freshness mostraba Yahoo CURRENT, Alta (cobertura sectores 11/11) mientras Provenance declaraba temporal_coherence=WALK_BACK con effective_date_equity del 04-11 (cobertura tickers 408/530). Ambas vistas correctas a su granularidad, pero un operador leyendo solo Data Freshness podia creer que el equity iba al dia.'
+  evidencia: 'render_data_freshness acepta walk_back_applied=False. Si True, anade nota forward-reference: Frescura declarada = fecha del ultimo dato crudo por fuente. La fecha efectiva del bloque de equity puede ser anterior si la cobertura por ticker no alcanza el umbral (ver Provenance, WALK_BACK). report_generator pasa walk_back_applied=(provenance or {}).get(temporal_coherence) == WALK_BACK. Sin hardcode de Yahoo/LSE: la nota es estructural. Provenance ya renderiza antes 2 notas explicando WALK_BACK; esta es la referencia inversa, no duplica. 3 tests.'
+
+- id: TEMPORAL-CONTRACTS-REGISTRY-DRIFT
+  tipo: deuda_tecnica
+  ciclo: '2026-11-06'
+  estado: FIXED
+  commit: '3761fb0e'
+  test: tests/test_temporal_contracts_registry.py
+  descripcion: 'test_derivacion_por_clase verificaba solo 4 de los 8 campos que _build_registry_entry deriva de las clases (family, session_calendar, max_lag_days, min_coverage). Los 4 restantes (per_ticker_lag, per_pair_max_lag, activation_req, critical) sin cobertura directa en el test de drift. Un cambio futuro que omitiera un campo en _build_registry_entry o en una clase nueva pasaba el test.'
+  evidencia: 'test_derivacion_por_clase extendido a los 3 campos faltantes (critical ya tiene test propio test_critical_solo_equity_eod). Cierra Q6 del cuestionario S29. Si alguien anade una clase a _IMPLEMENTED_CONTRACTS sin propagar un campo en la derivacion, el test falla.'
+
+- id: RESOLVE-SECURITY-IDENTITY-NO-KWARGS
+  tipo: deuda_tecnica
+  ciclo: '2026-11-06'
+  estado: FIXED
+  commit: '24a6a74f'
+  test: tests/test_sec_13f_security_identity.py
+  descripcion: 'resolve_security_identity(cusip, period) sin equivalence_df ni crosswalk_internal_df ni figi_lookup devolvia OBSERVED_ONLY silencioso. Footgun real: bug HON 2026-11-05 (caller sin kwargs aunque cusip_equivalence.csv tenia 2 entries). El default silencioso enmascaraba bugs de wiring.'
+  evidencia: 'Guard en _resolve_identity_inner: raise ValueError si cusip no vacio y los 3 kwargs son None. pd.DataFrame() cuenta como declaracion explicita de sin-datos (legitimo en tests). Pre-check AST valida que los 5 callers productivos (pipeline_contractual + 4 scripts/iae_*.py) pasan kwargs. 2 tests ajustados a pd.DataFrame() explicito, 1 nuevo del raise. Cierra Q7 del cuestionario S29.'
+
+- id: HOOKS-PRE-COMMIT-PRE-PUSH
+  tipo: deuda_tecnica
+  ciclo: '2026-11-06'
+  estado: FIXED
+  commit: '9443f7da'
+  test: tests/test_hooks_install.py
+  descripcion: 'Incidente CI 340bfadc (S29): scripts nuevos no registrados en CI_ENTRYPOINTS y suite completa no ejecutada antes de commitear. Sin enforcement mecanico, la clase se repite. La regla de correr la suite completa antes de push era solo disciplina, no mecanismo.'
+  evidencia: 'scripts/hooks/pre_commit_check.py (pyflakes + compileall sobre src/scripts/tests/config/regimes/indicators, ~10s), pre_push_check.py (pytest con xdist si disponible, timeout 600s, bypass SKIP_PRE_PUSH=1 logueado), install.py (stubs sh en .git/hooks o core.hooksPath con --force, detecta interprete py/python3/python, backup .orig si existe hook previo no-simple, idempotente). Stubs portables Linux/Mac/Windows (git-for-windows usa su sh.exe). 12 tests centinela. Instalado en el clon de desarrollo S30 y validado en 3 pushes reales, incluyendo el bloqueo de un commit con mojibake (46acd647). Instalacion manual por clon: py scripts/hooks/install.py.'
+
+- id: MOJIBAKE-FILES-DURABLE
+  tipo: deuda_tecnica
+  ciclo: '2026-11-06'
+  estado: FIXED
+  commit: 'a041e3a0'
+  test: tests/test_no_mojibake_files.py
+  descripcion: 'Complemento al test_no_mojibake.py AST de S29 (que solo cubre strings Python productivos). Faltaba deteccion repo-wide en docs/csv/yaml/md. El item anterior (REPORT-ENCODING-MOJIBAKE-BITACORA) era un fix manual puntual sin red de seguridad.'
+  evidencia: 'Rediseno durable: deteccion heuristica por rangos Unicode (2-byte: U+00C0-U+00FF + U+0080-U+00BF; 3-byte: U+00E0-U+00EF + U+2018-U+203A/U+0080-U+00BF + U+0080-U+00BF), auto-descubrimiento de roots (ficheros raiz + subdirs excepto EXCLUDE_DIRS justificadas), whitelist por fichero con evidencia historica. 3 centinelas: auto-descubre dir nuevo, auto-descubre fichero raiz, excluye outputs/data. Calibrado contra corpus: 7 hits en 2 ficheros de evidencia, 0 falsos positivos. Detecto en S30 el mojibake del HANDOFF (5 hits) durante el push de cierre, bloqueando el commit hasta el fix (46acd647). Cierra Q14 del cuestionario S29. Autocritica: el commit intermedio 9a368461 sobrescribio el test existente sin .orig, subsanado en a0d167fa.'
+
+- id: CHECK-YAHOO-REVISION-ISSUES
+  tipo: observabilidad
+  ciclo: '2026-11-06'
+  estado: FIXED
+  commit: 'cf75d79a'
+  test: tests/test_check_yahoo_revision_issues.py
+  descripcion: 'Check_yahoo_revision corria en daily_run.yml post-run (S29, e1f8090e) pero solo emitia WARN al log. Sin issue, decorativo: nadie lee logs de scheduled runs. El check se disparaba pero su senal se perdia.'
+  evidencia: 'Script reescrito con --with-issues: abre/actualiza issue label yahoo-revision cuando detecta WARN/FAIL, lo cierra cuando vuelve a OK. Reutiliza patron de health_check.py (_ensure_label, _find_open_issue, _run_gh). daily_run.yml: anadido issues: write al job run-system (antes solo contents: write), env GH_TOKEN en el step, run con --with-issues. Sin --with-issues el script se comporta como antes (retrocompatible). 12 tests: aggregacion de estados, apertura, actualizacion, cierre, skip por manifest ausente, respeto a SKIP, main con/sin flag, tolerancia a fallo de gh (exit 0 siempre). Cierra Q10 del cuestionario S29.'
+

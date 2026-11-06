@@ -172,6 +172,20 @@ Ver `docs/auditoria/wyckoff/39_nota_fixes_2026-10-22.md`.
 
 ---
 
+### 4.4. Hooks pre-commit / pre-push (S30, 2026-11-06)
+
+`scripts/hooks/` con 3 modulos: `pre_commit_check.py` (pyflakes + compileall sobre `src/scripts/tests/config/regimes/indicators`, ~10s), `pre_push_check.py` (pytest con xdist si disponible, timeout 600s, bypass `SKIP_PRE_PUSH=1` logueado), `install.py` (escribe stubs `sh` en `.git/hooks` o `core.hooksPath` con `--force`, backup `.orig` si existe hook previo no-sample, idempotente).
+
+Instalacion manual por clon: `py scripts/hooks/install.py`. Stubs portables: git-for-windows usa su `sh.exe` embebido, asi que `#!/bin/sh` + `command -v py/python3/python` funciona en Windows/Linux/Mac. No se auto-instala al clonar (los hooks son politica de flujo, no parte del repo).
+
+12 tests en `tests/test_hooks_install.py` sin tocar `.git/hooks` real. Validado en 3 pushes reales de S30, incluyendo el bloqueo del commit `46acd647` por mojibake en `HANDOFF`.
+
+### 4.5. `src/formatting.py` (S30, 2026-11-06)
+
+`format_signed_float(value, decimals=2)` normaliza `-0.0 -> +0.0` tras redondeo. Elimina el artefacto `-0.00` en f-strings con format_spec `+.Nf` sobre valores como `z=-0.001`. 5 sitios migrados: `indicators/price_flow_divergence.py:41,48` (`flow_proxy_z`) y `src/report/alerts.py:57,67,74` (`_hyg_z`).
+
+21 tests en `tests/test_formatting.py` (18 param) + `tests/test_no_negative_zero.py` (2 integracion con productores reales + 1 AST centinela que prohibe `format_spec "+.Nf"` directo en `src/indicators/regimes/config`). Cualquier f-string futuro con `+` sin la utility falla el AST guard.
+
 ## 5. MODELO TEMPORAL
 
 Tres capas independientes que NO deben confundirse:

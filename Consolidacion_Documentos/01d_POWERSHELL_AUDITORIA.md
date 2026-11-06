@@ -190,6 +190,26 @@ Cinco trampas verificadas empiricamente (4 pisadas en S28, 1 en S28+1).
 
 ---
 
+### 6quinquies. TRAMPAS S30 (2026-11-06)
+
+**1. `Get-Content` en PS 5.1 lee UTF-8 sin BOM como Windows-1252 y `WriteAllLines` reescribe como UTF-8: doble codificacion silenciosa.**
+
+Reproducido al reconstruir `HANDOFF - Radar de Rotacion Sectorial.txt`: `Get-Content` leyo `§` (bytes `C2 A7`) como dos caracteres Windows-1252 (`Â`, `§`), `WriteAllLines` los reescribio como `C3 82 C2 A7`. 5 hits de mojibake en el fichero final, detectados por el pre-push hook (test_no_mojibake_files) y bloqueando el push.
+
+Regla: para ficheros con caracteres no-ASCII, **usar siempre** `[IO.File]::ReadAllText($p)` / `[IO.File]::WriteAllText($p, $c, [UTF8Encoding]::new($false))`. Nunca `Get-Content | Set-Content` ni `WriteAllLines` sobre ficheros que puedan tener `§`, tildes, emoji, etc. Ya era el patron en `test_no_mojibake_files.py` (S30); ahora es regla dura.
+
+**2. `String.Replace(old, new, count)` no existe en .NET. Solo 2 argumentos.**
+
+Tres argumentos -> `MethodException` silenciosa. No aborta `$LASTEXITCODE` (no es un proceso), no detiene el script, no produce salida visible si el pipeline de PowerShell la traga. El `Write-Host "OK ..."` posterior se ejecuta igual y da falsa sensacion de exito.
+
+Regla: para reemplazos con intencion de "solo primera ocurrencia" (que es lo que uno espera de `Replace(a, b, 1)` por analogia con strings de Python o JS), **usar `IndexOf + Substring`**:
+
+    $idx = $c.IndexOf($old)
+    if ($idx -lt 0) { Write-Host "anchor not found"; return }
+    $c = $c.Substring(0, $idx) + $new + $c.Substring($idx + $old.Length)
+
+O `[regex]::Replace($c, [regex]::Escape($old), $new, 1)` si el patron es simple. Nunca `Replace(a, b, n)`.
+
 ## 7. AUDITORIA - METODO
 
 Cuando se audita codigo linea a linea:

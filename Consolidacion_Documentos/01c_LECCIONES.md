@@ -152,3 +152,17 @@ Y `git cat-file -s HEAD:file` da tamano en bytes sin transformacion:
 6 falsos positivos en 6 casos (docstrings y regex que mencionan la ruta sin
 leerla). Una regla mecanica con 100% de falsos positivos es peor que la
 regla documental.
+
+### Autocritica 9a368461 (2026-11-06): sobrescritura de test sin .orig
+
+S30. En el commit `9a368461` reescribi `tests/test_no_mojibake.py` con `[IO.File]::WriteAllLines` sin verificar primero si el fichero ya existia y sin crear `.orig`. El fichero **ya existia** en el repo (test AST de S29 sobre strings Python productivos, 42 lineas, con 3 patrones CP437 y roots `src/regimes/indicators/scripts/config`). Mi version (96 lineas, escaneo bytes, 15 patrones) **perdio** esa cobertura y anadio una distinta.
+
+Detectado por `git diff --stat` en el commit siguiente (`-42 lineas`), no por un test. Corregido en `a0d167fa`: restaurado el original, la variante por bytes pasa a `tests/test_no_mojibake_files.py` como complemento.
+
+Reglas que fallaron y que el metodo ya tenia:
+- "Backup .orig antes de tocar; eliminar tras verificar" (00_ARRANQUE 2).
+- "Un cambio, una verificacion, un commit" (01_METODO 3): la verificacion de "el fichero no existe" se omitio.
+
+Regla nueva: **antes de `WriteAllText`/`WriteAllLines` sobre un path, `Test-Path` primero**. Si existe, `.orig` antes. Si no, OK. Esto no es solo para ficheros que voy a modificar: es para cualquier fichero que escriba, porque puedo no saber que ya existia (ej. test centinela con nombre generico).
+
+La red de seguridad que lo habria bloqueado antes: si el pre-commit hook hubiera sido obligatorio en S30 (lo fue a partir de `9443f7da`), `pyflakes` habria detectado imports no usados en la nueva version (perdida de cobertura AST). Pero el hook no estaba activo aun en `9a368461`. Leccion: instalar los hooks antes de empezar a tocar codigo, no despues.
