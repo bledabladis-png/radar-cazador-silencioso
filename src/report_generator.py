@@ -118,7 +118,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # DATA FRESHNESS + ALERTAS + CROSS-MODULE
     # =========================================================================
-    lines.extend(render_data_freshness(pcr_data, darkpool_data, sector_results, reference_date=reference_date, liquidity_state=liquidity_state))
+    lines.extend(render_data_freshness(pcr_data, darkpool_data, sector_results, reference_date=reference_date, liquidity_state=liquidity_state, walk_back_applied=(provenance or {}).get("temporal_coherence") == "WALK_BACK"))
     lines.extend(render_alerts(breadth_values, financial_regime, price_flow_divergences, confirmation_data))
     lines.extend(render_cross_module(cross_module_conflict))
 

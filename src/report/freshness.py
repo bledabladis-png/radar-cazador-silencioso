@@ -23,13 +23,15 @@ from src.report.helpers import (
 )
 
 
-def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_date=None, liquidity_state=None):
+def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_date=None, liquidity_state=None, walk_back_applied=False):
     """Renderiza la seccion 'Data Freshness' + tabla de cobertura.
 
     Devuelve lista de lineas markdown. Sin side effects.
     """
     out = []
     out.append("### Data Freshness\n")
+    if walk_back_applied:
+        out.append("*Frescura declarada = fecha del ultimo dato crudo por fuente. La fecha efectiva del bloque de equity puede ser anterior si la cobertura por ticker no alcanza el umbral (ver Provenance, WALK_BACK).*\n\n")
     out.append("| Fuente | Ultimo dato | Antigüedad | Estado | Conf. Frescura |\n")
     out.append("|--------|-------------|------------|--------|----------|\n")
     _ref = resolve_reference_date(reference_date)
