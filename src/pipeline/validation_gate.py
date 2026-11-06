@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from src.dependency_tracker import audit_double_counting
+from src.formatting import format_signed_float
 from config.settings import FRESHNESS_CBOE, FRESHNESS_FINRA
 
 
@@ -100,9 +101,9 @@ def run_validation_gate(wyckoff_holdings_data, pcr_data, darkpool_data, mte_resu
                     validation_errors.append(f"{ticker}: Tactical/Structural no numerico.")
                     continue
                 if abs(t) > 1.0:
-                    validation_errors.append(f"{ticker}: Tactical Score fuera de rango ({t:+.2f}).")
+                    validation_errors.append(f"{ticker}: Tactical Score fuera de rango ({format_signed_float(t)}).")
                 if abs(s) > 1.0:
-                    validation_errors.append(f"{ticker}: Structural Score fuera de rango ({s:+.2f}).")
+                    validation_errors.append(f"{ticker}: Structural Score fuera de rango ({format_signed_float(s)}).")
                 sectors_checked += 1
         if sectors_checked == 0:
             _add_check(validation_checks, validation_errors, "Rangos tacticos/estructurales", False, "sin sectores coincidentes")

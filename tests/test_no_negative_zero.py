@@ -40,38 +40,92 @@ class TestIntegracion:
 class TestAstSentinel:
 
     ROOTS = ("src", "indicators", "regimes", "config")
+    ROOT_FILES_GLOB = "*.py"
     PATTERN = re.compile(r"^\+\.\d+f$")
 
-    def test_sin_format_spec_neg_zero_suelto(self):
-        offenders = []
+    def _iter_py_files(self):
         for root in self.ROOTS:
             p = pathlib.Path(root)
             if not p.exists():
                 continue
             for f in p.rglob("*.py"):
-                try:
-                    tree = ast.parse(f.read_bytes())
-                except SyntaxError:
+                yield f
+        for f in pathlib.Path(".").glob(self.ROOT_FILES_GLOB):
+            if f.is_file():
+                yield f
+
+    def _get_spec_string(self, spec):
+        """Extrae el string literal del format_spec.
+
+        Python 3.11: ast.Constant(str) directo.
+        Python 3.12+ (PEP 701): ast.JoinedStr envolviendo Constant(str),
+        incluso cuando el spec no tiene interpolacion.
+        Con interpolacion en el spec (spec dinamico), retorna None:
+        ese caso no produce -0.00 por el mismo mecanismo.
+        """
+        if isinstance(spec, ast.Constant) and isinstance(spec.value, str):
+            return spec.value
+        if isinstance(spec, ast.JoinedStr):
+            vals = spec.values
+            if len(vals) == 1 and isinstance(vals[0], ast.Constant):
+                v = vals[0].value
+                if isinstance(v, str):
+                    return v
+        return None
+
+    def _find_offenders(self):
+        offenders = []
+        for f in self._iter_py_files():
+            try:
+                tree = ast.parse(f.read_bytes())
+            except SyntaxError:
+                continue
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.JoinedStr):
                     continue
-                for node in ast.walk(tree):
-                    if not isinstance(node, ast.JoinedStr):
+                for v in node.values:
+                    if not isinstance(v, ast.FormattedValue):
                         continue
-                    for v in node.values:
-                        if not isinstance(v, ast.FormattedValue):
-                            continue
-                        spec = v.format_spec
-                        if not isinstance(spec, ast.Constant):
-                            continue
-                        if not isinstance(spec.value, str):
-                            continue
-                        if self.PATTERN.match(spec.value):
-                            rel = f.relative_to(pathlib.Path(".")).as_posix()
-                            offenders.append(
-                                "%s:%d spec=%r"
-                                % (rel, node.lineno, spec.value)
-                            )
+                    spec_str = self._get_spec_string(v.format_spec)
+                    if spec_str is None:
+                        continue
+                    if self.PATTERN.match(spec_str):
+                        rel = f.relative_to(pathlib.Path(".")).as_posix()
+                        offenders.append(
+                            "%s:%d spec=%r" % (rel, node.lineno, spec_str)
+                        )
+        return offenders
+
+    def test_sin_format_spec_neg_zero_suelto(self):
+        offenders = self._find_offenders()
         assert not offenders, (
             "f-string con format_spec +.Nf directo. "
             "Usar src.formatting.format_signed_float. "
             "Offenders: " + ", ".join(offenders)
         )
+
+
+class TestGetSpecString:
+
+    def test_joinedstr_pep701_spec_literal(self):
+        tree = ast.parse('y = f"z={x:+.2f}"')
+        fv = [n for n in ast.walk(tree) if isinstance(n, ast.FormattedValue)][0]
+        assert TestAstSentinel()._get_spec_string(fv.format_spec) == "+.2f"
+
+    def test_spec_con_interpolacion_no_matchea(self):
+        tree = ast.parse('y = f"z={x:{prec}f}"')
+        fv = [n for n in ast.walk(tree) if isinstance(n, ast.FormattedValue)][0]
+        assert TestAstSentinel()._get_spec_string(fv.format_spec) is None
+
+class TestAstSentinelCoversRoot:
+    """Verifica que el AST guard cubre .py de raiz (run.py, conftest.py, futuros)."""
+
+    def test_detecta_offender_en_raiz(self, tmp_path, monkeypatch):
+        (tmp_path / "sospechoso_raiz.py").write_text(
+            "x = 1\ny = f\"z={x:+.2f}\"\n", encoding="utf-8"
+        )
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(TestAstSentinel, "ROOTS", ())
+        offenders = TestAstSentinel()._find_offenders()
+        assert offenders, "El guard debe detectar un +.Nf directo en raiz"
+        assert "sospechoso_raiz.py" in offenders[0]

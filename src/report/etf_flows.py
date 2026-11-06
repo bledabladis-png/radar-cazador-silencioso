@@ -31,7 +31,7 @@ def render_flujo_spdr(etf_primary_flow_data):
             _reg = row.get('primary_flow_z_regime', '')
             _z_str = _fmt_signed(_z, '{:+.2f}', '{:.2f}')
             if _reg == 'SATURATED' and _raw is not None and pd.notna(_raw):
-                return f"{_z_str}* ({_raw:+.2f})"
+                return f"{_z_str}* ({_fmt_signed(_raw, '{:+.2f}', '{:.2f}')})"
             return _z_str
 
         for _, row in etf_primary_flow_data.iterrows():

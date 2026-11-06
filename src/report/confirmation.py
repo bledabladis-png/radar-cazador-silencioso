@@ -5,6 +5,7 @@ Extraido de src/report_generator.py (refactor C1, fase C1-6d4c2).
 """
 
 import pandas as pd
+from src.formatting import format_signed_float
 from src.report.helpers import _fmt_num, _fmt_signed
 from indicators.cross_asset import RATIO_LABELS
 
@@ -132,7 +133,7 @@ def render_confirmation(confirmation_data):
                 _ext_label, _ext_z = max(_zs, key=lambda t: abs(t[1]))
                 out.append(
                     f"\n*Ratio con |Z-Score| mas extremo: {_ext_label} "
-                    f"({_ext_z:+.2f}).*\n"
+                    f"({format_signed_float(_ext_z)}).*\n"
                 )
         out.append("\n")
     return out

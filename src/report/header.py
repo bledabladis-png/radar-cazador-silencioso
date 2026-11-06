@@ -6,6 +6,7 @@ Extraido de src/report_generator.py (refactor C1, fase C1-5).
 
 import pandas as pd
 
+from src.formatting import format_signed_float
 from src.report.helpers import _fmt_signed
 from config.settings import FLS_STRESS_THRESHOLD
 
@@ -103,7 +104,7 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
             _sev = _v2.get('severidad_cruda')
             _diff = _v2.get('diff_bp')
             if _sev and _sev != 'OK':
-                _diff_str = f"{float(_diff):+.1f}" if isinstance(_diff, (int, float)) else 'N/D'
+                _diff_str = format_signed_float(_diff, decimals=1, na='N/D')
                 out.append(f"  - *Severidad: {_sev} (diff_bp={_diff_str})*\n")
     if real_liq_prev is not None:
         try:
