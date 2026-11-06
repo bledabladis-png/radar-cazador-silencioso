@@ -179,6 +179,7 @@ def main():
     sector_breadth_df = bm['sector_breadth_df']
     sector_breadth_is_stale = bm.get('sector_breadth_is_stale', False)
     sector_breadth_stale_reason = bm.get('sector_breadth_stale_reason')
+    sector_breadth_stale_context = bm.get('sector_breadth_stale_context')
 
     en = compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, temporal_meta=temporal_meta)
     tactical_scores = en['tactical_scores']
@@ -346,7 +347,8 @@ def main():
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
                           real_liq_prev=real_liq_prev, sector_breadth_data=sector_breadth_df, sector_breadth_is_stale=sector_breadth_is_stale,
-                          sector_breadth_stale_reason=sector_breadth_stale_reason, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df, sector_breadth_momentum_data=sector_breadth_momentum_df,
+                          sector_breadth_stale_reason=sector_breadth_stale_reason,
+                          sector_breadth_stale_context=sector_breadth_stale_context, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df, sector_breadth_momentum_data=sector_breadth_momentum_df,
                           evidence_matrix_data=evidence_matrix_df,
                           sector_dispersion_data=sector_dispersion_df,
                           sector_correlation_summary_data=sector_corr_summary_df,

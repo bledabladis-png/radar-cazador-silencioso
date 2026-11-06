@@ -247,6 +247,56 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
         return None, False
 
 
+def _compute_stale_context(df_stocks, reference_date):
+    """Deriva contexto de la causa del stale desde _compute_by_market.
+
+    Cuando _compute_sector_breadth_health emite DATA_PENDING, esta
+    funcion calcula el mercado con menor coverage_at_session para que
+    render_sector_breadth publique la causa real (LSE, XETRA, BME,
+    EURONEXT...) en lugar del texto generico "sesion NYSE pendiente".
+
+    Filtra SKIP, INVALID y PENDING: esos estados indican ausencia total
+    de datos (otra causa, otro mensaje), no baja cobertura.
+
+    Devuelve dict {worst_market, worst_coverage, expected_session} o
+    None si no hay datos suficientes.
+    """
+    if df_stocks is None or df_stocks.empty:
+        return None
+    if reference_date is None:
+        return None
+    try:
+        from src.utils import _compute_by_market
+        from src.market_calendar import last_expected_market_date
+        by_market = _compute_by_market(df_stocks, reference_date)
+        if not by_market:
+            return None
+        candidates = [
+            (m, info["coverage_at_session"])
+            for m, info in by_market.items()
+            if info.get("n", 0) > 0
+            and info.get("coverage_at_session") is not None
+            and info.get("status") not in ("SKIP", "INVALID", "PENDING")
+        ]
+        if not candidates:
+            return None
+        worst_market, worst_cov = min(candidates, key=lambda x: x[1])
+        try:
+            expected = last_expected_market_date(reference_date)
+            expected_iso = (expected.isoformat()
+                            if hasattr(expected, "isoformat")
+                            else str(expected))
+        except Exception:
+            expected_iso = None
+        return {
+            "worst_market": worst_market,
+            "worst_coverage": float(worst_cov),
+            "expected_session": expected_iso,
+        }
+    except Exception:
+        return None
+
+
 def compute_breadth_metrics(df_stocks, df_market, holdings_df, reference_date=None, temporal_meta=None):
     """Calcula Sector Breadth & Health + Momentum de amplitud.
 
@@ -258,14 +308,19 @@ def compute_breadth_metrics(df_stocks, df_market, holdings_df, reference_date=No
         dict con keys:
             sector_breadth_momentum_df, sector_breadth_df,
             sector_breadth_is_stale (bool),
-            sector_breadth_stale_reason (str | None)
+            sector_breadth_stale_reason (str | None),
+            sector_breadth_stale_context (dict | None)
     """
     sb_df, sb_is_stale, sb_stale_reason = _compute_sector_breadth_health(
         df_stocks, df_market, holdings_df, reference_date=reference_date,
         temporal_meta=temporal_meta, return_reason=True)
+    stale_ctx = None
+    if sb_is_stale and sb_stale_reason == 'DATA_PENDING':
+        stale_ctx = _compute_stale_context(df_stocks, reference_date)
     return {
         'sector_breadth_momentum_df': _compute_momentum_amplitud(df_stocks),
         'sector_breadth_df': sb_df,
         'sector_breadth_is_stale': sb_is_stale,
         'sector_breadth_stale_reason': sb_stale_reason,
+        'sector_breadth_stale_context': stale_ctx,
     }

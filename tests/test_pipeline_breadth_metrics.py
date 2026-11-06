@@ -229,11 +229,14 @@ def test_sbh_error_en_compute_devuelve_none(tmp_path, monkeypatch):
 # compute_breadth_metrics
 # =============================================================================
 
-def test_compute_breadth_metrics_contrato_4_keys(tmp_path, monkeypatch):
-    """F6-2b (2026-09-28): contrato ampliado a 4 keys.
+def test_compute_breadth_metrics_contrato_5_keys(tmp_path, monkeypatch):
+    """S30 (2026-11-06): contrato ampliado a 5 keys.
 
-    sector_breadth_stale_reason se anade para distinguir
-    MARKET_CLOSED vs DATA_PENDING (F6-01).
+    sector_breadth_stale_context se anade para propagar la causa
+    real del DATA_PENDING (mercado con menor coverage_at_session)
+    al render. Sin el, el WARN atribuia toda baja cobertura a
+    "sesion NYSE pendiente" aunque el mercado culpable fuera LSE
+    (bug B del 06-11, LSE 18.6%).
     """
     monkeypatch.chdir(tmp_path)
     (tmp_path / "outputs" / "history").mkdir(parents=True)
@@ -247,7 +250,8 @@ def test_compute_breadth_metrics_contrato_4_keys(tmp_path, monkeypatch):
         )
     assert set(out.keys()) == {
         "sector_breadth_momentum_df", "sector_breadth_df",
-        "sector_breadth_is_stale", "sector_breadth_stale_reason"}
+        "sector_breadth_is_stale", "sector_breadth_stale_reason",
+        "sector_breadth_stale_context"}
 
 
 def test_compute_breadth_metrics_propaga_is_stale(tmp_path, monkeypatch):

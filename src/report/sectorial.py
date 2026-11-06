@@ -10,7 +10,7 @@ from config.settings import MIN_SECTOR_COVERAGE
 from src.report.helpers import _fmt_num, _fmt_ad_net, _shared_vars_note
 
 
-def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None):
+def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None, stale_context=None):
     """Renderiza la tabla Sector Breadth & Health.
 
     C2-followup (2026-09-12): is_stale=True indica que la observacion
@@ -33,9 +33,21 @@ def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None
         if is_stale:
             _latest_str = pd.Timestamp(latest_date).strftime('%Y-%m-%d')
             if stale_reason == 'DATA_PENDING':
-                out.append(f"**[WARN]** Sin actualizacion - sesion NYSE pendiente "
-                           f"de datos en stock_prices. Ultima observacion: {_latest_str}. "
-                           f"No es festivo: verificar cobertura de stock_prices.parquet.*\n\n")
+                if stale_context and stale_context.get("worst_market"):
+                    _wm = stale_context["worst_market"]
+                    _wc = stale_context.get("worst_coverage")
+                    _wc_str = f"{_wc:.1%}" if _wc is not None else "N/D"
+                    out.append(
+                        f"**[WARN]** Sin actualizacion - cobertura insuficiente "
+                        f"en {_wm} ({_wc_str}). Ultima observacion: {_latest_str}. "
+                        f"Verificar cobertura de stock_prices.parquet.*\n\n"
+                    )
+                else:
+                    out.append(
+                        f"**[WARN]** Sin actualizacion - sesion NYSE pendiente "
+                        f"de datos en stock_prices. Ultima observacion: {_latest_str}. "
+                        f"No es festivo: verificar cobertura de stock_prices.parquet.*\n\n"
+                    )
             elif stale_reason == 'ERROR':
                 out.append(f"**[WARN]** Sin actualizacion - error en el calculo de "
                            f"Sector Breadth. Ultima observacion: {_latest_str}.*\n\n")
