@@ -7,272 +7,100 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-11-05, sesion 29)
 
-HEAD: `4a7bd8ce` (consultar `git log --oneline -1` para el actual).
+## 1. ESTADO AL CIERRE (2026-11-06, sesion 30)
+
+HEAD: `cf75d79a` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4469 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4553 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
 Gobernanza: docs/gobernanza/REGISTRO.yaml, 294 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 13 (_IMPLEMENTED_CONTRACTS), 5 familias.
+Hooks activos: pre-commit (pyflakes + compileall) y pre-push (pytest xdist) instalados en .git/hooks/, validados en 2 pushes reales de S30.
 
 Fase 2 (auditoria por bloques): COMPLETA. B1-B8 auditados.
 Fase 0 + Fase 1: COMPLETAS.
 Transversales: cerrados.
 Analisis economico 30-oct (FASE-A): 5 items cerrados.
 
-Sesion 29 (2026-11-05): 3 bugs reales arreglados con codigo + evidencia
-+ 5 items del saliente cerrados + incidente CI corregido.
+Sesion 30 (2026-11-06): 4 deudas de codigo S29 cerradas (Q6, Q7, Q13, Q14),
+3 bugs del reporte arreglados con codigo (E -0.00, B WARN stale, F granularidad),
+Q10 (check_yahoo_revision con issues) cerrado, Q12 (CRON-SLOTS-OBS + SCHEDULER-DELAYS)
+cerrado con datos empiricos de 22 dias. 11 commits net.
 
-Bugs reales (todos con E2E en produccion local + test que cierra la clase):
-  - D1 TEMPORAL-CONTRACTS-NO-WIRED (1644adb3): CONTRACTS_REGISTRY
-    era un dict paralelo de 9 entradas a _IMPLEMENTED_CONTRACTS (13).
-    resolve_all_contracts iteraba list_contracts() -> 9. Fix: derivar
-    de _IMPLEMENTED_CONTRACTS + atributos de clase. Test anti-drift.
-    Evidencia run 42020621979: "13 contratos resueltos".
-  - HON-REVERSE-SPLIT-CUSIP (cc576403): CUSIP pre/post reverse split
-    2026-06-29. 507 filings Q2 con CUSIP viejo caian a
-    UNRESOLVED_IDENTITY -> EXIT artificial. Fix: 2 entries en
-    cusip_equivalence.csv. n_exit HON 902 -> 784.
-  - BKNG-SPLIT-DELTA (0dbddfcc): split 24:1 entre Q1 y Q2. delta
-    artificial +688M acciones. Fix: nuevo aggregation/split_detection.py
-    con deteccion por doble ratio (precio y shares). sum_delta +688M
-    -> -27.7M. 8 splits detectados. 14 tests.
-  - VERIFICAR-MTE-STATE-PROD (b73294f7): item creado FIXED con
-    evidencia run 42020621979 (schema v2, mte_state=DEGRADED,
-    futures_status=STALE).
+Deuda codigo S29 cerrada: Q6 anti-drift, Q7 guard, Q13 hooks, Q14 mojibake durable.
+Bugs reporte 06-11 arreglados: E (-0.00), B (WARN stale con causa real), F (Data Freshness -> Provenance).
+Q10: check_yahoo_revision abre/cierra issue con label yahoo-revision (antes solo log).
+Q12: ventana 2026-10-16 a 2026-11-06 (22 dias, 101 runs, cruzados con run-system).
+     CRON-SLOTS-OBS -> FIXED (21/22 dias con >=1 run).
+     SCHEDULER-DELAYS -> WONT_FIX (p95 <=8h, delays no son metrica con slots solapando).
+DAILY-RUN-FAIL-40992758129 -> WONT_FIX razonado (ultimo run 30-10, sin reaparicion en 7 dias).
 
-Items del saliente cerrados (5): FORCE-DISPATCH-EMERGENCIA (29688163),
-POWERSHELL-TRAMPS-NO-DOCUMENTADAS (63af55dc), CHECK-YAHOO-REVISION-
-FRECUENCIA (e1f8090e, bug de ubicacion: health_check.yml -> daily_run.yml
-post-run), SEMANTICA-SIN-CONTRATO-INVENTARIO (bce81bf4, inventario
-parcial, 3 conceptos sin contrato), TEST-FRESHNESS-UMBRAL-VS-CADENCIA
-(76bd01e1, observatorio wireado, hipotesis refutada).
+Diagnostico LSE (no bug): scraper cubre 20/86 LSE tickers (20 con RIC en INSTRUMENTS).
+  16 traidos el 05-11; 70 FTSE 250/small caps sin cierre Yahoo. WONT_FIX razonado en
+  04_HISTORICO S30: ampliar INSTRUMENTS requiere fuente RIC no disponible.
 
-Incidente CI corregido (340bfadc): los 2 scheduled del 05-11 fallaron en
-"Run tests" porque los scripts nuevos (check_yahoo_revision.py,
-freshness_gap_observer.py) no estaban en CI_ENTRYPOINTS ni cubiertos por
-_local_names() de test_imports_declarados. 2 tests de prevencion lo
-detectaron. Fix: anadir a CI_ENTRYPOINTS + extender _local_names() con
-scripts/*.py.
+## 2. SESION 2026-11-06 (sesion 30): detalle
 
-Deuda activa: ninguna documental. 00_ARRANQUE, HANDOFF, 05_BITACORA,
-04_HISTORICO actualizados en f1202d9e (o commits siguientes de cierre).
+**Objetivo.** Cerrar deuda codigo del cuestionario S29 (18 preguntas) antes de Q10/Q12/Q15.
+Prioridad: bugs reales > deuda durable > documental.
 
-## 2. SESION 2026-11-05 (sesion 29): detalle
+**Hecho (11 commits, todos pusheados).**
 
-**Objetivo.** Cerrar los 5 items del saliente (FORCE-DISPATCH,
-POWERSHELL-TRAMPS, CHECK-YAHOO-REVISION, SEMANTICA-SIN-CONTRATO,
-TEST-FRESHNESS) + investigar los 2 items que el saliente dejo como OPEN
-pero sin causa raiz (COMMIT-46A3B370, CHECK-API-KEYS). Durante la
-investigacion se descubrieron 3 bugs reales.
-
-**Contexto previo.** Sesion 28 (04-11) cerro 7 items FIXED. HANDOFF
-declaraba "13 contratos activos" y "5 items OPEN auditoria 11-03".
-
-**Hecho (20+ commits, todos pusheados).**
-
-1. D1 DECISION-EFFECTIVE-DATE-POR-MODULO (B1):
-   El saliente dijo "build_temporal_meta consolida 9 contratos, no 13".
-   Auditoria revelo el bug real: resolve_all_contracts itera
-   list_contracts() -> CONTRACTS_REGISTRY, que era un dict literal de 9
-   entradas paralelo a _IMPLEMENTED_CONTRACTS (13). Los 4 nuevos de S28
-   (SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO) estaban
-   registrados, instanciables y testeados, pero no se resolvian en
-   produccion. El log real decia "9 contratos resueltos".
-   Fix: CONTRACTS_REGISTRY se deriva de _IMPLEMENTED_CONTRACTS y de los
-   atributos de clase (family, session_calendar, max_lag_days,
-   min_coverage, per_ticker_lag, per_pair_max_lag, activation_req,
-   critical). Una sola fuente de verdad. Test anti-drift que falla si
-   alguien anade clase a _IMPLEMENTED_CONTRACTS sin que aparezca en
-   CONTRACTS_REGISTRY. Commit 1644adb3. E2E run 42020621979:
-   13 contratos resueltos, gate 11/11.
-
-2. FORCE-DISPATCH-EMERGENCIA (29688163):
-   El runbook decia "el gate pipeline_gate.py con force=true bypassea
-   should_run". FALSO: el gate corre siempre (sus args son --now,
-   --target-session, --slot). Lo que hace force=true es saltarse el
-   veredicto del gate en el if: del job run-system. Reescribio §4.5
-   con: sintoma actualizado (el snapshot se pushea a main via auto-push
-   del step Commit and push hist/state), causa real (mecanismo del if:),
-   ficheros contaminados y pusheados, backup pre-force (PRE_SHA + tag
-   opcional), procedimiento de 8 pasos, 2 opciones de reversion (git
-   revert completo o restauracion quirurgica desde PRE_SHA). 130
-   inserciones, 12 deleciones.
-
-3. POWERSHELL-TRAMPS-NO-DOCUMENTADAS (63af55dc):
-   §6quater en 01d_POWERSHELL_AUDITORIA.md con 5 trampas verificadas
-   empiricamente: (1) if inline no es expresion es sentencia; (2) exit
-   cierra la sesion completa no solo el script; (3) $array -ne "" es
-   True con array vacio; (4) escape de comilla simple no es bash-style
-   (se duplica); (5) git checkout -- <path> devuelve LASTEXITCODE=0
-   aunque el pathspec no exista. Las 4 primeras pisadas en S28; la 5a
-   en S29. 32 inserciones.
-
-4. CHECK-YAHOO-REVISION-FRECUENCIA (e1f8090e, bug de ubicacion):
-   El check estaba en health_check.yml (lunes), donde el checkout
-   limpio hace current == head y el check nunca dispara. Los 3 logs
-   scheduled lo confirman: [OK] sin revision siempre. Movido a
-   daily_run.yml post-run.py pre-commit, donde current (manifest
-   recien escrito por run.py) != head (ultimo commit de main del run
-   anterior). No bloqueante (continue-on-error: true). Nuevo script
-   scripts/check_yahoo_revision.py (40 lineas). 4 tests centinelas en
-   test_daily_run_yaml_catalog.py. Verificado en prod run 42020621979:
-   "| yahoo_revision | [OK] | sesion nueva (2026-11-03 -> 2026-11-04) |".
-
-5. SEMANTICA-SIN-CONTRATO-INVENTARIO (bce81bf4, OPEN con inventario):
-   6 candidatos auditados 2026-11-05. 3 con contrato (pipeline_gate/
-   validation_gate via enmiendas v1.1-v1.3, structure_ratio via doc 08,
-   coverage_pct_effective via enmienda v1.3). 3 sin contrato:
-   - FRESHNESS_FINRA/CBOE/FRED/YAHOO: 5 modulos (indicators/data_quality,
-     src/pipeline/validation_gate, src/report/freshness, src/report/
-     helpers, src/temporal_contracts/finra_darkpool). Cada modulo
-     importa constantes de config.settings pero ninguno declara
-     formalmente la semantica de las 3 bandas (CURRENT/RECENT/STALE).
-   - confidence < 0.5 en src/report/helpers.py para UNCONFIRMED del
-     MTE: umbral sin contrato de que significa ni por que 0.5.
-   - SATURATED / MAD0_SAME en etf_flows.py y flows_international.py:
-     etiquetas de estado del z-score sin contrato.
-   Decision pendiente: contrato escrito o WONT_FIX razonado con coste-
-   beneficio.
-
-6. TEST-FRESHNESS-UMBRAL-VS-CADENCIA (76bd01e1, hipotesis REFUTADA):
-   Los 3 tests failed de test_freshness.py (market_data_fresh,
-   stock_prices_fresh, european_tickers_recent) en local con parquets
-   stale. Hipotesis inicial (umbral 4d demasiado estricto para la
-   cadencia del bot) REFUTADA 2026-11-05: tras refresh real del bot
-   (3172eaf5), test_freshness: 37 passed, 2 skipped, 0 failed; suite
-   completa: 4469 passed, 0 failed. El fallo previo era por parquets
-   locales stale (antes del E2E y del primer scheduled post-fix).
-   Observatorio wireado en daily_run.yml idx 19 (antes de Validate
-   freshness post-run). Append-only a outputs/history/
-   freshness_gap_observation.csv. Verificado en prod run 42020621979:
-   "[OK] freshness_gap: target=2026-11-04 gap_bus=0
-   test_would_fail=False". Revision formal 11-10 con >=5 filas.
-
-7. COMMIT-46A3B370-AUDIT (fbc60969, WONT_FIX razonado):
-   Commit 46a3b370 (27-oct) toca 3 ficheros: REGISTRO.yaml (38 lineas,
-   cambio real), HANDOFF vigente (1 linea), docs/handoffs/HANDOFF.md
-   (3 lineas, obsoleto). grep de "docs/handoffs/HANDOFF.md" en el repo:
-   10 hits, todos documentales. 0 hits en src/ o scripts/. Sin bug
-   funcional. Item retirado de 00_ARRANQUE.
-
-8. CHECK-API-KEYS-HUERFANAS (fbc60969, FALSE_POSITIVE):
-   Hipotesis del saliente (ALPHA_VANTAGE y TWELVE_DATA huerfanas tras
-   retirar cross_provider_validation en S27). Grep 2026-11-05: las 6
-   API keys (POLYGON, ALPHA_VANTAGE, TWELVE_DATA, FINNHUB, FMP, TIINGO)
-   tienen consumidor real: 5 en data/providers/backup_providers.py
-   L94-114 (DataRouter fallback), POLYGON en data/providers/polygon.py:16
-   (provider dedicado). Sin deuda.
-
-9. HON-REVERSE-SPLIT-CUSIP (cc576403):
-   Auditoria detecto que HON tenia 902 EXITs en el reporte, con
-   pct_exit=30.7%. Causa: HON hizo reverse split 2026-06-29. CUSIP
-   viejo 438516106 con valid_to=2026-03-31 en cusip_radar_crosswalk.csv.
-   CUSIP nuevo 438516205 solo en etf_holdings (sin vigencia). 507
-   filings Q2 con CUSIP viejo caian a OBSERVED_ONLY ->
-   UNRESOLVED_IDENTITY -> EXIT artificial.
-   Fix: cusip_equivalence.csv (prioridad sobre crosswalk) con 2
-   entries: 438516106 -> HON [2025-12-31, 2026-09-30]; 438516205 ->
-   HON [2026-06-29, null). Ventana Q1+Q2+1 trimestre de margen para
-   filings tardios.
-   E2E Q1->Q2: n_exit HON 902 -> 784 (-118 EXITs artificiales).
-   Residual 784: 690 venta real (reportan otros holdings, no HON),
-   42 sin filing Q2 (5.7%), 11 con CUSIP raro no mapeado (1.5%).
-   pct_exit HON 0.266 < 0.50. Sigue en el reporte sin filter_reason.
-   6 tests nuevos en test_sec_13f_security_identity.py.
-
-10. BKNG-SPLIT-DELTA (0dbddfcc):
-    Auditoria detecto BKNG con sum_delta +688M acciones en el reporte
-    (24x el float real ~33M). Causa: split 24:1 entre 2026Q1 y
-    2026Q2. Los filings 13F pre-split reportan shares pre-split y
-    precio pre-split (implied_price ~4210); post-split, post-split
-    (~178). Ratio Q2/Q1: 24.12x consistente en precio y shares.
-    compute_delta_shares comparaba SSHPRNAMT sin ajustar.
-    Fix: nuevo modulo aggregation/split_detection.py con deteccion
-    robusta SIN lista de splits, SIN fuente externa:
-    - Para cada CUSIP en ambos trimestres con >= MIN_FILERS=5:
-        ratio_precio = mediana(VALUE/SSHPRNAMT) prev / curr
-        ratio_shares = sum_shares_curr / sum_shares_prev
-    - Si AMBOS ratios coinciden con K >= 2 (o 1/K reverse) dentro de
-      tolerancia, marcar split.
-    - Excluye bonos (TITLEOFCLASS NOTE/BOND/DEB/PFD) y ETFs
-      apalancados (2X/3X/DAILY/LEVERAGED/INVERSE/SHORT/BULL/BEAR).
-      "ETF" a secas NO se excluye (VUG, SPY, QQQ pueden hacer splits
-      reales).
-    - Reverse splits exigen n_filers >= MIN_FILERS_REVERSE=20 (evita
-      ETFs apalancados con pocos filers).
-    Wiring en pipeline_contractual.py entre units y delta:
-        _splits = detect_splits(s_prev["INFOTABLE"], s_curr["INFOTABLE"])
-        if _splits:
-            u_prev = adjust_units_for_splits(u_prev, _splits)
-    Resultado E2E Q1->Q2: BKNG sum_delta +688,410,346 -> -27,766,667.
-    8 splits detectados: BKNG 24x, Carvana 5x, Gossamer 2x, Nocera
-    2x, OSR 2x, Vanguard 500 Growth 5x, VUG 5x, PS INTL 5x.
-    Bono 928298AR9 excluido. T-REX 2X y DEFIANCE DAILY excluidos.
-    14 tests en test_sec_13f_split_detection.py.
-
-11. VERIFICAR-MTE-STATE-PROD (b73294f7):
-    Item existia solo en 00_ARRANQUE (no en REGISTRO, bug de
-    coherencia). Creado FIXED con evidencia: run 42020621979 confirma
-    mte_state.json schema v2 con mte_state=DEGRADED, futures_status=
-    STALE, confidence=0.507, scenario=RECESSION. Reporte L153-154
-    publica MTE Status: DEGRADED y Futures Status: STALE. Coherente
-    con indicators/mte/status.py.
-
-12. Incidente CI (340bfadc):
-    Los 2 scheduled del 05-11 (41961991490 03:30, 42014568033 10:54)
-    fallaron en "Run tests" antes de "Run Macro Sectorial". Causa:
-    los scripts nuevos (check_yahoo_revision.py,
-    freshness_gap_observer.py) no estaban en CI_ENTRYPOINTS ni
-    cubiertos por _local_names() de test_imports_declarados. Los 2
-    tests de prevencion lo detectaron exactamente como fueron
-    disenados. Fix: anadir los 2 scripts a CI_ENTRYPOINTS + extender
-    _local_names() con scripts/*.py (los entry points se invocan con
-    "py scripts/foo.py" que pone scripts/ en sys.path[0]).
-    Autocritica: debi ejecutar la suite completa antes del commit de
-    CHECK-YAHOO-REVISION, no solo los tests especificos. La regla
-    existe (01_METODO §3).
-
-13. Bugs de coherencia documental (varios commits):
-    - HEAD literal en 00_ARRANQUE y HANDOFF stale por auto-referencia
-      (el commit que los actualiza cambia HEAD). Solucion: caveat
-      "(consultar git log --oneline -1)".
-    - "22 commits" en HANDOFF era falso: 27 contenido + 4 cierre = 31.
-    - "Se auto-resuelven con el proximo refresh" en 00_ARRANQUE era
-      falso: los tests NO se auto-resolvian con el refresh del bot
-      antes de 3172eaf5 (parquets stale). Corregido a hipotesis
-      refutada + observatorio.
-    - 4 mojibakes en 05_BITACORA §2 y §1777: triple UTF-8 -> latin-1
-      -> UTF-8. Corregidos con bytes.replace() exactos.
-    - COMMIT-46A3B370-AUDIT seguia OPEN en 00_ARRANQUE tras cerrarlo
-      WONT_FIX en REGISTRO (incoherencia introducida en fbc60969).
-    - 9f59365a (HON commit) quedo huerfano tras rebase: SHA real en
-      main es cc576403. Corregido en 87e09b73.
+1. **Q6 anti-drift** (`3761fb0e`): `test_derivacion_por_clase` verifica los 8 campos de
+   `_build_registry_entry`. Antes: 4/8. Commit aislado.
+2. **Q7 guard** (`24a6a74f`): `resolve_security_identity` raise si 3 kwargs None y cusip
+   no vacio. Footgun real de HON 2026-11-05. 2 tests ajustados + 1 nuevo.
+3. **Q14 mojibake durable** (`9a368461` + `a0d167fa` + `a041e3a0`): heuristica Unicode
+   (2-byte, 3-byte), auto-descubrimiento de roots, whitelist por fichero. 3 centinelas.
+   Autocritica: `9a368461` sobrescribio test existente sin `.orig`; subsanado en `a0d167fa`.
+4. **Q13 enforcement** (`9443f7da`): `scripts/hooks/` con pre_commit_check.py,
+   pre_push_check.py, install.py. Stubs sh en .git/hooks (git-for-windows compatible).
+   12 tests centinela. Instalado y validado en 2 pushes reales.
+5. **Bug E -0.00** (`a37e1a9a`): `f"+.2f"` sobre z=-0.001 -> `-0.00` en Alertas
+   de Divergencia. Fix durable: `src/formatting.py:format_signed_float`. 5 sitios
+   migrados (price_flow_divergence x2, alerts x3). 21 tests (18 param + 2 integracion
+   + 1 AST centinela).
+6. **Bug B WARN stale** (`7d2724b6`): Sector Breadth decia "sesion NYSE pendiente"
+   cuando la causa era LSE 18.6% (70/86 tickers). Fix: `_compute_stale_context`
+   deriva el mercado con menor coverage desde `_compute_by_market`. 10 tests nuevos.
+   `test_pipeline_breadth_metrics` actualizado a 5 keys. Docstring sync.
+7. **Bug F granularidad** (`7d0c6732`): Data Freshness mostraba Yahoo CURRENT
+   (sectores 11/11) mientras Provenance declaraba WALK_BACK con effective_date
+   del 04-11 (tickers 408/530). Fix: nota forward-reference cuando walk_back_applied.
+8. **Cierre documental intermedio** (`e9cba8e6`): ESTADO_SISTEMA + 04_HISTORICO S30
+   + 00_ARRANQUE §3.
+9. **Q12 gobernanza** (`bbd9e4b4`): revision 10-11 adelantada a 06-11. Ventana
+   2026-10-16 a 2026-11-06, 22 dias, 101 runs scheduled cruzados con run-system
+   via gh run view. CRON-SLOTS-OBS -> FIXED (21/22 dias con >=1 run, umbral >=2).
+   SCHEDULER-DELAYS -> WONT_FIX (p95 <=8h, delays no son metrica util porque los 5
+   slots nominales solapan con rangos 1-9h). Evidencia en 04_HISTORICO S30.
+10. **Q10 check_yahoo_revision** (`cf75d79a`): script reescrito con --with-issues.
+    Abre/actualiza/cierra issue label yahoo-revision en deteccion WARN/FAIL, cierra
+    al volver a OK. `daily_run.yml`: `issues: write` en run-system + env GH_TOKEN en
+    step + --with-issues. 12 tests. Retrocompatible sin --with-issues.
+11. **Diagnostico LSE** (no commit): scraper LSE cubre 20/86 LSE tickers (20 con RIC
+    en INSTRUMENTS; CPG.L sin RIC). 16 traidos 05-11. 70 FTSE 250/small caps sin
+    cierre Yahoo. `tickers_from_yahoo == tickers_missing` semanticamente correcto.
+    WONT_FIX razonado (ampliar INSTRUMENTS requiere Refinitiv no disponible).
 
 **Verificacion.**
 - pyflakes LIMPIO, compileall OK.
-- Suite completa: 4469 passed, 0 failed, 2 skipped.
-- gobernanza [OK], poda [OK].
-- E2E run.py en local: 17.1 min, gate 11/11, 13 contratos resueltos.
-- Run scheduled 42020621979 (11:38 UTC, head 5055a2f3): success.
-  3 cambios nuevos verificados: Observe freshness gap (target=2026-11-04
-  gap_bus=0), Check yahoo revision (sesion nueva), 13 contratos
-  resueltos. Gate 11/11.
-- Reporte auditado: 0 strings de modulos retirados, 0 mojibakes con
-  -Encoding UTF8, 0 nan%/-0.00, N/D count 8 (normal), MTE Status:
-  DEGRADED + Futures Status: STALE (fix S28 en prod), FRESHNESS_* por
-  bloque (fix B3 en prod), wyckoff_5bx_counter.json en artifact.
+- Suite completa: 4553 passed, 2 skipped, 0 failed (148s).
+- Gobernanza [OK], bitacora [OK], poda [OK].
+- Hooks validados: pre-commit + pre-push en 2 pushes reales.
+- 2 runs scheduled post-fix (06-11): 03:26 success (run-system completo), 10:51+12:55+15:01
+  skipped (sin sesion nueva, correcto).
 
 **Pendiente al cierre.**
-- Cierre documental de sesion 29 (este HANDOFF + 05_BITACORA +
-  04_HISTORICO). 00_ARRANQUE y REGISTRO ya actualizados.
-- Nada mas: los 5 items del saliente cerrados, 3 bugs reales arreglados,
-  incidente CI corregido.
+- Q15 (confidence<0.5 MTE + FRESHNESS_* + SATURATED/MAD0_SAME): sesion aparte con
+  decision producto. Reclasificado a baja urgencia: reporte ya publica UNCONFIRMED
+  correctamente cuando confidence < 0.50.
+- Cierre formal S30 (este HANDOFF + bitacora + 00_ARRANQUE §4.3).
 
 ## 3. PENDIENTES VIVOS
 

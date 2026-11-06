@@ -44,6 +44,32 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-06 — Sesion 30: 4 deudas codigo S29 + 3 bugs reporte + Q10 + Q12
+
+**Objetivo.** Cerrar deuda codigo del cuestionario S29 (18 preguntas al saliente)
+antes de Q10/Q12/Q15. Prioridad: bugs reales > deuda durable > documental.
+
+**Hecho.**
+- Q6 anti-drift (`3761fb0e`): `test_derivacion_por_clase` verifica los 8 campos de `_build_registry_entry`.
+- Q7 guard (`24a6a74f`): `resolve_security_identity` raise si 3 kwargs None y cusip no vacio. Footgun real de HON 05-11.
+- Q14 mojibake durable (`9a368461` + `a0d167fa` + `a041e3a0`): heuristica Unicode, auto-descubrimiento de roots, whitelist por fichero, 3 centinelas. Autocritica: `9a368461` sobrescribio test existente sin `.orig`, subsanado en `a0d167fa`.
+- Q13 enforcement (`9443f7da`): `scripts/hooks/` con pre_commit_check.py, pre_push_check.py, install.py. Stubs sh en .git/hooks, validados en 2 pushes reales. 12 tests centinela.
+- Bug E -0.00 (`a37e1a9a`): `f"+.2f"` sobre z=-0.001 -> `-0.00` en Alertas de Divergencia. Fix durable: `src/formatting.py:format_signed_float`. 5 sitios migrados. 21 tests (18 param + 2 integracion + 1 AST centinela).
+- Bug B WARN stale (`7d2724b6`): Sector Breadth decia "sesion NYSE pendiente" cuando la causa era LSE 18.6%. Fix: `_compute_stale_context` deriva el mercado con menor coverage desde `_compute_by_market`. 10 tests nuevos. `test_pipeline_breadth_metrics` a 5 keys.
+- Bug F granularidad (`7d0c6732`): Data Freshness (Yahoo CURRENT, sectores 11/11) vs Provenance (WALK_BACK, tickers 408/530). Fix: nota forward-reference cuando walk_back_applied. 3 tests.
+- Cierre documental intermedio (`e9cba8e6`): ESTADO_SISTEMA + 04_HISTORICO S30 + 00_ARRANQUE 3.
+- Q12 gobernanza (`bbd9e4b4`): CRON-SLOTS-OBS -> FIXED (21/22 dias con >=1 run); SCHEDULER-DELAYS -> WONT_FIX (p95 <=8h). Ventana 22 dias, 101 runs cruzados con run-system.
+- Q10 check_yahoo_revision (`cf75d79a`): script con --with-issues. Abre/cierra issue label yahoo-revision. `daily_run.yml`: issues: write + env GH_TOKEN. 12 tests.
+- Diagnostico LSE (no commit): scraper cubre 20/86 LSE tickers. 70 FTSE 250/small caps sin cierre Yahoo. WONT_FIX razonado.
+
+**Commits.** `24a6a74f`, `3761fb0e`, `9a368461`+`a0d167fa`+`a041e3a0`, `9443f7da`, `a37e1a9a`, `7d2724b6`, `7d0c6732`, `e9cba8e6`, `bbd9e4b4`, `cf75d79a`, cierre formal S30.
+
+**Pendiente.**
+- Q15 (confidence<0.5 MTE + FRESHNESS_* + SATURATED/MAD0_SAME): sesion aparte con decision producto. Baja urgencia.
+- WYCKOFF-5BX: BLOCKED_EXTERNAL (~2027). C2-920: BLOCKED_EXTERNAL.
+
+**Proximo paso sugerido.** Sesion de Q15 con decision producto, o reabrir frentes pendientes segun REGISTRO.
+
 ### 2026-11-05 — Sesion 29: 3 bugs reales (D1, HON, BKNG) + 5 items del saliente
 
 **Objetivo.** Cerrar los 5 items del saliente (FORCE-DISPATCH,
@@ -1627,310 +1653,6 @@ USA. DICT3-TOP20-COBERTURA sigue OPEN (deuda: 6 acciones del
 dictamen). DICT3-H04-INTERVALS OPEN. 4 frentes nuevos abiertos
 como tickets: P1-H01 a P1-H06, TOP20-FALTANTES-DATOS,
 TOP20-EU-HOLDINGS-INCOMPLETOS, indices USA/EU/IWM.
-
-### 2026-10-25 (actualizacion de traspaso)
-
-**Objetivo.** Actualizar HANDOFF + 00_ARRANQUE + 04_HISTORICO +
-05_BITACORA para replicar el trabajo en otra IA con contexto completo.
-
-**Hecho.**
-- HANDOFF reescrito sesion 10. Estado real: HEAD f5cb8834, 3755/2
-  tests, gate 11/11, 25 writers, PIT activo, structure_ratio continua,
-  sector_regime_matrix v2.
-- 00_ARRANQUE §3: gate 10/10 -> 11/11, 24 writers -> 25, bloque
-  dictamen anadido.
-- 04_HISTORICO: seccion sesion 10 con detalle por hallazgo.
-- 05_BITACORA: esta entrada.
-
-**Commits.** pendiente.
-
-**Pendiente.**
-- DICT3-H04-INTERVALS, DICT3-H05-FILLNA-FUTURE, DICT3-TOP20-COBERTURA,
-  DICT3-REACCUMULATION.
-- SOW-BEAR-CONFIRMATION (contrato v1.10).
-- Deuda documental: 62 (Tests 3776 -> 3755), 00_ARRANQUE (writers
-  20 -> 25).
-
-**Proximo paso sugerido.** DICT3-H05-FILLNA-FUTURE (acotado) o cerrar
-deuda documental residual (62 + 00_ARRANQUE).
-
-### 2026-10-25 (sesion 10) - Respuesta al dictamen externo (doc 68)
-
-**Objetivo.** Cerrar los huecos documentales del dictamen externo
-2026-10-25 tras los cierres de codigo (H-03, H-06, PIT, structure_ratio
-continuo, Xetra).
-
-**Hecho.**
-- `docs/auditoria/wyckoff/68_respuesta_dictamen_2026-10-25.md`: doc
-  formal de respuesta. Detalle por hallazgo, pruebas aportadas, pruebas
-  pendientes, cambios estructurales.
-- REGISTRO:
-  - `DICT3-WYCKOFF-AUDIT-2026-10-25` FIXED (frente global).
-  - `DICT3-H04-INTERVALS` OPEN (ICs, tamanos muestrales, solapamiento).
-  - `DICT3-H05-FILLNA-FUTURE` OPEN (bar_flags sin romper v1.8).
-  - `DICT3-TOP20-COBERTURA` OPEN (universo dinamico 80-90%).
-  - `DICT3-REACCUMULATION` OPEN (re-acumulacion continuacion).
-  - `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE` -> SUPERSEDED por Bloque 2.
-  - Nota en REP-AUDIT-20261022-WYCKOFF-P7-B4-B5-B3 (B4 = H-05 dictamen).
-- HANDOFF: §3 CERRADOS con DICT3 FIXED + SUPERSEDED. §4.2 anade los
-  4 DICT3 OPEN. Arreglada numeracion §4 (habia dos 4.1 duplicados).
-- Bug menor: doc 67 no existe como fichero (el analisis se hizo en
-  chat). Doc 68 lo sustituye.
-
-**Commits.** pendiente.
-
-**Pendiente.**
-- `DICT3-H04-INTERVALS`: congelar protocolo antes de inferencia.
-- `DICT3-H05-FILLNA-FUTURE`: bar_flags en build_ticker_df.
-- `DICT3-TOP20-COBERTURA`: universo dinamico.
-- `DICT3-REACCUMULATION`: frente nuevo con pre-registro.
-- `SOW-BEAR-CONFIRMATION`: contrato v1.10 pendiente auditor.
-- `WYCKOFF-5BX`: ~2027.
-- Deuda documental residual: 62 (Tests 3776 vs 3705), 00_ARRANQUE
-  writers 20 vs 24.
-
-**Lecciones.** "10 anos" del informe preliminar era error propio:
-el parquet market_data tiene 2021-10-04 pero el historico Wyckoff
-regenerado empieza en 2022-08-11 (1086 sesiones, ~4.2 anos). El
-doc 67 que se menciono en mensajes previos nunca se commiteo; doc 68
-lo sustituye con las cifras correctas.
-
-### 2026-10-25 (sesion 9) - Fase 3: regeneracion historica
-
-**Objetivo.** Regenerar `sector_wyckoff_distribution` con el universo
-correcto (top-20, >=200 barras) sobre todo el historico.
-
-**Hecho.**
-- `scripts/regenerate_wyckoff_history.py`: 12 workers, checkpoint,
-  validacion obligatoria contra `.csv` activo.
-- 11946 filas (1086 fechas), 2022-08-11 -> 2026-10-23.
-- 49.8 min, 234.197 invocaciones classify_phase_at.
-- Validacion: 11 filas x 20 columnas identicas en 2026-10-23.
-- Swap: `.csv` activo = regenerado. `.v1.csv` (342) queda como backup.
-
-**Hallazgo critico.**
-`structure_positive = (pct_acc + pct_markup) >= 50` da 0/11946 en el
-historico completo. `pct_range` domina (media por sector 47.4%-91.6%).
-El umbral es inalcanzable. Fase 5 requiere rediseño de la metrica.
-
-**Commits.** Codigo/datos en este commit. Doc en commit siguiente.
-
-**Pendiente.**
-- Fase 5: rediseño de structure_score con pre-registro. El umbral `>=50`
-  no se toca hasta tener evidencia empirica sobre la que decidir.
-- Fase 6: descarga unificada (bloqueada por falta de 4 ficheros).
-
-**Lecciones.** Una metrica binaria con umbral fijo puede estar muerta
-durante meses sin que nadie lo note, si el test no mide su discriminacion
-temporal. Con 1086 fechas x 11 sectores, 0/11946 es evidencia solida de
-que `>=50` no discrimina.
-### 2026-10-25 (sesion 8) - Fase 4b: rename compute_sector_scores
-
-**Objetivo.** Resolver confusion de nombres entre dos 'scores' del
-reporte: `compute_sector_scores` (6 componentes sobre el ETF) y
-`compute_structural_score` (3 componentes via STRUCTURAL_WEIGHTS).
-
-**Hecho.**
-- Rename `compute_sector_scores` -> `compute_sector_rank_score`.
-- 31 reemplazos en 7 ficheros.
-- Sin cambio de contrato ni calculo.
-- Suite 3717/2. Run real verificado.
-
-**Commits.** Codigo en este commit.
-
-**Pendiente.**
-- Fase 3: regeneracion historica (proyecto separado).
-- Fase 5: structure_score con pre-registro (>=50 da 0/11).
-- Fase 6: descarga unificada (bloqueada por 4 ficheros).
-
-**Lecciones.** Un nombre generico ('sector_scores') oculta la
-ambiguedad. Renombrar explicita lo que el codigo hace.
-### 2026-10-25 (sesion 7) - Fase 2: schema_v en frescura
-
-**Objetivo.** Cerrar asimetria Fase 1: `.schema` existia pero el
-reporte no lo publicaba.
-
-**Hecho.**
-- `_read_schema_version()` lee `<path>.schema` (entero).
-- `compute_data_quality` anade `schema_v` por fila post-loop.
-- `render_calidad_datos` publica columna Schema entre Cobertura y Notas.
-- Nota al pie con semantica (vN de `.schema`, v1 implicito, doc 64).
-
-**Commits.** Codigo en este commit.
-
-**Pendiente.**
-- Fase 3: regeneracion historica (proyecto separado).
-- Fase 4b: renombrar `compute_sector_scores` (trend, no estructura).
-- Fase 5: `structure_score` con pre-registro.
-- Fase 6: descarga unificada.
-
-**Lecciones.** Simetria: un contrato que se valida internamente (gate
-check 11) debe exponerse al operador (reporte). Si no, el gate sabe
-algo que el usuario no ve.
-### 2026-10-25 (sesion 6) - Fase 4: unificacion estructura
-
-**Objetivo.** Cerrar la divergencia agregado vs CSVs detectada en
-auditoria: 4 caminos paralelos de estructura sectorial.
-
-**Hecho.**
-- `compute_wyckoff_snapshot`: una pasada de `classify_phase`, top-20
-  por grupo + 200 barras. 14 columnas (12 contrato + n_bars + evaluable).
-- `sector_wyckoff_distribution` v3.0: consume snapshot. Universo pasa
-  de "todos + 60" a "top-20 + 200".
-- 6 CSVs: proyecciones del mismo snapshot.
-- `run.py`: calcula una vez, pasa a los 2 consumidores.
-- `phase_since` ISO date (antes timestamp con hora).
-- Test coherencia: agregado == CSVs por fase, 11 sectores.
-- Hotfix urgente: fixture de tests borraba `.schema` reales y
-  sobrescribia `.v1.csv`. Recuperado desde git. `persist` endurecido.
-
-**Commits.** `9960cdac` (codigo). Hotfix y datos en commits siguientes.
-
-**Pendiente.**
-- Fase 4b: renombrar `compute_sector_scores` (mide tendencia, no estructura).
-- Fase 5: `structure_score` continuo. `>=50` sigue dando 0/11.
-- Fase 6: descarga unificada (Router fed/treasury).
-
-**Lecciones.** Una fixture de test que limpia artefactos de produccion
-es un bug estructural, no un detalle. El `.v1.csv` (historico 342 filas)
-se recupero desde git solo porque estaba en un commit. Si no, se pierde
-permanentemente. Los tests de integracion con path real requieren
-mtime cutoff o path_override.
-### 2026-10-25 (sesion 5) - Fase 1: schema versioning outputs
-
-**Objetivo.** Cerrar el incidente de schema mezclado detectado en
-auditoria post-sesion-4 (auditoria completa solicitada por el usuario:
-descarga, fuentes, Wyckoff, arquitectura).
-
-**Diagnostico.** Commit `415487ff` (sesion 3) anadio FORMING/CONFLICT
-a `sector_wyckoff_distribution` sin versionar. CSV con 330 filas v1 +
-11 filas v2 sin senal. `persist()` ciego, gate y data_quality no
-detectaban.
-
-**Hecho.**
-- `OutputSpec.schema_version` (default 1, sector_wyckoff_distribution=2).
-- `persist()`: COPIAR backup v{old} si schema difiere, escribir nuevo
-  sin appendear, escribir `.schema` lateral.
-- Gate check 11: schema CSV vs spec, reporta MIGRATED.
-- `.gitignore`: `outputs/**/*.schema` + `outputs/history/*.v[0-9]*.csv`.
-- `finalize.save_regime_history`: path_override (retrocompatible).
-- `conftest.py`: fixture autouse limpia `.schema` tras tests.
-- `test_output_schema.py`: 6 tests.
-- Run real 15 min, gate 11/11, CSV regenerado (11 filas v2).
-
-**Commits.** `c9a848b5` (codigo), `a88e85da` (CSV).
-
-**Pendiente (Fase 2-6).**
-- Fase 2: data_quality con schema_v en frescura.
-- Fase 3: regeneracion historica (proyecto separado).
-- Fase 4: unificacion de 4 caminos de estructura sectorial.
-- Fase 5: structure_score continuo.
-- Fase 6: descarga unificada (Router).
-
-**Lecciones.** Un cambio de schema sin version explicita se convierte
-en historico envenenado silencioso. El append ciego es la causa raiz
-del bug. `git log -p` + analisis de columnas por fecha fue como se
-detecto. Requirio ~3h de auditoria para localizar el commit `415487ff`.
-
-### 2026-10-25 (sesion 4 continuacion 2) - Cierre STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE
-
-**Objetivo.** Cerrar la ultima deuda de codigo de sesion 3.
-
-**Hecho.**
-- Retirado `leader_breadth=0.5` de la firma de
-  `regimes/structural_engine.py::compute_structural_score`.
-- Confirmado en auditoria que el cuerpo NO usaba el parametro:
-  `STRUCTURAL_WEIGHTS` = {rs_structural 0.50, flow_structure 0.30,
-  persistence 0.20}, suma 1.0. Cosmetico puro, no sesga el calculo.
-- AST: 10 llamadores, todos sin el kwarg.
-- 28 focalizados + 3705/2 suite verde, pyflakes/compileall limpios.
-
-**Commits.** `7679d3fb`.
-
-**Pendiente.**
-- `REPORT-ENCODING-MOJIBAKE-ADC` (nuevo): mojibake preexistente [FALSE_POSITIVE 2026-10-25: reporte en UTF-8 correcto, mojibake era consola PowerShell]
-  en bloque Clasificacion de Evidencia del reporte.
-- `CURRENT-PHASE-BASIS-CSV`, `ACCUMULATION-ZERO`,
-  `VALIDATION-GATE-NO-STANDALONE`, `IWM-HOLDINGS-EXPANSION`,
-  `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE`,
-  `PODA-BITACORA-DIA-EN-CURSO` (documentales u observacionales).
-- SOW-BEAR-CONFIRMATION (contrato v1.10).
-
-**Lecciones.** Un parametro con default neutro que nadie pasa puede
-parecer sesgo silencioso pero ser cosmetico. La verificacion del
-cuerpo (no solo de la firma) lo confirma en 2 minutos. En este caso
-el frente era prioridad 2 en HANDOFF; debio ser prioridad 3 desde
-el principio.
-
-### 2026-10-25 (sesion 4 continuacion) - Cierre C4.5-SLPM-STRINGS-RESIDUALES
-
-**Objetivo.** Cerrar C4.5-SLPM-STRINGS-RESIDUALES (deuda de
-sesion 3).
-
-**Hecho.**
-- 9 ficheros productivos limpiados: `dependency_tracker.py`
-  (v1.2->v1.3, DIRECT sin SLPM/stock_leader/Leader Breadth,
-  liquidity_v2, +WLS), `sectorial.py:54`, `rankings.py:90,145`,
-  `engines.py:2`, `rs_internal.py:6`, `momentum.py:73`,
-  `report_generator.py:169` (bloque huerfano),
-  `helpers.py` (Acciones lideres), `run.py` (limpieza CSVs de
-  lideres).
-- Commit codigo `c1e4af2e`.
-- Run real 14.4 min, gate 10/10, 24 writers OK, cero menciones
-  SLPM en reporte, cero "Acciones lideres".
-- Nueva deuda `REPORT-ENCODING-MOJIBAKE-ADC` (OPEN): mojibake [FALSE_POSITIVE 2026-10-25: reporte en UTF-8 correcto, mojibake era consola PowerShell]
-  preexistente en el bloque clasificacion de evidencia del
-  Anti-Double-Counting ("Clasificación", "Crédito"). Detectado
-  en A5 del run real. No introducido por C4.5.
-
-**Commits.** `c1e4af2e` (codigo).
-
-**Pendiente.**
-- `STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE` (cosmetico confirmado).
-- `REPORT-ENCODING-MOJIBAKE-ADC` (nuevo, verificar fix en escritor [FALSE_POSITIVE 2026-10-25: reporte en UTF-8 correcto, mojibake era consola PowerShell]
-  del reporte).
-- `helpers.py` ya sin `analisis_lideres.csv`, pero la seccion
-  "Acciones lideres" desaparecio del reporte: verificar que no
-  rompe el contrato de la tabla Data Freshness.
-- SOW-BEAR-CONFIRMATION (contrato v1.10).
-
-**Lecciones.** El grep de C4.5 inicial (sesion 3) habia listado 3
-notas; el grep expandido post-Commit A dio 9 ficheros. La leccion
-de HANDOFF §6 sobre "auditar el reporte en 2 dimensiones" aplica
-tambien al codigo: grep por fichero, no por linea conocida.
-
-### 2026-10-25 (sesion 4) - Cierre VERIFY-LEADER-SELECTION-ROTO
-
-**Objetivo.** Cerrar el primer item tras sesion 3.
-
-**Hecho.**
-- `git rm validation/verify_leader_selection.py` (importaba
-  `config.index_tickers`, borrado en C4.4; leia `analisis_lideres*.csv`
-  no generados desde C4.3).
-- Retirados del `daily_run.yml`: step "Verify leader selection"
-  (202-203), artefactos `analisis_lideres*.csv` (226-227) y
-  `slpm_state.json` (239).
-- `git rm outputs/state/slpm_state.json` (fosil sin productor).
-- `data_quality.py:233` comentario corregido.
-- `settings.py:87-90` bloque `# SLPM COVERAGE` huerfano eliminado.
-- `generate_docs.py:214` fallback muerto eliminado.
-- `run.py:62` comentario sin `verify_leader_selection`.
-
-**Commits.** `37bca52d` (codigo).
-
-**Pendiente.**
-- `C4.5-SLPM-STRINGS-RESIDUALES` (siguiente, con run real + auditoria
-  2 dimensiones).
-- `STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE` (cosmetico confirmado:
-  `leader_breadth` no se usa en el cuerpo de `compute_structural_score`).
-- `helpers.py:136` y `run.py:64` (residuales `analisis_lideres`,
-  inocuos, van con C4.5).
-- SOW-BEAR-CONFIRMATION (contrato v1.10).
-
-**Lecciones.** El test de gobernanza exige commit alcanzable en
-`refs/heads/` o `refs/tags/` y evidencia >= 20. No se puede marcar
-`FIXED` en el mismo commit que crea el cambio. Secuencia correcta:
-commit de codigo -> commit documental con hash.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 

@@ -5307,7 +5307,7 @@ items:
 - id: DAILY-RUN-FAIL-40992758129
   tipo: frente
   ciclo: '2026-10-31'
-  estado: OPEN
+  estado: WONT_FIX
   descripcion: 'Run daily_run 40992758129 fallo hace ~21h (2026-10-30). Runs
 
     posteriores OK, incluido 41037457375 (19m7s, real). Hipotesis:
@@ -5315,9 +5315,13 @@ items:
     rate limit o fallo puntual de proveedor externo.
 
     '
-  siguiente_accion: 'Verificar si reaparece. Si no reaparece en 7 dias, cerrar
+  razon: 'Verificado 2026-11-06 (sesion 30): ultimo run fallido 40992758129
 
-    WONT_FIX razonado.
+    el 30-10 (head 89b6e0a2). Sin reaparicion en 7 dias. cron_slots WARN
+
+    tampoco en ultimos 30 runs. Hipotesis (rate limit / fallo puntual
+
+    proveedor externo) confirmada por ausencia de patron.
 
     '
   evidencia: 'gh run list --workflow=daily_run.yml --limit 5 (2026-10-31):

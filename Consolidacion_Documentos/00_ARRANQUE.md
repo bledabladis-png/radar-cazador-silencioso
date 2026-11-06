@@ -186,11 +186,11 @@ Sistema holdings-based en produccion desde sesion 3 (2026-10-24). Modulos, pre-r
 - **C2 (920):** BLOCKED_EXTERNAL. Auditor debe publicar comando + HEAD del valor externo (-4.264.449.932). Sin eso, no reproducible.
 - **WYCKOFF-5BX:** BLOCKED_EXTERNAL. `n_confirmed_H20_complete >= 550` (~2027). Instrumentado (54d4a23f). Valores: 27/68 (02-11) -> 31/73 (04-11). Ver `outputs/state/wyckoff_5bx_counter.json`.
 - **SEMANTICA-SIN-CONTRATO-INVENTARIO:** OPEN. Inventariar conceptos con semantica sin contrato. ROI bajo, no urgente.
-- **DAILY-RUN-FAIL-40992758129:** 7 dias sin reaparecer -> revisar 06-nov-2026, cerrar WONT_FIX si no.
+- **DAILY-RUN-FAIL-40992758129:** WONT_FIX razonado 2026-11-06. Ultimo fallo 30-10 (`89b6e0a2`), sin reaparicion en 7 dias. `cron_slots` WARN tampoco en ultimos 30 runs.
 - **H5.3:** cron 20-nov-2026 06:17 UTC.
 - **RECEIPT-AUDIT-LAG:** cierre 17-nov-2026 (4 semanas de obs).
-- **CRON-SLOTS-OBS:** revision 10-nov-2026 (runs 20-oct a 10-nov).
-- **SCHEDULER-DELAYS:** p95 delays 10-nov-2026.
+- **CRON-SLOTS-OBS:** FIXED 2026-11-06 (revision adelantada). 21/22 dias con >=1 run scheduled en ventana 22 dias, 1 solo dia con 0/5 slots (16-10) < umbral 2. Evidencia en 04_HISTORICO S30. Commit `bbd9e4b4`.
+- **SCHEDULER-DELAYS:** WONT_FIX razonado 2026-11-06 (revision adelantada). p95 <=8h cumple criterio del propio item. Delays no son metrica util con slots nominales que solapan 1-9h. 4 fallos de la ventana son `340bfadc` (cerrado S29). Evidencia en 04_HISTORICO S30. Commit `bbd9e4b4`.
 - **INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH:** CERRADO en S28.
 - **2 tests skipped** (`test_freshness.py` network, opt-in).
 - **test_freshness**: hipotesis inicial refutada 2026-11-05. Los 3 tests se auto-resuelven con un refresh real del bot (post-3172eaf5: 4469 passed, 0 failed). Item OPEN `TEST-FRESHNESS-UMBRAL-VS-CADENCIA` en REGISTRO: observatorio `freshness_gap_observer.py` recoge serie hasta 11-10; cierre formal con >=5 filas.
