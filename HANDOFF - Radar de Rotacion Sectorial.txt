@@ -10,13 +10,13 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-06, sesion 30)
 
-HEAD: `cf75d79a` (consultar `git log --oneline -1` para el actual).
+HEAD: `7119f01b` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        4553 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 294 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 302 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 13 (_IMPLEMENTED_CONTRACTS), 5 familias.
@@ -30,7 +30,7 @@ Analisis economico 30-oct (FASE-A): 5 items cerrados.
 Sesion 30 (2026-11-06): 4 deudas de codigo S29 cerradas (Q6, Q7, Q13, Q14),
 3 bugs del reporte arreglados con codigo (E -0.00, B WARN stale, F granularidad),
 Q10 (check_yahoo_revision con issues) cerrado, Q12 (CRON-SLOTS-OBS + SCHEDULER-DELAYS)
-cerrado con datos empiricos de 22 dias. 11 commits net.
+cerrado con datos empiricos de 22 dias. 13 commits net (incluye cierre formal + actualizacion documental).
 
 Deuda codigo S29 cerrada: Q6 anti-drift, Q7 guard, Q13 hooks, Q14 mojibake durable.
 Bugs reporte 06-11 arreglados: E (-0.00), B (WARN stale con causa real), F (Data Freshness -> Provenance).
