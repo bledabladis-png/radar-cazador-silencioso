@@ -44,6 +44,56 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-06 — Sesion 31: 9/10 huecos del cuestionario S30
+
+**Objetivo.** Responder al saliente S30 y cerrar los huecos reales
+detectados en el cuestionario (22 preguntas: 5 prioritarias + 17
+sistematicas). Prioridad: verificacion pura > bugs > tests > docs.
+
+**Hecho.**
+- 10 huecos reales identificados. 9 cerrados; el #1 (`issues: write`
+  en CI) solo verificable tras scheduled 07-11.
+- Hallazgo grave no anticipado: el AST guard de `REPORT-NEGATIVE-ZERO`
+  (S30) estaba roto en Python 3.14 (local + CI). PEP 701 envuelve el
+  `format_spec` en `ast.JoinedStr`; el guard solo miraba
+  `ast.Constant`. Pasaba el test en falso. Al reparar el guard se
+  destaparon 5 sitios no migrados (validation_gate:103,105,
+  confirmation:134, etf_flows:34, header:106).
+- LSE a REGISTRO como WONT_FIX razonado: scraper es repo externo
+  privado con cron propio, no rama paralela. Ampliar a 86 tickers
+  requiere Refinitiv no disponible.
+- Euronext/XETRA/BME cubiertos como worst_market en Sector Breadth
+  (antes solo LSE). Codigo productivo limpio verificado.
+- Q15 (MTE UNCONFIRMED): umbral real vive en `volatility_mte.py:94`
+  (no en `scoring.py` como apunto el saliente). 12 tests parametrizados
+  + 1 de sincronizacion texto<->logica (extrae el umbral del texto
+  contractual con regex, sin hardcodear).
+- 3 sincronizaciones de conteo de tests (4556 -> 4567 -> 4579). El
+  patron estructural (conteo duplicado en 4 sitios) queda anotado
+  como deuda TEST-COUNT-DUP en HANDOFF §3.6.
+- Gobernanza: item nuevo `REPORT-NEGATIVE-ZERO-GUARD-PY314` (FIXED,
+  d4e80b9b). Enmienda a `REPORT-NEGATIVE-ZERO` para no dejar
+  evidencia falsa en el registro canonico. 303 -> 304 items.
+
+**Commits.** `99142a6a`, `de9df670`, `d4e80b9b`, `4dc1c32f`,
+`ff8d040e`, `69cab02a`, `ea4863c4`, `dfc5dc5d`, `af1ea520`,
+`f258d95e`.
+
+**Pendiente.**
+- #3 Q12 CSV crudo (severidad alta): los 101 runs del observatorio
+  S30 solo estan en prosa en 04_HISTORICO. Requiere sesion dedicada
+  para reconstruir + persistir CSV reproducible + script regenerador.
+- #1 issues:write CI: verificar scheduled 07-11 ~03:26 UTC.
+- Deuda TEST-COUNT-DUP (conteo duplicado en 4 sitios, 3
+  desincronizaciones esta sesion).
+- Deuda FIXED-EVIDENCIA-FALSA (pattern posible en otros FIXED).
+
+**Proximo paso sugerido.** Sesion dedicada a Q12 CSV crudo, o
+verificar #1 tras scheduled 07-11. En paralelo: abrir items formales
+para TEST-COUNT-DUP y FIXED-EVIDENCIA-FALSA en REGISTRO.
+
+---
+
 ### 2026-11-06 — Sesion 30: 4 deudas codigo S29 + 3 bugs reporte + Q10 + Q12
 
 **Objetivo.** Cerrar deuda codigo del cuestionario S29 (18 preguntas al saliente)
