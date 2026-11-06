@@ -3632,3 +3632,38 @@ coherencia), `3aa295fb` (REGISTRO mojibake), `29688163` (runbook §4.5),
 - TEST-FRESHNESS: `scripts/freshness_gap_observer.py`,
   `outputs/history/freshness_gap_observation.csv`.
 - Incidente CI: `tests/test_ci_entrypoints_import.py`, `tests/test_imports_declarados.py`.
+
+## Sesion 2026-11-06 (sesion 30) - Deuda codigo S29 + revision ejecucion + 3 bugs reporte
+
+Continuacion del cuestionario S29 (18 preguntas al saliente). Prioridad: deuda de codigo antes que Q10/Q12/Q15.
+
+### Cierres de deuda codigo (Q6, Q7, Q13, Q14)
+
+- **Q6 anti-drift** (`3761fb0e`): `test_derivacion_por_clase` verifica los 8 campos de `_build_registry_entry` (family, session_calendar, max_lag_days, min_coverage, per_ticker_lag, per_pair_max_lag, activation_req, critical). Antes: 4/8. Un cambio futuro que omita campo en la derivacion ahora falla el test.
+- **Q7 guard** (`24a6a74f`): `resolve_security_identity` con cusip no vacio y 3 kwargs None -> raise. Footgun real: HON 2026-11-05 (caller sin kwargs con entries ya existentes en cusip_equivalence). 2 tests ajustados a pd.DataFrame() explicito, 1 nuevo del raise.
+- **Q14 mojibake** (`9a368461` + `a0d167fa` + `a041e3a0`): complemento al AST de S29. Heuristica Unicode (2-byte: U+00C0-U+00FF + U+0080-U+00BF; 3-byte: U+00E0-U+00EF + U+2018-U+203A/U+0080-U+00BF + U+0080-U+00BF), auto-descubrimiento de roots (ficheros raiz + subdirs excepto EXCLUDE_DIRS justificadas), whitelist por fichero. 3 centinelas. Autocritica: `9a368461` sobrescribio `tests/test_no_mojibake.py` sin .orig. Subsanado en `a0d167fa`. Leccion 01c: Test-Path + .orig antes de write_text en fichero no creado por el patch.
+- **Q13 enforcement** (`9443f7da`): `scripts/hooks/pre_commit_check.py` (pyflakes + compileall sobre src/scripts/tests/config/regimes/indicators, ~10s), `pre_push_check.py` (pytest con xdist si disponible, timeout 600s, bypass `SKIP_PRE_PUSH=1` logueado), `install.py` (stubs sh en .git/hooks o `core.hooksPath` con `--force`, detecta interprete, backup .orig). 12 tests centinela. Instalacion manual: `py scripts/hooks/install.py`.
+
+### Revision ejecucion 06-11 + bugs reporte (B, E, F)
+
+- **Ejecucion 06-11**: 1 run real (03:26 UTC, head `9443f7da`, run-system completo, gate 11/11, artifact `daily-report` 6MB). 3 runs reintento (10:51, 12:55, 15:01) con `run-system` skipped (`should_run=false`, sin sesion nueva). Delay post-close: +9min. Delay reintentos: 1-4h (esperado). Input Q12: `SCHEDULER-DELAYS`/`CRON-SLOTS-OBS` del 10-11 deben medir p95 del slot 03:17, no de todos.
+- **Bug E -0.00** (`a37e1a9a`): `f-string` con `+.2f` sobre z=-0.001 -> `-0.00` en Alertas de Divergencia (Financials 06-11). Fix durable: `src/formatting.py:format_signed_float` normaliza -0.0 -> +0.0 tras redondeo. Migrados 5 sitios: `indicators/price_flow_divergence.py:41,48`, `src/report/alerts.py:57,67,74`. 18 tests param + 2 integracion + 1 AST centinela que prohibe format_spec `+.Nf` directo en src/indicators/regimes/config.
+- **Bug B WARN stale** (`7d2724b6`): Sector Breadth decia sesion NYSE pendiente aunque la causa real fuera LSE 18.6% (70/86 FTSE 250 sin cierre 05-11). NYSE al 98.55%. Fix: `_compute_stale_context` deriva el mercado con menor `coverage_at_session` desde `_compute_by_market` (filtrando SKIP/INVALID/PENDING); `compute_breadth_metrics` propaga `sector_breadth_stale_context` solo en `DATA_PENDING`; `run.py` -> `generate_daily_report` -> `render_sector_breadth` publica `cobertura insuficiente en {worst_market} ({coverage:.1%})`. Sin hardcode de LSE/NYSE: cualquier mercado con cobertura baja aparece solo. 10 tests nuevos. `test_pipeline_breadth_metrics` actualizado a 5 keys. Docstring actualizado (`test_audit_contracts::test_dict_keys_alineado`).
+- **Bug F granularidad** (`7d0c6732`): Data Freshness mostraba Yahoo CURRENT (sectores 11/11) mientras Provenance declaraba WALK_BACK con effective_date_equity 04-11 (tickers 408/530). Ambas vistas correctas. Fix: `render_data_freshness` acepta `walk_back_applied`; si True, anade nota forward-reference a Provenance. `report_generator` pasa `(provenance or {}).get("temporal_coherence") == "WALK_BACK"`. 3 tests.
+
+### Diagnostico LSE - no bug
+
+El scraper LSE cubre 20/86 tickers LSE (los 20 con refinitiv RIC en INSTRUMENTS; CPG.L sin RIC). El 05-11 trajo 16/20. Los 70 restantes caen a Yahoo, que no tenia cierre 05-11 para FTSE 250/small caps. 16 + 70 = 86 (cuadra). `tickers_from_yahoo == tickers_missing` cuando Yahoo tampoco los trae: semanticamente correcto, operativamente confuso. WONT_FIX razonado: (a) ampliar INSTRUMENTS a 86 requiere fuente RIC (Refinitiv) no disponible; (b) el lag Yahoo small caps no es controlable. Nota: si `INSTRUMENTS` no crece, no hace falta tocar el scraper.
+
+### Commits
+
+`24a6a74f` (Q7 guard), `3761fb0e` (Q6 anti-drift), `9a368461` + `a0d167fa` + `a041e3a0` (Q14), `9443f7da` (Q13 hooks), `a37e1a9a` (E -0.00), `7d2724b6` (B WARN stale), `7d0c6732` (F granularidad).
+
+### Referencias
+
+- Q7: `src/institutional_accumulation/sec_13f/identity/security_identity.py`, `tests/test_sec_13f_security_identity.py`.
+- Q14: `tests/test_no_mojibake.py`, `tests/test_no_mojibake_files.py`.
+- Q13: `scripts/hooks/*`, `tests/test_hooks_install.py`.
+- Bug E: `src/formatting.py`, `tests/test_formatting.py`, `tests/test_no_negative_zero.py`.
+- Bug B: `src/pipeline/breadth_metrics.py::_compute_stale_context`, `tests/test_breadth_stale_context.py`.
+- Bug F: `src/report/freshness.py`, `tests/test_freshness_walk_back_note.py`.

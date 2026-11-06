@@ -90,12 +90,12 @@ Lo que NUNCA haces:
 
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
-Snapshot al cierre del ultimo commit (2026-11-04, sesion 28):
-- HEAD: `4a7bd8ce` (consultar `git log --oneline -1` para el actual)
-- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S28: 4460 passed, 3 failed (test_freshness, datos locales stale, ajenos al codigo), 2 skipped. pyflakes LIMPIO, compileall OK.
+Snapshot al cierre del ultimo commit (2026-11-06, sesion 30):
+- HEAD: `7d0c6732` (consultar `git log --oneline -1` para el actual)
+- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S30: 4541 passed, 0 failed, 2 skipped. pyflakes LIMPIO, compileall OK.
 - Validation Gate: 11/11
 - Working tree: limpio
-- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 287 items. Validador reforzado.
+- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 294 items. Validador reforzado.
 - Corpus documental: v3 (Consolidacion_Documentos/00-08)
 - Contratos temporales: 13 (`_IMPLEMENTED_CONTRACTS`). 9 originales + 4 nuevos (SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO).
 - Scheduled: ultimo run real 41833890715 (04-11 12:58 UTC, gate=true, head bf384387). Ver `gh run list`.
@@ -112,6 +112,9 @@ Snapshot al cierre del ultimo commit (2026-11-04, sesion 28):
 - **MTE degraded state (2026-11-04, sesion 28).** `indicators/mte/status.py` con `VALID`/`DEGRADED`/`INVALID` derivado de `futures_status`, `coverage`, `confidence`. `compute_mte` persiste `mte_state` en `outputs/state/mte_state.json` (schema v1->v2, aditivo) y en el return. `render_mte` publica `MTE Status` cuando != VALID. No usa `validation.py` (valida artefactos, no outputs de modulo). 5 tests centinela.
 
 - **Contratos temporales para fuentes no-equity (2026-11-04, sesion 28).** 4 nuevos `TemporalContract`: `SEC_13F` (data/sec_13f/processed/, max_lag 90), `FINRA_DARKPOOL` (darkpool_history.csv, max_lag 45), `SSGA_PRIMARY_FLOW` (etf_primary_flow.csv, max_lag 5), `FRED_MACRO` (liquidity_state.json, max_lag 90). `_IMPLEMENTED_CONTRACTS` pasa de 9 a 13. Justificacion de las 2 fuentes no cubiertas: HoldingsPIT es log PIT append-only (no mide lag); BME/Euronext cubiertos por EQUITY_EOD + INDEX_EOD_EUROPA.
+- **Utility format_signed_float (2026-11-06, sesion 30).** `src/formatting.py:format_signed_float(value, decimals=2)` normaliza -0.0 -> +0.0 tras redondeo. Elimina `-0.00` en f-strings con `+.Nf` sobre z=-0.001. Migrados 5 sitios (price_flow_divergence, alerts). Test AST centinela prohibe format_spec `+.Nf` directo en src/indicators/regimes/config. Commits `a37e1a9a`.
+- **Hooks pre-commit/pre-push (2026-11-06, sesion 30).** `scripts/hooks/` con `pre_commit_check.py` (pyflakes + compileall, ~10s), `pre_push_check.py` (pytest con xdist, timeout 600s, bypass `SKIP_PRE_PUSH=1`), `install.py` (stubs sh, `core.hooksPath`, backup .orig). Instalacion manual por clon: `py scripts/hooks/install.py`. Commit `9443f7da`.
+- **WARN Sector Breadth con causa real (2026-11-06, sesion 30).** `_compute_stale_context` deriva el mercado con menor `coverage_at_session` desde `_compute_by_market`. `sector_breadth_stale_context` se propaga solo en `DATA_PENDING`. `render_sector_breadth` publica `cobertura insuficiente en {worst_market} ({coverage:.1%})`. Sin hardcode: cualquier mercado aparece solo. Commit `7d2724b6`.
 
 - **Ticker health (2026-10-30, sesion 18).** Registro canonico de estado por ticker (ACTIVE/DELISTED/STALE/TRUNCATED_IPO) en `data/mappings/ticker_health.yaml` + modulo `src/ticker_health.py` (API: get_estado, is_eligible, filter_eligible, exclusion_reason). WBD DELISTED 2026-10-06 (adquirida por Paramount Skydance). `get_stock_list()` filtra DELISTED, `p1_h02` reporta `n_excluidos`, `health_check::check_ticker_health` WARN si ticker ACTIVE stale >=10 sesiones no clasificado. Invariante: ningun ticker ACTIVE pasa 10 sesiones sin datos sin que el operador lo sepa.
 
