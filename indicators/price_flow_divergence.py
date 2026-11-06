@@ -1,9 +1,10 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 price_flow_divergence.py -- Price-Flow Divergence Detector v1.1
 Detecta divergencias entre el retorno de precio y el Flow Proxy.
 """
 import numpy as np
+from src.formatting import format_signed_float
 
 def detect_price_flow_divergence(price_return_20d, flow_proxy_z):
     """
@@ -38,14 +39,14 @@ def detect_price_flow_divergence(price_return_20d, flow_proxy_z):
     if price_return_20d > 0.05 and flow_proxy_z < 0.10:
         return {
             'status': 'PRICE_STRONG_FLOW_UNCONFIRMED',
-            'message': f'Precio fuerte (+{price_return_20d*100:.1f}%) sin confirmacion del Flow Proxy (z={flow_proxy_z:+.2f}). El indicador no permite inferir directamente participacion institucional.'
+            'message': f'Precio fuerte (+{price_return_20d*100:.1f}%) sin confirmacion del Flow Proxy (z={format_signed_float(flow_proxy_z)}). El indicador no permite inferir directamente participacion institucional.'
         }
 
     # Precio debil (<-5% en 20d) con Flow Proxy positivo
     if price_return_20d < -0.05 and flow_proxy_z > 0.30:
         return {
             'status': 'PRICE_WEAK_FLOW_SUPPORTIVE',
-            'message': f'Precio debil ({price_return_20d*100:.1f}%) con Flow Proxy positivo (z={flow_proxy_z:+.2f}). Posible presion compradora/absorcion en debilidad; requiere confirmacion adicional.'
+            'message': f'Precio debil ({price_return_20d*100:.1f}%) con Flow Proxy positivo (z={format_signed_float(flow_proxy_z)}). Posible presion compradora/absorcion en debilidad; requiere confirmacion adicional.'
         }
 
     return {'status': 'ALIGNED', 'message': ''}

@@ -8,6 +8,7 @@ import pandas as pd
 
 from config.tickers import SECTOR_NAMES
 from config.settings import NEUTRAL_BAND_HYG_LQD_ZSCORE
+from src.formatting import format_signed_float
 
 
 def render_alerts(breadth_values, financial_regime, price_flow_divergences, confirmation_data=None):
@@ -54,7 +55,7 @@ def render_alerts(breadth_values, financial_regime, price_flow_divergences, conf
             alerts.append(
                 f"- **Financial Stress vs Credit:** Condiciones financieras "
                 f"elevadas. El ratio crediticio (HYG/LQD) esta proximo a "
-                f"neutral (Z={_hyg_z:+.2f}, banda neutral |Z|<{NEUTRAL_BAND_HYG_LQD_ZSCORE}): no "
+                f"neutral (Z={format_signed_float(_hyg_z)}, banda neutral |Z|<{NEUTRAL_BAND_HYG_LQD_ZSCORE}): no "
                 f"confirma por si solo el estres sistemico. La observacion "
                 f"de condiciones financieras elevadas se mantiene por sus "
                 f"propias condiciones."
@@ -64,14 +65,14 @@ def render_alerts(breadth_values, financial_regime, price_flow_divergences, conf
                 f"- **Financial Stress vs Credit:** Condiciones financieras "
                 f"elevadas, pero el credito relativo (HYG/LQD) presenta una "
                 f"desviacion positiva frente a su distribucion reciente "
-                f"(Z={_hyg_z:+.2f}). Estres localizado. No se observa "
+                f"(Z={format_signed_float(_hyg_z)}). Estres localizado. No se observa "
                 f"confirmacion suficiente de estres sistemico."
             )
         else:
             alerts.append(
                 f"- **Financial Stress vs Credit:** Condiciones financieras "
                 f"elevadas Y el credito relativo (HYG/LQD) muestra desviacion "
-                f"negativa frente a su distribucion reciente (Z={_hyg_z:+.2f}). "
+                f"negativa frente a su distribucion reciente (Z={format_signed_float(_hyg_z)}). "
                 f"El estres no esta localizado: el credito lo confirma."
             )
     
