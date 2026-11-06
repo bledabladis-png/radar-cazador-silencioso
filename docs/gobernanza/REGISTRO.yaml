@@ -7579,4 +7579,9 @@ items:
   test: tests/test_check_yahoo_revision_issues.py
   descripcion: 'Check_yahoo_revision corria en daily_run.yml post-run (S29, e1f8090e) pero solo emitia WARN al log. Sin issue, decorativo: nadie lee logs de scheduled runs. El check se disparaba pero su senal se perdia.'
   evidencia: 'Script reescrito con --with-issues: abre/actualiza issue label yahoo-revision cuando detecta WARN/FAIL, lo cierra cuando vuelve a OK. Reutiliza patron de health_check.py (_ensure_label, _find_open_issue, _run_gh). daily_run.yml: anadido issues: write al job run-system (antes solo contents: write), env GH_TOKEN en el step, run con --with-issues. Sin --with-issues el script se comporta como antes (retrocompatible). 12 tests: aggregacion de estados, apertura, actualizacion, cierre, skip por manifest ausente, respeto a SKIP, main con/sin flag, tolerancia a fallo de gh (exit 0 siempre). Cierra Q10 del cuestionario S29.'
-
+- id: LSE-SCRAPER-COVERAGE-20-86
+  tipo: auditoria_interna
+  ciclo: '2026-11-06'
+  estado: WONT_FIX
+  descripcion: 'Scraper LSE cubre 20/86 tickers LSE. Solo 20 tienen RIC Refinitiv en INSTRUMENTS; CPG.L sin RIC. El 05-11 trajo 16/20 via scraper; los 70 FTSE 250/small caps restantes sin cierre Yahoo (solo ADR). Diagnostico de S30 tras bug B del 06-11.'
+  razon: 'El scraper LSE es un repo externo privado (bledabladis-png/lse-close-scraper) con cron propio (~23:00 UTC) clonado por daily_run.yml (step Fetch LSE scraper, continue-on-error: true, sparse-checkout: datos, sin ref explicito -> main). Cubre 20/86 tickers LSE porque solo 20 tienen RIC Refinitiv en src/instrument_registry.py:INSTRUMENTS; CPG.L sin RIC. El 05-11 trajo 16/20 via scraper y 70/86 quedaron sin cierre (Yahoo no cubre FTSE 250/small caps con close real, solo ADR). Ampliar a 86 requiere fuente Refinitiv no disponible; el lag Yahoo small caps no es controlable desde el pipeline principal. El sistema es autonomo: si el scraper falla, el radar continua y esos tickers quedan sin observacion hasta el siguiente run. No se toca INSTRUMENTS ni el scraper: si INSTRUMENTS no crece, no hace falta tocar el scraper.'
