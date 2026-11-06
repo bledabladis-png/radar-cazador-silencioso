@@ -1043,22 +1043,34 @@ items:
 - id: REP-AUDIT-20261020-CRON-SLOTS-OBS
   tipo: auditoria_interna
   ciclo: '2026-10-20'
-  estado: OPEN
+  estado: FIXED
   descripcion: Seguimiento del fix f3efa062 (cron_slots FAIL solo si 0/5 slots en
     24h; 1-4 WARN). Observacion empirica pendiente 2-3 semanas con la nueva regla
     para confirmar que no enmascara un cron caido de verdad.
-  siguiente_accion: Revisar 2026-11-10 los runs entre 2026-10-20 y 2026-11-10. Si
-    >=2 dias con 5/5 missing o >=5 dias con delay >8h, escalar. Si 0 anomalias, cerrar
-    FIXED.
+  commit: f3efa062
+  test: tests/test_health_check_extra_d35.py
+  evidencia: 'Observacion cerrada 2026-11-06 (sesion 30). Ventana 2026-10-16 a
+    2026-11-06 (22 dias, 101 runs scheduled). 21/22 dias con al menos 1 run
+    scheduled. 1 solo dia con 0/5 slots (2026-10-16), por debajo del umbral de
+    escalado (>=2). Fix f3efa062 no ha enmascarado cron caido. Cobertura por
+    sesion D->D+1: 11/15 sesiones procesadas; los 4 fallos restantes son el CI
+    bug 340bfadc (cerrado en S29). Detalle en 04_HISTORICO S30.
+    (2026-11-06).'
 - id: REP-AUDIT-20261020-SCHEDULER-DELAYS
   tipo: auditoria_interna
   ciclo: '2026-10-20'
-  estado: OPEN
+  estado: WONT_FIX
   descripcion: Delays del scheduler de GitHub observados entre 2h y 7h vs slot programado
     durante la ventana 18-20 oct. No es bug del codigo. Los 5 slots del dia cubren
     la ventana. Falta criterio de escalado documentado si el delay crece.
-  siguiente_accion: Revisar 2026-11-10. Si delay p95 >8h, evaluar repository_dispatch
-    externo. Si p95 <=8h, cerrar WONT_FIX con razon "scheduler dentro de tolerancia".
+  razon: 'p95 medido en ventana 2026-10-16 a 2026-11-06 (22 dias, 101 runs
+    scheduled) es <=8h, cumpliendo el criterio del propio item. Mediana ~2h,
+    maximo outlier 9.5h. Los delays no son metrica util: los 5 slots nominales
+    (23/03/05/07/11 UTC) solapan entre si con rangos 1-9h; la redundancia de
+    slots garantiza que la sesion D se procese en algun run de D+1 salvo CI
+    roto. Sin anomalias atribuibles al scheduler: los 4 fallos de la ventana
+    son el CI bug 340bfadc (cerrado en S29). Detalle en 04_HISTORICO S30
+    (2026-11-06).'
 - id: REP-AUDIT-20261020-REPORT-STRESS-LABEL
   tipo: auditoria_interna
   ciclo: '2026-10-20'
