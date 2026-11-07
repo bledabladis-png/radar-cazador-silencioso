@@ -13,7 +13,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 HEAD: `39252de7` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4636 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4650 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
 Gobernanza: docs/gobernanza/REGISTRO.yaml, 304 items.
@@ -100,11 +100,25 @@ Bloque auditoria 2026-11-07:
   (latest_quarter.txt).
 - Retry H5.2 + issue `sec-13f-failure` si falla. Cubierto.
 
+6. `d9233e6c` **H7-20261016 completado - centraliza umbrales
+   freshness en data_quality**. NOTA: este 'H7' NO es el H7 del
+   auditor 2026-11-07 (que es 'delta shares * NAV no es compra
+   neta', semantico). El H7 del auditor 2026-10-16 centralizo
+   FINRA, SEC y CFTC en config.settings. Quedaron 3 huecos:
+   rama fred (30,60,90) hardcodeada, rama else (3,7,14) hardcodeada,
+   y CBOE cayendo en else con umbrales DEFAULT en vez de
+   FRESHNESS_CBOE (3,5,10). Bug latente: cambiar FRESHNESS_CBOE
+   en settings no cambiaba el reporte. Fix: importar 4 constantes
+   mas, ramas explicitas fred/cboe/yahoo, else -> DEFAULT.
+   Sources Yahoo y CBOE con frequency propia (antes 'daily').
+   14 tests centinela (monkeypatch de settings + AST de literales
+   + sources).
+
 **Verificacion.**
 - pyflakes LIMPIO, compileall OK.
-- Suite completa: 4636 passed, 2 skipped, 0 failed (~140s).
-- Gobernanza [OK] tras los 5 fixes.
-- 5 pre-commit + 5 pre-push validados.
+- Suite completa: 4650 passed, 2 skipped, 0 failed (~160s).
+- Gobernanza [OK] tras los 6 fixes.
+- 6 pre-commit + 6 pre-push validados.
 
 ## 3. PENDIENTES VIVOS
 
@@ -181,6 +195,18 @@ estan cubiertos:
   guard funcionaba, cuando estaba roto en Python 3.14. Corregido
   (ff8d040e). Auditoria opcional.
 
+- **NOMENCLATURA-H7-COLISION**: existen 3 'H7' distintos en el
+  proyecto. (a) H7 de la auditoria 2026-10-16 (freshness
+  centralizado, FINRA/SEC/CFTC + los 3 huecos cerrados hoy en
+  d9233e6c). (b) H7 de la auditoria 2026-11-07 (delta shares *
+  NAV no es compra neta, semantico). (c) H7-vol (2026-10-17,
+  'Lectura volatilidad' nivel vs velocidad, cerrado en S30 con
+  docs). Y 'H12-fix' del commit 660bc65a NO es el H12 del auditor
+  2026-11-07 (matriz evidencia = heuristico), es hallazgo propio
+  de frescura detectado el 07-11. Futuras sesiones: NO reutilizar
+  IDs del auditor para hallazgos propios. Si se necesita ID,
+  prefijo diferente (p.ej. FRESH-GATE-WALKBACK en vez de H12-fix).
+
 - **GATE-PANEL-SOLO-BLUE-CHIPS**: el gate mide frescura sobre
   GATE_PANEL_USA (20 blue chips). Small caps pueden no estar
   completos cuando el gate dice READY. Mitigado por H12-fix
@@ -215,7 +241,7 @@ Esperado:
 - HEAD = git log --oneline -1.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests: fuente autoritativa ESTADO_SISTEMA.md (4636 passed, 0 failed).
+- Tests: fuente autoritativa ESTADO_SISTEMA.md (4650 passed, 0 failed).
 - Gobernanza [OK]. Indice H1-H18 [OK]. Bitacora [OK].
 - pyflakes silencio, compileall OK.
 
