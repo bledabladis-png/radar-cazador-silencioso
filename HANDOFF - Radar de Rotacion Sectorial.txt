@@ -8,9 +8,9 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 ---
 
 
-## 1. ESTADO AL CIERRE (2026-11-06, sesion 31)
+## 1. ESTADO AL CIERRE (2026-11-07, sesion 32)
 
-HEAD: `af1ea520` (consultar `git log --oneline -1` para el actual).
+HEAD: `39252de7` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        4636 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
@@ -20,91 +20,101 @@ Gobernanza: docs/gobernanza/REGISTRO.yaml, 304 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 13 (_IMPLEMENTED_CONTRACTS), 5 familias.
-Hooks activos: pre-commit (pyflakes + compileall) y pre-push (pytest xdist)
-  instalados en .git/hooks/. SKIP_PRE_PUSH=1 verificado en Windows nativo
-  (S31). Hooks locales; CI valida por workflows independientes.
+Hooks activos: pre-commit (pyflakes + compileall) y pre-push (pytest xdist).
 
 Fase 2 (auditoria por bloques): COMPLETA. B1-B8 auditados.
 Fase 0 + Fase 1: COMPLETAS.
 Transversales: cerrados.
 
-Sesion 31 (2026-11-06): 9 commits. Cierre de los 22 huecos del
-cuestionario al saliente S30 (10 reales, 9 cerrados; 1 requiere
-scheduled 07-11). Incluye un hallazgo grave no anticipado: el AST
-guard de neg-zero estaba roto en Python 3.14 (local Y CI), migrando
-5 sitios que nadie vigilaba. Tambien: 2 sincronizaciones de conteo
-de tests (4556, 4567, 4579) - el patron estructural esta detectado.
+Sesion 32 (2026-11-07): continuacion de S31 (misma semana). Cierre de
+5 fixes del bloque auditoria 2026-11-07 (12 hallazgos externos). Los
+4 fixes verificables con codigo + 1 fix propio de frescura detectado
+por el operador. 8 hallazgos restantes son decision de producto.
+Autonomia 13F verificada (workflow active, primer disparo 20-nov).
 
-## 2. SESION 2026-11-06 (sesion 31): detalle
+## 2. SESION 2026-11-07 (sesion 32): detalle
 
-**Objetivo.** Cerrar los 10 huecos reales identificados en el
-cuestionario al saliente S30 (22 preguntas: 5 prioritarias + 17
-sistematicas). Prioridad: verificacion pura > bugs > tests > docs.
+**Objetivo.** (a) Cerrar bloque auditoria 2026-11-07 (12 hallazgos
+del informe externo recibido). (b) Verificar frescura de datos del
+sistema contra fuentes reales. (c) Confirmar autonomia 13F.
 
-**Hecho (9 commits, todos pusheados).**
+**Hecho (20 commits desde f4747ce5).**
 
-1. `99142a6a` **LSE a REGISTRO** (WONT_FIX). Item
-   `LSE-SCRAPER-COVERAGE-20-86`. Razon verificada: scraper es repo
-   externo privado (bledabladis-png/lse-close-scraper) con cron
-   propio (~23:00 UTC), no rama paralela. 20/86 tickers LSE con RIC
-   Refinitiv; ampliar requiere fuente no disponible.
-2. `de9df670` **HANDOFF 4469 -> 4553** (seccion 4). Residuo S29.
-3. `d4e80b9b` **AST guard roto en Python 3.14** + 5 sitios migrados.
-   PEP 701 envuelve format_spec en ast.JoinedStr; guard original
-   solo miraba ast.Constant. Nunca detectaba offenders. Test pasaba
-   en falso. Reparado: _get_spec_string maneja ambos. Extension a
-   raiz (ROOT_FILES_GLOB = *.py). Al reparar el guard se destaparon
-   5 sitios no migrados: validation_gate:103,105, confirmation:134,
-   etf_flows:34, header:106. Todos migrados.
-4. `4dc1c32f` **conteo 4553 -> 4556** (d4e80b9b anadio 3 tests netos).
-5. `ff8d040e` **gobernanza del guard**. Item nuevo
-   `REPORT-NEGATIVE-ZERO-GUARD-PY314` (FIXED, d4e80b9b). Enmienda
-   a `REPORT-NEGATIVE-ZERO` (S30) para no dejar evidencia falsa
-   en el registro canonico.
-6. `69cab02a` **Euronext worst** (hueco C.4 S30). Codigo productivo
-   limpio verificado (sin hardcode). Tests parametrizados con LSE,
-   EURONEXT, XETRA, BME + end-to-end pipeline. 11 tests netos.
-7. `ea4863c4` **conteo 4556 -> 4567**.
-8. `dfc5dc5d` **Q15 centinela umbral UNCONFIRMED** (hueco Q15 S30).
-   Umbral real vive en `src/report/volatility_mte.py:94`, no en
-   scoring.py (el saliente ubico mal). 12 tests: 11 parametrizados
-   cubriendo frontera 0.50 + 1 de sincronizacion texto<->logica
-   (extrae umbral del texto contractual con regex, sin hardcodear).
-9. `af1ea520` **conteo 4567 -> 4579**.
+Bloque auditoria 2026-11-07:
+
+1. `994212c8` **H5 - PCR lag**. El render de Estructura de
+   volatilidad publicaba PCR del 4/11 bajo fecha del VIX 5/11 sin
+   declarar lag. Causa raiz: pcr_data['last_date'] existia
+   (options.py:237), se perdia en market_data.py:_compute_vol_structure,
+   no se leia en compute_volatility_structure, ni en el render. Fix:
+   propagar pcr_date, calcular pcr_lag_days, render con '(lag Nd)'
+   + nota al pie. 12 tests. Sin hardcode: cualquier lag se declara.
+
+2. `136309e4` **H2 - A/D sin fecha**. A/D Net, NH/NL y A/D Line
+   sin declarar fecha efectiva. Render confirmation.py lee
+   ad['effective_date'] y ad['lag_days'] que ya existian en el dict
+   de breadth_equity.py:130-139. Nota '(al YYYY-MM-DD, lag Nd)'
+   en las 3 lineas. 14 tests.
+
+3. `bcbe468a` **H3 - derivados breadth sin DEGRADED**. Sector
+   Regime Matrix y Matriz de Evidencia consumian sector_breadth
+   sin declarar si venia de walk-back. Mecanismo estructural:
+   input_status dict {sector_breadth: VALID|DEGRADED} (reutiliza
+   indicators/mte/status.py). Persistido como columna. Render
+   publica '*Datos al YYYY-MM-DD.*' siempre y '*[input DEGRADED]*'
+   cuando aplica. 6 ficheros + 15 tests.
+
+4. `551367e4` **H11 - NIPC aritmetico**. El auditor observo
+   Total != suma breakdowns (+1 accion). Verificado: raw correcto,
+   causa raiz es _fmt_int con int() truncando. Fix: int(round) +
+   derivar Total = suma breakdowns presentados + nota si difiere
+   del raw. NaN/None preserva N/D (no enmascara ausencia). 6 tests.
+
+5. `660bc65a` **H12-fix - gate no reintenta tras walk-back**.
+   NOTA: este 'H12' NO es el H12 del auditor (que es 'matriz
+   evidencia = heuristico', semantico). Es hallazgo propio de
+   frescura detectado por el operador el 07-11.
+   Bug real: run 42156577761 (06-11 03:26) hizo walk-back a
+   04-11 por cobertura small caps incompleta. Receipt se emitio
+   para target_session=2026-11-05 sin declarar walk-back. Los 4
+   runs posteriores (10:51, 12:55, 15:01, 18:03) devolvieron
+   CURRENT por receipt existente. Reporte de las 18:03 seguia
+   con datos del 04-11 (1 dia de lag hasta siguiente target).
+   Fix: writer persiste effective_session del manifest al receipt;
+   evaluate(target, is_last_slot=False) devuelve READY si receipt
+   tiene effective < target y no es ultimo slot; ultimo slot
+   acepta CURRENT para no bloquear reporte final. 10 tests.
+
+**Autonomia 13F verificada (no fix, no commit).**
+
+- `.github/workflows/update_sec_13f.yml` tiene cron
+  `17 6 20 2,5,8,11 *` (20 feb/may/ago/nov 06:17 UTC, 5 dias
+  post-deadline SEC). Introducido el 25-sep-2026 (3c345b24).
+- `gh api` confirma `state: active`.
+- 0 runs scheduled en historial: el cron no ha tenido
+  oportunidad de disparar (introducido 25-sep, proximo 20-nov).
+- Primer disparo real: 20-nov-2026 06:17 UTC, ingiere Q3-2026
+  (cierre 30-sep, deadline SEC 14-nov).
+- Manifests actuales (05-10) son de ejecucion manual local del
+  operador, no del bot. Q2-2026 es el ultimo ingerido
+  (latest_quarter.txt).
+- Retry H5.2 + issue `sec-13f-failure` si falla. Cubierto.
 
 **Verificacion.**
 - pyflakes LIMPIO, compileall OK.
-- Suite completa: 4579 passed, 2 skipped, 0 failed (~125s).
-- Gobernanza [OK] tras los 9 commits.
-- 2 hooks validados: pre-commit en 9 commits, pre-push en 9 pushes.
-
-**Huecos del cuestionario S30 cerrados.** 9 de 10:
-- #2 LSE a REGISTRO (99142a6a).
-- #4 HANDOFF 4469 (de9df670).
-- #6 Euronext worst (69cab02a).
-- #7 ANCLAS S30 (0 hits en logica productiva, sin cambio).
-- #8 SKIP_PRE_PUSH (verificado Windows nativo).
-- #9 AST guard 3.14 (d4e80b9b).
-- #10 .bak tracked (0 en git).
-- #5 Q15 test umbral (dfc5dc5d).
-- #1 YAML issues:write (verificado; runtime pendiente scheduled 07-11).
-
-**Hueco pendiente.** #3 Q12 CSV crudo (severidad alta):
-  los 101 runs del observatorio S30 solo estan en prosa en
-  04_HISTORICO. Reconstruir + persistir CSV reproducible + script
-  regenerador. Sesion dedicada.
+- Suite completa: 4636 passed, 2 skipped, 0 failed (~140s).
+- Gobernanza [OK] tras los 5 fixes.
+- 5 pre-commit + 5 pre-push validados.
 
 ## 3. PENDIENTES VIVOS
 
 ### 3.1. Bloqueados por auditor externo (2)
 
 - **C2-920**: discrepancia 920 baseline IAE. Auditor debe publicar
-  comando + HEAD del valor externo (-4.264.449.932). Sin eso, no
-  reproducible.
+  comando + HEAD del valor externo. Sin eso, no reproducible.
 
 - **WYCKOFF-5BX**: n_confirmed_H20_complete >= 550 (~2027).
-  Instrumentado (54d4a23f). Valores: 27/68 (02-11) -> 31/73 (04-11).
-  Ver outputs/state/wyckoff_5bx_counter.json.
+  Instrumentado (54d4a23f). Ver outputs/state/wyckoff_5bx_counter.json.
 
 ### 3.2. OPEN heredado DICT3 (2)
 
@@ -114,52 +124,79 @@ sistematicas). Prioridad: verificacion pura > bugs > tests > docs.
 - **DICT3-H04-INTERVALS**: OPEN sin accion propia. Registro
   historico del rechazo del IC95 inferencial.
 
-### 3.3. OPEN activos (2)
+### 3.3. OPEN activos (3)
 
 - **SEMANTICA-SIN-CONTRATO-INVENTARIO**: OPEN con inventario
   parcial (bce81bf4). 3 conceptos sin contrato identificados.
-  Decision pendiente: contrato escrito o WONT_FIX razonado.
 
-- **Q12-DATOS-CRUDOS**: pendiente de abrir como item formal. Los
-  101 runs del observador S30 estan solo en prosa. Requiere CSV
-  reproducible + script. Severidad alta (auditabilidad).
+- **Q12-DATOS-CRUDOS**: pendiente de abrir como item formal.
+  Los 101 runs del observador S30 estan solo en prosa en
+  04_HISTORICO. Requiere CSV reproducible + script.
 
-### 3.4. Items OPEN observacionales (fechas)
+- **TEMPORAL-EFFECTIVE-DATE-POR-MODULO** (H1-auditor 2026-11-07):
+  OPEN. Tabla de corte efectivo por modulo. Decision de producto.
+
+- **MTE-DEGRADED-STATE** (H4-auditor 2026-11-07): OPEN. La
+  confidence del MTE no se degrada por estado. Decision de
+  producto (mi recomendacion: WONT_FIX razonado, la confidence
+  ya esta declarada 'no calibrada' y el estado se publica por
+  canal separado).
+
+- **FRESHNESS-POR-BLOQUE** (H10-auditor 2026-11-07): OPEN.
+  Cobertura y frescura por bloque. Decision de producto.
+
+### 3.4. Auditoria 2026-11-07: 5 hallazgos semanticos (decision producto)
+
+Sin item en REGISTRO. Requieren decision de producto o ya
+estan cubiertos:
+- **H6** (flow primary vs retorno precio): variante de H1.
+- **H7** (delta shares * NAV no es compra neta): el reporte
+  ya lo declara. Solo wording.
+- **H8** (Wyckoff no point-in-time): limitacion intrinseca
+  documentada.
+- **H9** (doble contabilizacion): FIXED en FASE-A-INDEPENDENCIA-
+  ESTADISTICA (180f0ad6). Auditor pide mas prominencia.
+- **H12-auditor** (matriz evidencia = heuristico de votos): el
+  reporte ya declara 'Balance de Evidencia'. Solo wording.
+
+### 3.5. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |
 |---|---|---|
 | ISSUES-WRITE-CI-RUNTIME | 2026-11-07 | Verificar tras scheduled ~03:26 UTC |
 | TEST-FRESHNESS-UMBRAL-VS-CADENCIA | 2026-11-10 | >=5 filas del observatorio |
 | RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
-| H5.3 | 2026-11-20 | Verificar cron trimestral 13F |
+| H5.3 | 2026-11-20 | Verificar cron trimestral 13F (primer disparo real) |
 
-### 3.5. Prioritaria analista 30-oct no abierta (decision producto)
+### 3.6. Deuda detectada sesiones anteriores (no accionada)
 
-- **FASE-A-REGIMEN-ECONOMIA-REAL** (no abierta como item): bloque
-  macro con datos oficiales (BEA PIB/PCE/renta, BLS IPC/empleo/
-  salarios reales, Fed tipos nominales y reales) separado del
-  regimen de mercado. Dos etiquetas independientes. Estimacion:
-  3-5 sesiones. Decision de producto.
+- **TEST-COUNT-DUP**: el conteo de tests esta duplicado en 4
+  sitios (ESTADO_SISTEMA auto-generado + 3 literales en
+  00_ARRANQUE + HANDOFF x2). Desincronizado 5 veces en S31-S32.
+  Fix de raiz: literales referencian ESTADO_SISTEMA §2 sin
+  duplicar el numero.
 
-### 3.6. Deuda detectada S31 (no accionada)
+- **FIXED-EVIDENCIA-FALSA**: pattern de FIXED con evidencia no
+  verificada. `REPORT-NEGATIVE-ZERO` (S30) declaro que el AST
+  guard funcionaba, cuando estaba roto en Python 3.14. Corregido
+  (ff8d040e). Auditoria opcional.
 
-- **TEST-COUNT-DUP**: el conteo de tests esta duplicado en 4 sitios
-  (ESTADO_SISTEMA auto-generado + 3 literales en 00_ARRANQUE +
-  HANDOFF x2). Ya desincronizado 3 veces esta sesion. Fix de raiz:
-  que los literales referencien ESTADO_SISTEMA §2 sin duplicar el
-  numero. Refactor documental, no urgente.
+- **GATE-PANEL-SOLO-BLUE-CHIPS**: el gate mide frescura sobre
+  GATE_PANEL_USA (20 blue chips). Small caps pueden no estar
+  completos cuando el gate dice READY. Mitigado por H12-fix
+  (reintentos en slots intermedios). Deuda observacional, no bug.
 
-- **FIXED-EVIDENCIA-FALSA**: `REPORT-NEGATIVE-ZERO` (S30) declaro
-  en su evidencia que el AST guard funcionaba, cuando estaba roto
-  en 3.14. Ya enmendado (ff8d040e). Patron puede repetirse: FIXED
-  con evidencia no verificada. Auditoria opcional.
+### 3.7. Prioritaria analista 30-oct no abierta (decision producto)
 
-### 3.7. Items residuales conocidos (no accionables sin fuente externa)
+- **FASE-A-REGIMEN-ECONOMIA-REAL**: bloque macro con datos
+  oficiales (BEA PIB/PCE/renta, BLS IPC/empleo/salarios reales,
+  Fed tipos nominales y reales) separado del regimen de mercado.
+  Dos etiquetas independientes. Estimacion: 3-5 sesiones.
 
-- **HON residual 784 EXITs**: 690 venta real, 42 sin filing Q2,
-  11 con CUSIP raro. No fixable sin corporate actions.
-- **BKNG residual**: split 24x ajustado. Comportamiento conocido.
-- **Titulos con TITLEOFCLASS ETF**: VUG/SPY/QQQ pueden splits reales.
+### 3.8. Items residuales conocidos (no accionables sin fuente externa)
+
+- HON residual 784 EXITs. BKNG residual split 24x.
+- VUG/SPY/QQQ TITLEOFCLASS ETF pueden splits reales.
 
 ## 4. COMO ARRANCAR
 
@@ -189,8 +226,8 @@ Esperado:
 ### 5.1. Operativas (PowerShell / Windows / BOM)
 
 - Here-strings @""..""@ y @'..'@ rotos al pegar en esta maquina.
-  Patron: array de lineas + Set-Content -Encoding UTF8 a fichero .py
-  + py fichero.py. Nunca py -c con strings > ~2KB.
+  Patron: array de lineas + Set-Content -Encoding UTF8 a fichero
+  .py + py fichero.py.
 - **No anidar here-strings de PowerShell con scripts Python**.
 - **Ruta absoluta SIEMPRE con [IO.File]::* en PowerShell**.
 - **Here-strings de PowerShell >10KB se truncan silenciosamente**.
@@ -199,8 +236,8 @@ Esperado:
 - **BOM UTF-8** presente en varios ficheros. Leer con utf-8-sig.
 - **EOL:** detectar con git ls-files --eol. Working copies CRLF,
   attr fuerza LF en indice.
-- python sin ruta resuelve a Microsoft Store. Usar py o ruta real.
-- **monkeypatch.chdir no reubica paths de __file__**.
+- **Patches multi-fichero:** normalizar a LF antes de replace,
+  restaurar EOL original al escribir. Ver scripts usados en S32.
 
 ### 5.2. Git
 
@@ -209,38 +246,34 @@ Esperado:
 - Tras rebase, los SHA cambian.
 - git add selectivo + git status -sb completo antes de commit.
 - 1 cambio = 1 verificacion = 1 commit.
-- Para FIXED con SHA: commit codigo sin REGISTRO, luego SHA,
-  luego commit REGISTRO.
 
 ### 5.3. Workflow_dispatch
 
 - force=true NO entre 13:30-20:00 UTC (US market open).
 - Slots seguros: pre-13:30 UTC o post-23:00 UTC.
 - Scheduled slots: 17 23, 17 3, 17 5, 17 7, 17 11 (UTC).
-- Procedimiento completo en 07_RUNBOOK.md §4.5.
 
 ### 5.4. Contratos
 
 - Receipt fail-closed. Contrato EQUITY_EOD critical=True.
 - Gobernanza canonica. Items a docs/gobernanza/REGISTRO.yaml.
 - verifica_gobernanza.py en CI.
-- REGISTRO.yaml: NO yaml.safe_dump. find/replace por bloque.
-- FIXED requiere `test:` como path de fichero existente.
-- FALSE_POSITIVE exige `razon:` (>=20 chars), no `evidencia:`.
-- WONT_FIX idem.
+- REGISTRO.yaml: NO yaml.safe_dump.
+- FIXED requiere `test:` path. FALSE_POSITIVE/WONT_FIX exigen
+  `razon:` >=20 chars, no `evidencia:`.
 - structure_ratio DESCRIPTIVO. IC95 no autorizados.
-- holdings_snapshots.csv append-only REAL.
 - normalize_yahoo_ticker antes de lookup en parquet.
-- daily_run con gate.should_run=false: runs de 1 min.
-- EU_INDEX_ETFS_NO_CAP en stock_data_loader.
-- Universo de descarga: 530 tickers.
-- Wyckoff .md filtra, .csv completo: MIN_WEIGHT_PCT=0.5.
 
-### 5.5. Autonomia
+### 5.5. Autonomia y frescura (S32)
 
-- El sistema corre en GitHub (daily_run.yml, 5 slots/dia).
-- Retry 3x backoff en SSGA/BlackRock/Invesco/Amundi.
-- health_check holdings: stale/ausentes/incompletos -> FAIL -> issue.
+- **Gate walk-back:** receipt incluye effective_session; si
+  effective < target y no es ultimo slot -> READY (reintenta).
+  Ultimo slot acepta CURRENT. Slots: 23, 3, 5, 7, 11 UTC.
+- **Gate panel:** GATE_PANEL_USA son 20 blue chips. Small caps
+  pueden no estar completos cuando el gate dice READY. H12-fix
+  mitiga via reintentos. Ampliar panel es deuda observacional.
+- **13F autonomo:** cron `17 6 20 2,5,8,11 *` active. Primer
+  disparo 20-nov-2026 06:17 UTC. Retry 3x + issue si falla.
 
 ### 5.6. PowerShell / Python
 
@@ -252,15 +285,23 @@ Ver 01d_POWERSHELL_AUDITORIA.md §6-§6quinquies.
 - cusip_equivalence.csv prioridad sobre crosswalk.
 - Splits detectables sin API: doble ratio (precio + shares).
 - Bonos no hacen splits. ETFs apalancados tampoco.
-- test_imports_declarados exige _local_names() actualizado.
 
 ### 5.8. Guard AST neg-zero (S31)
 
-- Python 3.14 (local + los 13 workflows CI) envuelve format_spec
+- Python 3.14 (local + 13 workflows CI) envuelve format_spec
   en ast.JoinedStr aunque no haya interpolacion (PEP 701).
   Cualquier guard AST nuevo que lea format_spec DEBE manejar
   ambos casos o sera decorativo. Ver
   tests/test_no_negative_zero.py::_get_spec_string.
+
+### 5.9. Frescura declarada (S32)
+
+- **Regla general:** todo dato con lag respecto al target_session
+  debe declarar (a) fecha efectiva, (b) lag en dias, (c) nota al
+  pie. Aplicado en H5 (PCR), H2 (A/D), H3 (derivados breadth).
+- **input_status dict:** mecanismo reutilizable para propagar
+  VALID/DEGRADED/INVALID desde productores a render. Ver
+  indicators/mte/status.py y finalize.compute_final_matrices.
 
 ## 6. REFERENCIAS
 
@@ -277,24 +318,34 @@ Contratos temporales (13 en _IMPLEMENTED_CONTRACTS):
     FUTURE_SETTLEMENT, FX_DAILY_CUT (9 originales).
   - SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO (4 S28).
 
-Modulos nuevos sesion 31:
-  - tests/test_mte_unconfirmed_threshold.py (12 tests, Q15).
+Modulos nuevos S31-S32:
+  - tests/test_mte_unconfirmed_threshold.py (Q15, 12 tests).
+  - tests/test_h5_pcr_lag_declarado.py (12 tests).
+  - tests/test_h2_ad_date_declarada.py (14 tests).
+  - tests/test_h3_derivados_input_status.py (15 tests).
+  - tests/test_h11_nipc_suma_consistente.py (6 tests).
+  - tests/test_h12_gate_walk_back_retry.py (10 tests).
 
-Modulos modificados sesion 31:
-  - tests/test_no_negative_zero.py (guard AST reparado + 3 tests).
-  - src/pipeline/validation_gate.py (5 sitios: import + 2 migraciones).
-  - src/report/confirmation.py (import + 1 migracion).
-  - src/report/etf_flows.py (1 migracion).
-  - src/report/header.py (import + 1 migracion).
-  - tests/test_breadth_stale_context.py (11 tests parametrizados).
-  - docs/gobernanza/REGISTRO.yaml (2 items: nuevo + enmienda).
-  - Consolidacion_Documentos/ESTADO_SISTEMA.md (regenerado 3 veces).
-  - Consolidacion_Documentos/00_ARRANQUE.md (conteo).
-  - HANDOFF - Radar de Rotacion Sectorial.txt (conteo + seccion 4).
+Modulos modificados S32:
+  - src/pipeline/market_data.py (H5).
+  - indicators/volatility_structure.py (H5).
+  - src/report/volatility_mte.py (H5).
+  - src/report/confirmation.py (H2).
+  - indicators/sector_regime_matrix.py (H3).
+  - indicators/evidence_matrix.py (H3).
+  - src/pipeline/finalize.py (H3).
+  - run.py (H3).
+  - src/report/sector_context.py (H3).
+  - src/report/synthesis.py (H3).
+  - src/report/iae.py (H11).
+  - scripts/write_completion_receipt.py (H12-fix).
+  - scripts/pipeline_gate.py (H12-fix).
 
 Fase 1 (consistencia temporal): item FASE1-CENSO en REGISTRO.
-Fase 2 (auditoria por bloques): items B1-CENSO a B8-CENSO en REGISTRO.
+Fase 2 (auditoria por bloques): items B1-CENSO a B8-CENSO.
 FASE-A (analisis economico 30-oct): items FASE-A-* en REGISTRO.
+Auditoria 2026-11-07: 12 hallazgos. 4 cerrados con codigo, 3 OPEN
+  en REGISTRO (H1, H4, H10), 5 semanticos sin item.
 
 ---
 

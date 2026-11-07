@@ -90,9 +90,9 @@ Lo que NUNCA haces:
 
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
-Snapshot al cierre del ultimo commit (2026-11-06, sesion 31):
-- HEAD: `af1ea520` (consultar `git log --oneline -1` para el actual)
-- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S31: 4636 passed, 0 failed, 2 skipped. pyflakes LIMPIO, compileall OK.
+Snapshot al cierre del ultimo commit (2026-11-07, sesion 32):
+- HEAD: `39252de7` (consultar `git log --oneline -1` para el actual)
+- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S32: 4636 passed, 0 failed, 2 skipped. pyflakes LIMPIO, compileall OK.
 - Validation Gate: 11/11
 - Working tree: limpio
 - Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 304 items. Validador reforzado.

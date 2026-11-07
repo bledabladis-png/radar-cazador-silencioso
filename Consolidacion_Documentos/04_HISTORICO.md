@@ -3667,3 +3667,90 @@ El scraper LSE cubre 20/86 tickers LSE (los 20 con refinitiv RIC en INSTRUMENTS;
 - Bug E: `src/formatting.py`, `tests/test_formatting.py`, `tests/test_no_negative_zero.py`.
 - Bug B: `src/pipeline/breadth_metrics.py::_compute_stale_context`, `tests/test_breadth_stale_context.py`.
 - Bug F: `src/report/freshness.py`, `tests/test_freshness_walk_back_note.py`.
+
+### 2026-10-26 (sesiones 11 y 12, resumen tardio para poda)
+
+Resumen anadido el 2026-11-07 durante el cierre de S32, antes de podar
+S11 y S12 de 05_BITACORA.md por la regla de retencion (ultimas 10
+sesiones). Ambas sesiones se ejecutaron el 2026-10-26.
+
+**S11 - A.2c TOP20 + dictamen condicionado + 2 bugs colaterales.**
+
+Objetivo: cerrar DICT3-TOP20-COBERTURA fases A.2a-c. Cambio de
+selector de holdings por sector USA de `nlargest(20)` a acumular por
+peso hasta 85%, con regeneracion completa del historico.
+
+Cambios en produccion: universe_expansions.yaml con 28 tickers XLI;
+`_select_target_holdings` sin `idxmax()`, denominador = peso total
+grupo, `MIN_TICKERS_PER_GROUP=20`; `selection_mode` en
+`compute_wyckoff_snapshot`; `regenerate_wyckoff_history` parametrizado;
+backfill 1086 fechas x 11 sectores (50 min) con 11946 filas sin
+regresiones; 21 ficheros regenerados.
+
+Bugs colaterales corregidos:
+- `persist()` es append-only por merge_keys; tickers que salen dejan
+  fila huerfana. Fix: `replace_date=True` (f4528b49). 2 tests.
+- `compute_pcr_signals` retornaba None sin `skip()` cuando CBOE falla;
+  el gate fallaba el run entero. Fix: `skip('pcr_history', 'NO_DATA')`
+  (9338dcd4). 4 tests.
+
+Efecto cobertura: XLI 20->44 (57.2%->85.8%), XLF 19->22, XLK 20->22.
+XLU/XLV/XLY nominalmente no cumplian pero sus tickers extra no estan
+en parquet (ticket TOP20-FALTANTES-DATOS).
+
+Dictamen externo 2026-10-26: APROBACION CONDICIONADA de A.2c, NO
+cierre global. 6 acciones pendientes: P1-H01 (selector estados
+REACHED/UNREACHABLE/INVALID_UNIVERSE), P1-H02 (cobertura efectiva
+ponderada), P1-H03 (6 invariantes backfill), P1-H04 (sesgo PIT
+visible), P1-H05 (separar H-04), P1-H06 (gobernanza + tickets
+indices USA/EU/IWM).
+
+Incidente: `git checkout -- outputs/` revirtio 52 min de backfill.
+Leccion: backup `.bak` antes de revertir.
+
+Suite al cierre S11: 3809 passed, 2 skipped.
+
+**S12 - Dictamen 70-v2 (6 acciones) + dictamen H-04.**
+
+Dictamen 70-v2 ejecutado:
+- P1-H01 (b3793d7c): selector estados REACHED/UNREACHABLE/
+  INVALID_UNIVERSE. `max_missing_weight_ratio=0.0` default. 15->18
+  tests. Consumidores adaptados, ninguno leia el tercer elemento
+  (AST verificado).
+- P1-H02 (2d84ae82): cobertura efectiva por grupo (18 grupos).
+  Script p1_h02_cobertura_efectiva.py + doc 71. Universo real sin
+  datos: 52 tickers (no 8; handoff subestimaba x6.5). Peor USA XLF
+  76.19%; peores EU FEZ 66.26%, ISF.L 60.80%.
+- P1-H03 (adfbb69b): invariantes backfill. 5/6 OK, 1 SKIP (hang
+  classify_phase). Correccion: `v2_full_target_only.csv` defectuoso,
+  base valida `v2_full.csv.bak`.
+- P1-H04 (f967985d): nota PIT en `render_wyckoff_sectorial`. 2 tests.
+- P1-H06: 6 tickets gobernanza (PERSIST-REPLACE-DATE,
+  PCR-SKIP-NO-DATA, TOP20-USA-INDICES, TOP20-EU-INDICES,
+  SOW-HOLDOUT-IMMUTABLE, GOVERNANZA-CI-NO-STEP).
+- P1-H05: separacion A.2c vs H-04 registrada. No cerrada: el
+  dictamen H-04 rechaza la inferencia original.
+
+Dictamen H-04 (doc 73): 5 hallazgos aceptados (P0-H04-01..03,
+P1-H04-04..05). Criterio §9 no concluyente, no reinterpretado.
+DICT3-H04-INTERVALS: OPEN sin cambio. Nuevo DICT3-H04-INFERENCE-V2:
+4 decisiones, sin codigo hasta aprobacion. Verificado: sistema NO
+publica IC95 en reporte (0 hits en `src/report/`). `structure_ratio`
+solo descriptiva. Sin cambios de codigo necesarios.
+
+Ciclo documental 70-v2: v2b (aceptacion), v2c (solicitud
+reconsideracion), v2d (cierre 5/6 acciones).
+
+Bug detectado: `classify_phase` cuelga con al menos un ticker. Traza:
+`_trend_component` en `wyckoff_v1.py:99` alinea Series con indices
+incompatibles. Bug preexistente, no introducido. Registrado como
+WYCKOFF-CLASSIFY-PHASE-HANG (OPEN). Fix candidato: `.to_numpy()` en
+`_trend_component`.
+
+Commits: rango `ebdeac02..74b09c7e` (13 commits).
+
+Estado al cierre S12: DICT3-TOP20-COBERTURA pendiente de cierre
+formal por auditor (doc 70-v2d). DICT3-H04-INTERVALS OPEN.
+DICT3-H04-INFERENCE-V2 OPEN. TOP20-FALTANTES-DATOS: 52 tickers
+(7 holdout SOW, 1 MRNA, 44 descarga nueva).
+WYCKOFF-CLASSIFY-PHASE-HANG OPEN con fix candidato.

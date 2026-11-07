@@ -44,6 +44,62 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-07 — Sesion 32: 5 fixes de frescura y aritmetica (auditoria 2026-11-07)
+
+**Objetivo.** Cerrar bloque auditoria 2026-11-07 (12 hallazgos),
+verificar frescura de datos contra fuentes reales, confirmar
+autonomia 13F.
+
+**Hecho.**
+- H5 (PCR lag): el render publicaba PCR del 4/11 bajo fecha VIX
+  5/11 sin declarar. Causa raiz: last_date existia en pcr_data,
+  se perdia en market_data. Fix: propagar + lag N d + nota. 12
+  tests.
+- H2 (A/D sin fecha): A/D Net, NH/NL, A/D Line sin declarar
+  fecha efectiva. Render lee ad['effective_date'] que ya existia.
+  14 tests.
+- H3 (derivados breadth sin DEGRADED): Sector Regime Matrix y
+  Matriz de Evidencia consumian breadth sin avisar walk-back.
+  Mecanismo input_status reutilizando indicators/mte/status.py.
+  Persistido como columna + nota en render. 6 ficheros, 15 tests.
+- H11 (NIPC aritmetico): Total != suma breakdowns (+1). Causa:
+  int() truncando. Fix: int(round) + derivar Total = suma
+  breakdowns + nota si difiere. N/D preservado en NaN/None.
+  6 tests.
+- H12-fix (gate walk-back): bug de frescura detectado por el
+  operador. Run 42156577761 (06-11 03:26) hizo walk-back a 04-11,
+  los 4 runs posteriores devolvieron CURRENT por receipt existente.
+  Reporte de las 18:03 seguia con datos del 04-11. Fix: receipt
+  incluye effective_session; evaluate(target, is_last_slot=False)
+  devuelve READY si effective < target y no es ultimo slot.
+  10 tests.
+- Autonomia 13F verificada: workflow active, cron
+  `17 6 20 2,5,8,11 *` introducido 25-sep-2026. Primer disparo
+  real 20-nov-2026 06:17 UTC (Q3-2026). 0 runs scheduled en
+  historial porque no ha habido oportunidad. Retry H5.2 + issue
+  si falla.
+
+**Commits.** 20 desde f4747ce5. Los 5 de codigo:
+`994212c8`, `136309e4`, `bcbe468a`, `551367e4`, `660bc65a`.
+8 syncs documentales + otros.
+
+**Pendiente.**
+- 3 OPEN en REGISTRO (H1, H4, H10): decision de producto.
+- 5 semanticos sin item (H6, H7, H8, H9, H12-auditor): decision
+  de producto o cubiertos.
+- Deuda TEST-COUNT-DUP: literales duplicados en 4 sitios,
+  desincronizado 5 veces en S31-S32.
+- Deuda GATE-PANEL-SOLO-BLUE-CHIPS: gate mide frescura sobre 20
+  blue chips. Mitigado por H12-fix.
+
+**Proximo paso sugerido.** Decision de producto sobre H1/H4/H10.
+Recomendacion para H4: WONT_FIX razonado (confidence ya declarada
+'no calibrada', estado publicado por canal separado). Abrir items
+formales para H6/H7/H8/H9/H12-auditor si el operador quiere
+visibilidad en gobernanza.
+
+---
+
 ### 2026-11-06 — Sesion 31: 9/10 huecos del cuestionario S30
 
 **Objetivo.** Responder al saliente S30 y cerrar los huecos reales
@@ -1538,171 +1594,6 @@ de `pct_*` (evita ruido en cada `py run.py` post-regeneracion
 historica). Prioridad datos: TOP20-FALTANTES-DATOS (descarga de los
 44 + decision sobre 7 holdout SOW). Prioridad gobernanza: GOVERNANZA-
 CI-NO-STEP (5 min, cierra el hueco de verificacion en CI).
-
-### 2026-10-26 (sesion 12) - Dictamen 70-v2 (6 acciones) + dictamen H-04
-
-**Objetivo.** Ejecutar las 6 acciones del dictamen externo 2026-10-26
-sobre doc 70-v2, y responder al dictamen H-04 recibido al final de la
-sesion.
-
-**Hecho.**
-
-Dictamen 70-v2 (4 acciones ejecutables + 1 separacion + gobernanza):
-- P1-H01: selector con estados REACHED/UNREACHABLE/INVALID_UNIVERSE.
-  `max_missing_weight_ratio=0.0` default. 15->18 tests. Consumidores
-  adaptados (`_alcanzado`/`_ok` -> `_estado`), ninguno leia el tercer
-  elemento (verificado por AST).
-- P1-H02: cobertura efectiva por grupo (18 grupos). Script
-  `p1_h02_cobertura_efectiva.py` + doc 71. Universo real de tickers
-  sin datos: 52, no 8 (handoff subestimaba x6.5). Peor sector USA
-  XLF 76.19% sobre grupo; peores EU FEZ 66.26%, ISF.L 60.80%.
-  TOP20-FALTANTES-DATOS expandido.
-- P1-H03: invariantes del backfill. Script `p1_h03_invariantes.py` +
-  doc 72. 5/6 OK, 1 SKIP (bloqueado por hang de classify_phase).
-  Correccion: `v2_full_target_only.csv` es artefacto intermedio
-  defectuoso; base valida `v2_full.csv.bak`.
-- P1-H04: nota PIT visible en reporte. `render_wyckoff_sectorial` +
-  2 tests. Solo reporte (no sidecar JSON).
-- P1-H06: 6 tickets gobernanza (PERSIST-REPLACE-DATE, PCR-SKIP-NO-DATA,
-  TOP20-USA-INDICES, TOP20-EU-INDICES, SOW-HOLDOUT-IMMUTABLE,
-  GOVERNANZA-CI-NO-STEP).
-- P1-H05: separacion A.2c vs H-04 hecha. P1-H05 no se cierra: el
-  dictamen H-04 rechaza la inferencia, pero la separacion esta
-  registrada.
-
-Dictamen H-04 (recibido al final de la sesion):
-- Doc 73: respuesta formal. 5 hallazgos aceptados (P0-H04-01..03,
-  P1-H04-04..05). Criterio §9 declarado no concluyente, no
-  reinterpretado.
-- DICT3-H04-INTERVALS: OPEN sin cambio de estado. siguiente_accion
-  reescrito con los 5 hallazgos y las 4 decisiones.
-- Nuevo DICT3-H04-INFERENCE-V2: 4 decisiones de diseno, sin codigo
-  hasta aprobacion del auditor.
-- Verificado: sistema NO publica IC95 en reporte (0 hits en
-  src/report/). structure_ratio solo descriptiva. Sin cambios de
-  codigo necesarios.
-
-Ciclo documental 70-v2: v2b (aceptacion), v2c (solicitud
-reconsideracion), v2d (cierre 5/6 acciones).
-
-Bug detectado: classify_phase cuelga con al menos un ticker. Traza:
-_trend_component en wyckoff_v1.py:99 alinea Series con indices
-incompatibles. Bug preexistente, no introducido. Registrado como
-WYCKOFF-CLASSIFY-PHASE-HANG (OPEN).
-
-**Commits.** Rango `ebdeac02..74b09c7e` (13 commits):
-- b6b75e55 doc 70-v2b
-- 46a5bfe3 REGISTRO 6 items
-- 6a591e67 correcciones post-saliente
-- b3793d7c P1-H01 selector
-- c080761d P1-H01 en REGISTRO
-- 2d84ae82 P1-H02
-- adfbb69b P1-H03
-- f967985d P1-H04
-- edd4cbf0 P1-H04 en REGISTRO
-- 52a7ce8d doc 70-v2c
-- 5b855ce5 doc 73 + REGISTRO H-04
-- fc0b695b doc 70-v2d
-- 74b09c7e WYCKOFF-CLASSIFY-PHASE-HANG
-
-**Pendiente.**
-- DICT3-TOP20-COBERTURA: solicitar cierre como FIXED a A.2c
-  (doc 70-v2d). Auditor externo.
-- DICT3-H04-INTERVALS: OPEN, decision sobre nuevo protocolo.
-- DICT3-H04-INFERENCE-V2: OPEN, 4 decisiones de diseno.
-- TOP20-FALTANTES-DATOS: 52 tickers (7 holdout SOW, 1 MRNA ausente,
-  44 descarga nueva).
-- TOP20-EU-HOLDINGS-INCOMPLETOS, TOP20-USA-INDICES, TOP20-EU-INDICES.
-- SOW-HOLDOUT-IMMUTABLE, GOVERNANZA-CI-NO-STEP.
-- WYCKOFF-CLASSIFY-PHASE-HANG: fix candidato `.to_numpy()` en
-  _trend_component.
-
-**Proximo paso sugerido.** Confirmar WYCKOFF-CLASSIFY-PHASE-HANG
-como ticket prioritario (desbloquea invariante 2 de P1-H03 y columna
-evaluable real de P1-H02). Alternativa: arrancar TOP20-FALTANTES-DATOS
-(descarga de los 44 + decision sobre los 7 holdout SOW).
-
-### 2026-10-26 (sesion 11) - A.2c TOP20 + dictamen condicionado + 2 bugs colaterales
-
-**Objetivo.** Cerrar `DICT3-TOP20-COBERTURA` fases A.2a-c: cambio de
-selector de holdings por sector USA de `nlargest(20)` a acumular por
-peso hasta 85%, con regeneracion completa del historico. Primera
-respuesta al dictamen externo 2026-10-26 sobre doc 70 v1.
-
-**Cambios en produccion:**
-
-1. Expansion declarativa (`404dc7c5`): `data/universe_expansions.yaml`
-   con 28 tickers XLI. `get_stock_list()` fuente 5. Tests: 8.
-2. Selector `_select_target_holdings` (`557048f8`): sin `idxmax()`,
-   denominador = peso total grupo, `MIN_TICKERS_PER_GROUP=20` evita
-   regresion de grupos >85%. Tests: 15.
-3. `selection_mode` en `compute_wyckoff_snapshot` (`0c14a8a3`).
-   `run.py` pasa `target_weight`. Tests: 4.
-4. `regenerate_wyckoff_history` parametrizado (`5e4fe2fc`).
-5. Backfill completo: 1086 fechas × 11 sectores, 50 min. 0 regresiones
-   por fila (date, sector) en 11946 filas. Swap a activo + backup
-   `pre_top20_target.csv` (hash 7D988C841C06E567..., versionado).
-6. A.2c completo (`e7f27cd0`): 21 ficheros regenerados.
-
-**Bugs colaterales corregidos:**
-
-- `persist()` es append-only por merge_keys. Los 6 CSVs de holdings
-  son subconjuntos filtrados por fase: un ticker que sale deja su
-  fila vieja huerfana. Detectado con GE/PWR/VRT en XLI (14 filas CSV
-  vs 11 snapshot). Fix: `replace_date=True` en `persist` + flag en
-  `wyckoff_holdings`. Tests: 2. Commit `f4528b49`.
-- `compute_pcr_signals` retornaba `None` sin `skip()` cuando CBOE
-  no responde. El gate detectaba "sin receipt pcr_history" y fallaba
-  el run entero. Fix: `skip('pcr_history', 'NO_DATA')` en los dos
-  return None tempranos. Tests: 4. Commit `9338dcd4`.
-
-**Efecto en cobertura:**
-
-- XLI: 20→44 (57.2% → 85.8%).
-- XLF: 19→22 (72.8% → 85+%).
-- XLK: 20→22 (79.6% → 85+%).
-- XLE, XLC, XLB, XLP, XLRE: sin cambio (ya cumplian >85%, el
-  min_tickers=20 evita regresion).
-- XLU, XLV, XLY: seleccionan tickers extra pero NO estan en parquet
-  (CNP, CI/MRNA/BSX/HCA/COR/CAH, NKE). Cobertura efectiva sin cambio.
-  Ticket `TOP20-FALTANTES-DATOS` abierto.
-
-**Re-ejecucion H-03/H-04 sobre nueva base:**
-
-Doc 69 §13 (anexo, no modifica §2-§10):
-- H-03: 30/30 (identico, opera sobre parquet).
-- H-04: `rho_bar` 0.524→0.471, ALL annual IC [0.268,0.754]→
-  [0.294,0.765], ancho multiway/naive 2.4×. Criterio §9 sigue sin
-  discriminar. `DICT3-H04-INTERVALS` OPEN.
-
-**Dictamen externo 2026-10-26 sobre doc 70-v2:**
-
-APROBACION CONDICIONADA de A.2c. NO aprobacion del cierre global
-de `DICT3-TOP20-COBERTURA` (sigue OPEN). 6 acciones pendientes:
-P1-H01 (selector con estados REACHED/UNREACHABLE/INVALID_UNIVERSE),
-P1-H02 (tabla cobertura efectiva ponderada), P1-H03 (6 invariantes
-backfill), P1-H04 (sesgo PIT visible en artefactos consumidos),
-P1-H06 (gobernanza separada + tickets índices USA/EU/IWM),
-P1-H05 (H-04 separado, no mezclar con A.2c).
-
-**Correccion documental detectada por auditor:** el resumen decia
-"resto no cambia porque ya cumplia". Falso: XLU 83.1%, XLV 78.9%,
-XLY 84.5% NO cumplian nominalmente. No cambian materialmente porque
-sus tickers extra no estan en parquet. Doc 70-v2b debe corregirlo.
-
-**Incidente durante la sesion:** `git checkout -- outputs/` revertis
-el CSV regenerado (52 min de backfill perdidos). Re-ejecutado. Leccion:
-backup `.bak` antes de revertir.
-
-**Commits (11):** 404dc7c5, 557048f8, 0c14a8a3, 5e4fe2fc, efd53cfe,
-f4528b49, 9338dcd4, e7f27cd0, a14b463b, 8a0a8b1d. Suite: 3809
-passed, 2 skipped. CI verde en cada push.
-
-**Estado al cierre:** A.2c en produccion con target_weight sectores
-USA. DICT3-TOP20-COBERTURA sigue OPEN (deuda: 6 acciones del
-dictamen). DICT3-H04-INTERVALS OPEN. 4 frentes nuevos abiertos
-como tickets: P1-H01 a P1-H06, TOP20-FALTANTES-DATOS,
-TOP20-EU-HOLDINGS-INCOMPLETOS, indices USA/EU/IWM.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 
