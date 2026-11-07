@@ -1,14 +1,14 @@
 {
-  "lse_expected_session": "2026-11-05",
+  "lse_expected_session": "2026-11-06",
   "reason": null,
-  "run_id": "20261106_043029",
+  "run_id": "20261107_035311",
   "scraper_available": true,
   "scraper_used": true,
-  "source_commit": "0f670bf8fa0e426192ef03ea2d4f7a0848c2cb83",
+  "source_commit": "ca8f5fb082a8d4786f1dd965c78626f2d798ca2c",
   "source_ref": "main",
   "source_repo": "bledabladis-png/lse-close-scraper",
   "status": "PARTIAL",
-  "target_session": "2026-11-05",
+  "target_session": "2026-11-06",
   "tickers_from_scraper": [
     "AAL.L",
     "AZN.L",
