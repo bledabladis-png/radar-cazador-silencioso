@@ -52,7 +52,15 @@ from config.tickers import EU_INDEX_ETFS as EU_INDEX_ETFS_NO_CAP
 
 
 def get_usa_tickers():
-    """Obtiene solo tickers de sectores USA (data/etf_holdings.csv)."""
+    """Obtiene TODOS los holdings de sectores USA (data/etf_holdings.csv).
+
+    2026-11-07 (coherencia de universo): se elimino el truncado a
+    TOP_N_SECTOR_COMPONENTS. El resto del sistema
+    (sector_concentration n_total, wyckoff_holdings, darkpool_io,
+    holdings_snapshot, _ticker_list) ya opera sobre etf_holdings.csv
+    completo. Mantener el truncado aqui producia universos distintos
+    por capa (n_total=504, n_valid=220).
+    """
     tickers = []
     try:
         import pandas as pd
@@ -60,7 +68,7 @@ def get_usa_tickers():
         if 'weight' in df_sect.columns:
             df_sect = df_sect.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_sect.groupby('etf'):
-            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(TOP_N_SECTOR_COMPONENTS).tolist()])
+            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].tolist()])
     except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         print(f"  [WARN] get_usa_tickers: etf_holdings.csv: {e}")
     # Eliminar duplicados
@@ -75,8 +83,9 @@ def get_usa_tickers():
 def get_stock_list():
     """Obtiene lista de tickers para descargar.
 
-    Fuentes: (1) top-20 de cada sector USA (etf_holdings.csv);
-    (2) top-20 de cada indice USA+Europa (index_holdings.csv);
+    Fuentes: (1) TODOS los holdings de cada sector USA
+    (etf_holdings.csv); (2) top-20 de cada indice USA+Europa
+    (index_holdings.csv);
     (3) catalogo radar completo (radar_target_catalog.csv);
     (4) tickers europeos soportados por los providers oficiales
     (xetra, euronext, bme). La fuente (4) cierra el bug 2026-10-06:
@@ -91,7 +100,7 @@ def get_stock_list():
         if 'weight' in df_sect.columns:
             df_sect = df_sect.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_sect.groupby('etf'):
-            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(TOP_N_SECTOR_COMPONENTS).tolist()])
+            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].tolist()])
     except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         print(f"  [WARN] get_stock_list: etf_holdings.csv: {e}")
 
