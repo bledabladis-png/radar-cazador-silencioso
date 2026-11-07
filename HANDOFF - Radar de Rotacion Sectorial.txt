@@ -227,6 +227,62 @@ estan cubiertos:
 - HON residual 784 EXITs. BKNG residual split 24x.
 - VUG/SPY/QQQ TITLEOFCLASS ETF pueden splits reales.
 
+### 3.9. Cierres S33 (2026-11-07)
+
+5 verificaciones cerradas hoy. 4 falsos positivos, 1 WONT_FIX
+razonado. Ninguna toca codigo: todas se resuelven con evidencia.
+
+- **N-PORT sin actualizar (riesgo F1 #6 saliente S32):** FALSO
+  POSITIVO de metodo. Los 3 CSV (position_change_quarterly,
+  positions_2026q3, position_change_2026q3) contienen todas las
+  filas con REPORT_DATE=2026-06-30 (Q2-2026). El q3 del nombre
+  es trimestre de ingesta, no de periodo. Deadline SEC N-PORT
+  Q3-2026 ~29-nov-2026. update_sec_nport.yml corre semanal,
+  commitea solo si cambia contenido, y el mtime de un CSV
+  tracked no se mueve. No es bug. Aprendizaje: mtime de CSV
+  tracked != frescura; usar git log -1 + ultima fila.
+
+- **ISSUES-WRITE-CI-RUNTIME (HANDOFF 3.5, fecha 07-11):**
+  VERIFICADO, NO BUG. check_yahoo_revision --with-issues
+  (scripts/check_yahoo_revision.py:87) abre/actualiza issue con
+  label yahoo-revision al detectar WARN/FAIL y lo cierra al
+  volver a OK. Tests: tests/test_check_yahoo_revision_issues.py
+  + tests/test_issue_manager.py + tests/test_health_check.py:144-166.
+  Issue #8 (07-11 ~03:26 UTC, scheduled 42331125819) es evidencia
+  del open. Cierre automatico al ver un slot limpio. NO va a
+  REGISTRO (no es bug, es observacional verificado).
+
+- **Gate local desactualizado (written_at 2026-11-05):** FALSO
+  POSITIVO de metodo. outputs/state/validation_gate_result.json
+  esta en .gitignore:43. El gate es artefacto de CI, no fichero
+  commiteado. El written_at del working copy es la ultima
+  ejecucion local, no el ultimo run scheduled. Para verificar
+  el gate de un run: gh api repos/.../actions/runs/<id>/artifacts.
+
+- **SSGA sin frequency propio (riesgo F1 #2 saliente S32):**
+  FALSO POSITIVO verificado. SsgaPrimaryFlow en
+  src/temporal_contracts/ssga_primary_flow.py:
+  max_lag_days=5, min_coverage=0.9, session_calendar=NYSE.
+  Docstring: lag 1-2 dias -> STALE en produccion normal;
+  INSUFFICIENT solo si lag > 5. Test dedicado:
+  tests/test_ssga_primary_flow_contract.py. CSV real:
+  outputs/history/etf_primary_flow.csv, ultima fila 2026-11-05,
+  ultimo cierre NYSE 2026-11-06, lag=1 -> STALE (esperado).
+  No cae en FRESHNESS_DEFAULT. No es bug.
+
+- **CIRCUIT-BREAKER-PIPELINE (riesgo F1 #3 saliente S32):**
+  WONT_FIX razonado. Evidencia: 2 fallos en 20+ runs scheduled
+  (05-11-2026, runs 41961991490 y 42014568033), separados 7h,
+  recuperados por dispatch manual 42020621979 (11:38, 23m,
+  success). Cadencia real 5 slots/dia separados 2-4h, no
+  20-30 min por slot. Observabilidad existente:
+  outputs/state/completion_attempt.jsonl (write_completion_attempt.py)
+  + artifact completion-attempt-<run_id>-<attempt> + issue
+  automatico en last_slot fallido (daily_run.yml:457-461).
+  Circuit breaker sin base observada; umbral mal calibrado
+  dejaria pipeline stuck silencioso. Revisar solo si emerge
+  patron de 3+ fallos consecutivos en ventana de slots.
+  Item en REGISTRO: CIRCUIT-BREAKER-PIPELINE.
 ## 4. COMO ARRANCAR
 
     Set-Location D:\Macro_Sectorial

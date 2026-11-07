@@ -7594,3 +7594,26 @@ items:
   test: tests/test_no_negative_zero.py
   descripcion: 'El AST guard de REPORT-NEGATIVE-ZERO (S30, a37e1a9a) estaba roto en Python 3.14. PEP 701 envuelve el format_spec en ast.JoinedStr aunque no haya interpolacion; el guard solo miraba isinstance(spec, ast.Constant) y nunca entraba. El test_sin_format_spec_neg_zero_suelto pasaba en falso: 0 offenders por ceguera del guard, no por ausencia real. Python 3.14 es la version local Y la de los 13 workflows CI, por lo que el blindaje declarado en S30 no existia en produccion.'
   evidencia: 'Reparacion en _get_spec_string: maneja ast.Constant (3.11) y ast.JoinedStr envolviendo Constant (3.12+); retorna None si el spec tiene interpolacion (no produce -0.00 por ese camino). Extension ROOT_FILES_GLOB = *.py cubre raiz (run.py, conftest.py y futuros) sin hardcodear nombres. TestAstSentinelCoversRoot test_detecta_offender_en_raiz verifica la cobertura de raiz. TestGetSpecString con 2 tests (joinedstr_pep701_spec_literal, spec_con_interpolacion_no_matchea). Confirmado empiricamente: un +.2f inyectado en src/_diag_guard_ast.py paso el test ANTES del fix (0 offenders) y fallo DESPUES (1 offender). Al reparar el guard se destaparon 5 sitios no migrados: src/pipeline/validation_gate.py:103,105, src/report/confirmation.py:134, src/report/etf_flows.py:34, src/report/header.py:106; todos migrados a format_signed_float o _fmt_signed en el mismo commit.'
+- id: CIRCUIT-BREAKER-PIPELINE
+  tipo: deuda_tecnica
+  ciclo: 2026-11-07
+  estado: WONT_FIX
+  descripcion: >
+    Riesgo estructural levantado por el saliente S32: pipeline
+    sin circuit breaker. Escenario teorico: si el pipeline falla
+    repetidamente y el probe del gate ve cobertura >=90% en el
+    panel (20 blue chips), cada slot scheduled reintenta el
+    pipeline sin limite.
+  razon: >
+    Sin base observada. En los ultimos 20+ runs scheduled solo
+    hay 2 fallos (05-11-2026, runs 41961991490 y 42014568033),
+    separados 7h, recuperados por dispatch manual 42020621979
+    (11:38, 23m, success). Cadencia real 5 slots/dia separados
+    2-4h, no 20-30 min. Observabilidad ya existe:
+    outputs/state/completion_attempt.jsonl escrito por
+    write_completion_attempt.py, artifact
+    completion-attempt-<run_id>-<attempt>, e issue automatico en
+    last_slot fallido (daily_run.yml:457-461). Circuit breaker
+    sin datos que lo justifiquen; umbral mal calibrado dejaria
+    pipeline stuck silencioso. Revisar solo si emerge patron de
+    3+ fallos consecutivos en ventana de slots.
