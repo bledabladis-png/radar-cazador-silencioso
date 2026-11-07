@@ -2,20 +2,20 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/stock_prices.parquet",
-    "sha256": "466e6d27bec3ebe97e9a2ec67c7bde7f2cfda79a7741a001ecf4e305abaa692a",
-    "bytes": 26312133,
-    "written_at": "2026-11-07T10:18:58.928924"
+    "sha256": "3acc13e364ba73190e6ae9e054d812e080a3d0bb15980314e255eb149729838e",
+    "bytes": 35762091,
+    "written_at": "2026-11-07T18:52:15.217397"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20261107_110942",
+    "run_id": "20261107_194211",
     "source": "yahoo_european_cascade"
   },
   "content": {
     "rows": 1293,
-    "cols": 2650,
-    "n_tickers": 530,
+    "cols": 3565,
+    "n_tickers": 713,
     "date_min": "2021-11-08",
     "date_max": "2026-11-06"
   },
@@ -26,15 +26,15 @@
     "last_date": "2026-11-06",
     "expected_session": "2026-11-06",
     "last_date_is_expected_session": true,
-    "pct_dup_last": 0.005952,
-    "close_nan_last": 26,
-    "n_tickers_expected_last": 530,
-    "n_tickers_with_close_last": 504,
-    "n_tickers_missing_close_last": 26,
-    "coverage_pct_last": 0.950943,
+    "pct_dup_last": 0.005831,
+    "close_nan_last": 27,
+    "n_tickers_expected_last": 713,
+    "n_tickers_with_close_last": 686,
+    "n_tickers_missing_close_last": 27,
+    "coverage_pct_last": 0.962132,
     "last_row_is_partial": true,
     "effective_session": "2026-11-06",
-    "coverage_pct_effective": 0.950943,
+    "coverage_pct_effective": 0.962132,
     "effective_session_is_fallback": false,
     "status": "VALID_WITH_MISSING",
     "by_market": {
@@ -63,15 +63,15 @@
         "status": "INVALID"
       },
       "US_EQUITY": {
-        "n": 346,
+        "n": 529,
         "last_closed_session": "2026-11-06",
-        "coverage_at_session": 0.985549,
+        "coverage_at_session": 0.996219,
         "status": "VALID"
       },
       "XETRA": {
         "n": 34,
         "last_closed_session": "2026-11-06",
-        "coverage_at_session": 0.882353,
+        "coverage_at_session": 0.764706,
         "status": "VALID_WITH_MISSING"
       }
     }
