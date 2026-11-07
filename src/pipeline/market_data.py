@@ -52,6 +52,12 @@ def _compute_vol_structure(df_market, pcr_data):
             # No recalcular percentil; si no existe, se deja NaN
             if 'percentile_20d' in pcr_data:
                 pcr_vol['percentile_20d'] = pcr_data['percentile_20d']
+            # H5 (auditoria 2026-11-07): propagar fecha del PCR para
+            # declarar lag respecto al VIX en el render. Antes se perdia
+            # aqui y el render publicaba PCR del dia anterior bajo la
+            # fecha del VIX sin avisar.
+            if 'last_date' in pcr_data:
+                pcr_vol['date'] = pcr_data['last_date']
         vol_structure_df = compute_volatility_structure(df_market, pcr_data=pcr_vol if pcr_vol else None)
         if not vol_structure_df.empty:
             persist('volatility_structure', vol_structure_df)

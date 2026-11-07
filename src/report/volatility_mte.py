@@ -36,12 +36,30 @@ def render_estructura_volatilidad(volatility_structure_data):
                 return f"{v*100:.0f}%" if pd.notna(v) else "N/D"
             def _pct_0_100(v):
                 return f"{v:.0f}%" if pd.notna(v) else "N/D"
+            # H5 (auditoria 2026-11-07): declarar lag del PCR respecto al
+            # VIX cuando difieren de fecha. Bug real: antes se publicaba
+            # el PCR del dia anterior sin avisar.
+            _pcr_lag = row.get('pcr_lag_days') if hasattr(row, 'get') else None
+            _pcr_lag_int = int(_pcr_lag) if pd.notna(_pcr_lag) else 0
+            _pcr_z_str = _fmt(row['pcr_zscore'])
+            _pcr_pct_str = _pct_0_100(row['pcr_percentile_20d'])
+            if _pcr_lag_int > 0:
+                _pcr_z_str += f" (lag {_pcr_lag_int}d)"
+                _pcr_pct_str += f" (lag {_pcr_lag_int}d)"
             out.append(
                 f"| {date_str} | {_fmt(row['vix_level'])} | {_pct_0_1(row['vix_percentile_20d'])} | "
                 f"{_pct_0_1(row['vix_percentile_60d'])} | {_fmt(row['term_structure_ratio'])} | "
-                f"{_fmt(row['pcr_zscore'])} | {_pct_0_100(row['pcr_percentile_20d'])} | "
+                f"{_pcr_z_str} | {_pcr_pct_str} | "
                 f"{row['volatility_reading']} | {row['term_structure_reading']} |\n"
             )
+            if _pcr_lag_int > 0:
+                _pcr_d = row.get('pcr_date') if hasattr(row, 'get') else None
+                _pcr_d_str = (pd.Timestamp(_pcr_d).strftime('%Y-%m-%d')
+                              if pd.notna(_pcr_d) else 'N/D')
+                out.append(
+                    f"*PCR (CBOE) del {_pcr_d_str} ({_pcr_lag_int}d de lag "
+                    f"respecto al VIX).*\n"
+                )
         out.append("\n")
         out.append("*Estructura descriptiva de volatilidad implícita y posicionamiento en opciones. No incluye Dark Pool.*\n\n")
         # N6.2 (2026-10-13, auditor): ventanas exactas de cada percentil.

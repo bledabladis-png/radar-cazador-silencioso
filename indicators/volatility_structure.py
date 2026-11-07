@@ -71,12 +71,18 @@ def compute_volatility_structure(df_market, pcr_data=None, vix_ticker='^VIX', vi
         temporal_meta or {}, ['EQUITY_EOD', 'VOLATILITY_INDEX'])
 
     # PCR oficial
+    # H5 (auditoria 2026-11-07): propagar pcr_date y calcular lag
+    # respecto a la fecha del VIX (date). El dato existe en pcr_data
+    # (last_date, ver indicators/options.py:237). Sin esto, el reporte
+    # mezclaba PCR del dia anterior bajo la fecha del VIX sin avisar.
     if pcr_data is not None:
         pcr_z = pcr_data.get('zscore', np.nan)
         pcr_p20 = pcr_data.get('percentile_20d', np.nan)
+        pcr_date = pcr_data.get('date')
     else:
         pcr_z = np.nan
         pcr_p20 = np.nan
+        pcr_date = None
 
     # Lectura de volatilidad según percentil 20d
     if pd.isna(vix_p20):
@@ -91,6 +97,16 @@ def compute_volatility_structure(df_market, pcr_data=None, vix_ticker='^VIX', vi
         vol_reading = 'Volatilidad por debajo de la media'
     else:
         vol_reading = 'Volatilidad reducida'
+
+    # H5: lag del PCR respecto a la fecha del VIX, en dias.
+    if (pcr_date is not None and pd.notna(pcr_date)
+            and _obs_date is not None and pd.notna(_obs_date)):
+        try:
+            _pcr_lag_days = (pd.Timestamp(_obs_date) - pd.Timestamp(pcr_date)).days
+        except (TypeError, ValueError):
+            _pcr_lag_days = np.nan
+    else:
+        _pcr_lag_days = np.nan
 
     return pd.DataFrame([{
         'date': _obs_date,
@@ -109,4 +125,6 @@ def compute_volatility_structure(df_market, pcr_data=None, vix_ticker='^VIX', vi
         'n_valid_vix_20d': min(len(vix), 20),
         'n_valid_vix_60d': min(len(vix), 60),
         'n_valid_pcr_20d': np.nan if pd.isna(pcr_p20) else 20,
+        'pcr_date': pcr_date,
+        'pcr_lag_days': _pcr_lag_days,
     }])
