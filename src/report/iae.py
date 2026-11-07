@@ -18,8 +18,15 @@ def _fmt_int(v):
         return "N/D"
     if isinstance(v, float) and not math.isfinite(v):
         return "N/D"
+    # H11 (auditoria 2026-11-07): int(v) truncaba hacia cero. Con
+    # valores fraccionarios, int(a) + int(b) + int(c) != int(a+b+c)
+    # (truncado no es distributivo). El auditor detecto +1 accion de
+    # diferencia entre NIPC Total y la suma de breakdowns. int(round)
+    # reduce el sesgo individual; el bloque NIPC deriva el Total de
+    # la suma de breakdowns redondeados para garantizar consistencia
+    # aritmetica por construccion.
     try:
-        return f"{int(v):,}".replace(",", ".")
+        return f"{int(round(v)):,}".replace(",", ".")
     except (TypeError, ValueError, OverflowError):
         return str(v)
 
@@ -91,10 +98,55 @@ def render_iae_section(iae_section):
     out.append("### NIPC - Cambio neto de posiciones reportadas\n")
     out.append("| Concepto | Valor |\n")
     out.append("|---|---:|\n")
-    out.append(f"| Total | {_fmt_int(iae_section.get('nipc_total'))} |\n")
-    out.append(f"| SOLE  | {_fmt_int(iae_section.get('nipc_sole'))} |\n")
-    out.append(f"| DFND  | {_fmt_int(iae_section.get('nipc_dfnd'))} |\n")
-    out.append(f"| OTR   | {_fmt_int(iae_section.get('nipc_otr'))} |\n")
+    # H11 (auditoria 2026-11-07): Total se deriva de la suma de los
+    # breakdowns redondeados para garantizar que la tabla sea
+    # aritmeticamente consistente por construccion. Con floats
+    # fraccionarios, int(a)+int(b)+int(c) != int(a+b+c). El bug del
+    # auditor (+1 accion) era de presentacion, no de calculo: el
+    # compute_nipc raw es correcto (raw_total == sum(raw_parts)).
+    def _int_r(v):
+        try:
+            if v is None:
+                return None
+            import math
+            fv = float(v)
+            if not math.isfinite(fv):
+                return None
+            return int(round(fv))
+        except (TypeError, ValueError, OverflowError):
+            return None
+    _sole_i = _int_r(iae_section.get('nipc_sole'))
+    _dfnd_i = _int_r(iae_section.get('nipc_dfnd'))
+    _otr_i = _int_r(iae_section.get('nipc_otr'))
+    _total_raw_i = _int_r(iae_section.get('nipc_total'))
+    _any_breakdown_valid = (
+        _sole_i is not None or _dfnd_i is not None or _otr_i is not None)
+    _total_derived_i = (
+        ((_sole_i if _sole_i is not None else 0)
+         + (_dfnd_i if _dfnd_i is not None else 0)
+         + (_otr_i if _otr_i is not None else 0))
+        if _any_breakdown_valid else None)
+    # H11 (auditoria 2026-11-07): si nipc_total es NaN/None (dato
+    # faltante), mostrar N/D aunque haya breakdowns. Enmascararlo
+    # con un derivado ocultaria ausencia de dato. Solo cuando
+    # nipc_total esta presente se deriva Total = suma breakdowns
+    # para garantizar consistencia aritmetica con la tabla.
+    _total_to_show = _total_derived_i if _total_raw_i is not None else None
+    out.append(f"| Total | {_fmt_int(_total_to_show)} |\n")
+    out.append(f"| SOLE  | {_fmt_int(_sole_i)} |\n")
+    out.append(f"| DFND  | {_fmt_int(_dfnd_i)} |\n")
+    out.append(f"| OTR   | {_fmt_int(_otr_i)} |\n")
+    # Nota condicional: solo si el Total derivado difiere del raw
+    # redondeado (redondeo no distributivo). Cierra la coherencia con
+    # el JSON interno sin mentir.
+    if (_total_raw_i is not None and _total_derived_i is not None
+            and _total_raw_i != _total_derived_i):
+        out.append(
+            f"*Suma de breakdowns presentada con redondeo consistente. "
+            f"El `nipc_total` exacto (raw redondeado: {_total_raw_i:,}) "
+            f"puede diferir en +-1 por redondeo independiente.*\n"
+            .replace(",", ".")
+        )
     out.append("\n")
     # H14 (2026-10-15, auditoria externa): documentar unidad, formula,
     # tratamiento NEW/EXIT, deduplicacion de gestores y significado
