@@ -9,6 +9,8 @@ No crea Data Quality Score.
 from config.settings import (
     EXPECTED_SECTOR_COUNT, FRESHNESS_FINRA,
     FRESHNESS_SEC, FRESHNESS_CFTC,
+    FRESHNESS_DEFAULT, FRESHNESS_YAHOO,
+    FRESHNESS_CBOE, FRESHNESS_FRED,
 )
 from src.market_calendar import last_expected_market_date
 from config.tickers import MARKET_TICKERS
@@ -49,14 +51,41 @@ def classify_freshness(age_days, frequency):
         elif age_days <= max_stale: return 'STALE'
         else: return 'ARCHIVAL'
     elif frequency == 'fred':
-        if age_days <= 30: return 'CURRENT'
-        elif age_days <= 60: return 'RECENT'
-        elif age_days <= 90: return 'STALE'
+        # H7-completado (2026-11-07): centralizar en
+        # FRESHNESS_FRED de config.settings. Antes hardcoded
+        # (30, 60, 90), coincidente hoy pero divergente si settings
+        # cambia.
+        max_current, max_recent, max_stale = FRESHNESS_FRED
+        if age_days <= max_current: return 'CURRENT'
+        elif age_days <= max_recent: return 'RECENT'
+        elif age_days <= max_stale: return 'STALE'
+        else: return 'ARCHIVAL'
+    elif frequency == 'cboe':
+        # H7-completado: CBOE tiene sus propios umbrales
+        # (3, 5, 10), mas estrictos que DEFAULT (3, 7, 14). Antes
+        # caia en else y usaba DEFAULT.
+        max_current, max_recent, max_stale = FRESHNESS_CBOE
+        if age_days <= max_current: return 'CURRENT'
+        elif age_days <= max_recent: return 'RECENT'
+        elif age_days <= max_stale: return 'STALE'
+        else: return 'ARCHIVAL'
+    elif frequency == 'yahoo':
+        # H7-completado: alias explicito de DEFAULT. Mismo valor
+        # hoy (3, 7, 14) pero permite divergir sin tocar el default
+        # global de fuentes residuales.
+        max_current, max_recent, max_stale = FRESHNESS_YAHOO
+        if age_days <= max_current: return 'CURRENT'
+        elif age_days <= max_recent: return 'RECENT'
+        elif age_days <= max_stale: return 'STALE'
         else: return 'ARCHIVAL'
     else:
-        if age_days <= 3: return 'CURRENT'
-        elif age_days <= 7: return 'RECENT'
-        elif age_days <= 14: return 'STALE'
+        # H7-completado: default global en FRESHNESS_DEFAULT.
+        # Aplica a 'daily' (SSGA, BME, Euronext, Xetra, sectoriales)
+        # y cualquier frequency no reconocida.
+        max_current, max_recent, max_stale = FRESHNESS_DEFAULT
+        if age_days <= max_current: return 'CURRENT'
+        elif age_days <= max_recent: return 'RECENT'
+        elif age_days <= max_stale: return 'STALE'
         else: return 'ARCHIVAL'
 
 def _read_schema_version(csv_path):
@@ -85,7 +114,7 @@ SOURCES = [
         'source': 'Yahoo Finance',
         'file': 'data/market_data.parquet',
         'date_cols': None,
-        'frequency': 'daily',
+        'frequency': 'yahoo',
         'coverage_logic': 'sectorial',
         'notes': 'Precios y métricas sectoriales'
     },
@@ -101,7 +130,7 @@ SOURCES = [
         'source': 'CBOE PCR',
         'file': 'outputs/history/pcr_history.csv',
         'date_cols': ['date'],
-        'frequency': 'daily',
+        'frequency': 'cboe',
         'coverage_logic': 'rows',
         'notes': 'Put/Call ratio'
     },
