@@ -69,12 +69,35 @@ def render_confirmation(confirmation_data):
                 return str(int(v)) if v is not None and pd.notna(v) else "N/D"
             def _ad_float(v, fmt):
                 return format(v, fmt) if v is not None and pd.notna(v) else "N/D"
-            out.append(f"- **Advance/Decline Net (universo completo):** {_fmt_signed(ad.get('ad_net', 0), '{:+d}', '{:d}')} ({_ad_int(ad.get('advances'))} avances / {_ad_int(ad.get('declines'))} descensos)\n")
-            out.append(f"- **New Highs/Lows (mercado):** {_ad_int(ad.get('new_highs'))} maximos / {_ad_int(ad.get('new_lows'))} minimos (NH-NL: {_fmt_signed(ad.get('nh_nl', 0), '{:+d}', '{:d}')})\n")
+            # H2 (auditoria 2026-11-07): declarar fecha efectiva del bloque
+            # A/D. Bug real: compute_advance_decline ya anade effective_date
+            # y lag_days al dict (breadth_equity.py:130-139, via
+            # df_stocks_effective_meta) pero el render no los leia. El
+            # usuario podia leer +282 y creer que era del target_session
+            # cuando el bloque venia de un walk-back (4/11 vs 5/11). El
+            # auditor lo senalo: "publicar una fecha explicita en cada
+            # lectura de A/D, maximos y minimos".
+            _ad_date = ad.get('effective_date')
+            _ad_lag = ad.get('lag_days')
+            _ad_lag_int = (int(_ad_lag)
+                           if (_ad_lag is not None and pd.notna(_ad_lag))
+                           else 0)
+            _ad_suffix = ""
+            if _ad_date is not None and pd.notna(_ad_date):
+                try:
+                    _ad_date_str = pd.Timestamp(_ad_date).strftime('%Y-%m-%d')
+                except (ValueError, TypeError):
+                    _ad_date_str = str(_ad_date)
+                _ad_suffix = f" *(al {_ad_date_str}"
+                if _ad_lag_int > 0:
+                    _ad_suffix += f", lag {_ad_lag_int}d"
+                _ad_suffix += ")*"
+            out.append(f"- **Advance/Decline Net (universo completo):** {_fmt_signed(ad.get('ad_net', 0), '{:+d}', '{:d}')} ({_ad_int(ad.get('advances'))} avances / {_ad_int(ad.get('declines'))} descensos){_ad_suffix}\n")
+            out.append(f"- **New Highs/Lows (mercado):** {_ad_int(ad.get('new_highs'))} maximos / {_ad_int(ad.get('new_lows'))} minimos (NH-NL: {_fmt_signed(ad.get('nh_nl', 0), '{:+d}', '{:d}')}){_ad_suffix}\n")
             thrust = ad.get('breadth_thrust', 0.5)
             if thrust > 0.70 or thrust < 0.30:
                 out.append(f"- **Breadth Thrust extremo:** {thrust*100:.1f}%\n")
-            out.append(f"- **A/D Line (acumulada):** {_ad_float(ad.get('ad_line'), '.0f')}\n")
+            out.append(f"- **A/D Line (acumulada):** {_ad_float(ad.get('ad_line'), '.0f')}{_ad_suffix}\n")
             # H6 (2026-10-17, REP-AUDIT-20261017-capa5): la A/D Line
             # se recalcula en cada run sobre el universo actual de
             # df_stocks. NO es una serie incremental persistida. Si
