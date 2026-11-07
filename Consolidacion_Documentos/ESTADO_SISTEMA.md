@@ -22,7 +22,7 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 4650 passed, 2 skipped (sin filtro; suite completa)
+- **Resumen:** 4600 passed, 2 skipped (sin filtro; suite completa)
 - **Exit code:** 0
 
 **Tests skip:**
@@ -81,9 +81,9 @@ porque el commit que lo contiene cambia HEAD.
 ## 5. Datos IAE
 
 - `data/mappings/radar_target_catalog.csv`
-  - sha256: `fea18a9357390c7a350e56ca8584420e3a65595c2cc41b7c2722b0b7967b692d`
-  - bytes: 43035
-  - lineas: 348
+  - sha256: `b01021e53d0dec89336e8345c4c02b32d0bae7e0e13c6857adfac9f3d035a9ea`
+  - bytes: 65536
+  - lineas: 531
 - `data/mappings/cusip_radar_crosswalk.csv`
   - sha256: `c344bee55fa5149853ed029e59ee2acbccd94d39990f1b493048ea0cb06a60cc`
   - bytes: 22491
@@ -96,7 +96,7 @@ porque el commit que lo contiene cambia HEAD.
 ## 6. Scripts IAE
 
 - `scripts/iae_pipeline.py`: 159 LOC
-- `scripts/build_catalog_csvs.py`: 501 LOC
+- `scripts/build_catalog_csvs.py`: 516 LOC
 - `scripts/iae_reconciliation_b1.py`: 193 LOC
 - `scripts/iae_validate_crosswalk_openfigi.py`: 179 LOC
 - `scripts/iae_test_census.py`: 161 LOC
@@ -104,7 +104,7 @@ porque el commit que lo contiene cambia HEAD.
 - `scripts/iae_coverage.py`: 55 LOC
 - `scripts/iae_identity_uniqueness_audit.py`: 270 LOC
 - `scripts/iae_contractual_nipc_e2e.py`: 142 LOC
-- `scripts/regenerate_radar_catalog.py`: 273 LOC
+- `scripts/regenerate_radar_catalog.py`: 333 LOC
 - `scripts/regenerate_cusip_crosswalk.py`: 238 LOC
 - `scripts/update_sec_13f.py`: 373 LOC
 - `scripts/download_official_list_13f.py`: 147 LOC

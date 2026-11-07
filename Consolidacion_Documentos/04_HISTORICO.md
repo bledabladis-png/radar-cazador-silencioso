@@ -3754,3 +3754,71 @@ formal por auditor (doc 70-v2d). DICT3-H04-INTERVALS OPEN.
 DICT3-H04-INFERENCE-V2 OPEN. TOP20-FALTANTES-DATOS: 52 tickers
 (7 holdout SOW, 1 MRNA, 44 descarga nueva).
 WYCKOFF-CLASSIFY-PHASE-HANG OPEN con fix candidato.
+
+## Sesion 2026-11-07 (sesion 33) - Coherencia de universo
+
+**Objetivo:** el sistema operaba con universos distintos por capa:
+220 tickers descargados (get_stock_list top-20 por sector), 504
+holdings analizados en sector_concentration (etf_holdings.csv completo),
+90 holdings clasificados por Wyckoff (TARGET_WEIGHT_COVERAGE=0.85), 347
+en radar_target_catalog. La advertencia externa sobre coberturas 52-95%
+detecto el sintoma, no la causa.
+
+**Cambios de codigo:**
+
+1. `1c2c4004` + `5bd32514` + `470bae02` (UNIVERSO-COMPLETO-SECTORES).
+   `get_stock_list()` dejo de truncar a top-20 para sectores USA.
+   Indices USA (SPY/QQQ/DIA/IWM) siguen cap 20; breadth sigue cap 20
+   por diseno. `_load_declared_tickers` se extendio a las fuentes
+   canonicas (etf_holdings + index_holdings + xetra_map + yaml) para
+   que el guard MAX_NEW=20 no abortase con 182 tickers legitimos.
+   Descarga: 220 -> 504 holdings de sector; universo total 713.
+   Coste medido: +1 min de pipeline (0.20s/ticker, 284 extra).
+
+2. `0ba11bc5` (WYCKOFF-UNIVERSO-COMPLETO). `TARGET_WEIGHT_COVERAGE`
+   0.85 -> 1.0. Antes: XLK 25/74, XLF 34/76, XLI 44/83. Ahora:
+   XLK 74, XLF 76, XLI 81, XLV 60, XLC 21. `n_total` del CSV
+   refleja holdings completos del sector, no snapshot filtrado.
+   Coste: +0.6 min.
+
+3. `cc906492` (CATALOG-MERGE-ASSIGNMENTS-IDEMPOTENCIA). Bug de
+   idempotencia: `merge_assignments` añadia una fila nueva por ticker
+   sin FIGI (BF-B, PSKY) en cada ejecucion. El catalogo crecia
+   530->532->534. Fix: dedupe por ticker cuando FIGI vacio y exclusion
+   de vacios del calculo de huerfanos. `catalog_assignments.csv`
+   estable en 530.
+
+**Verificacion end-to-end:**
+
+- Run `42402241958` (force=true, HEAD 470bae02): success. Cobertura
+  sectorial 91-100% (antes 52-95%). Catalogo 347 -> 530. Gate 11/11.
+- Run `42409107484` (force=true, HEAD 0ba11bc5): success. Wyckoff
+  universo completo verificado en produccion.
+
+**Errores propios reconocidos durante la sesion:**
+
+- `5bd32514` (limpieza del yaml) se hizo sin auditar `_load_declared_tickers`.
+  El yaml no era solo documentacion: era la fuente de "declarados" que
+  el guard MAX_NEW usaba. Se recupero en `470bae02`.
+- Diagnostico inicial de N-PORT como "sin actualizar" fue falso positivo
+  de metodo (mtime de CSV tracked != frescura).
+- El primer test de `_load_declared_tickers` rompio 3 tests de
+  `test_regenerate_radar_catalog.py` porque cambio el contrato del
+  parametro `path`: con `path` explicito mono-fuente (solo yaml); con
+  `path=None`, multi-fuente. Fix en bloque posterior.
+- El primer test de Wyckoff (`test_snapshot_top20_por_grupo`) fallo
+  porque el fixture no pasaba `selection_mode="target_weight"`; caia
+  en el default `"nlargest"` (top-20). Reescrito a
+  `test_snapshot_universo_completo_por_grupo`.
+
+**Estado al cierre S33:**
+
+- Universo: 713 tickers unicos. Coherencia entre las 4 capas
+  (descarga, analisis, Wyckoff, catalogo).
+- Tests: 4600 passed, 2 skipped. pyflakes limpio, compileall OK.
+- Gate 11/11. Gobernanza 308 items.
+- Pendiente fecha: RECEIPT-AUDIT-LAG (17-11), H5.3 (20-11),
+  TEST-FRESHNESS (10-11, >=5 filas ya alcanzadas).
+- WYCKOFF-5BX: re-etiquetado como referencia historica; no se
+  recalibra hasta que haya caso real (umbral 550, hoy 34-40).
+

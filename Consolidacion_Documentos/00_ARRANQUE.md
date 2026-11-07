@@ -92,14 +92,16 @@ Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/
 
 Snapshot al cierre del ultimo commit (2026-11-07, sesion 32):
 - HEAD: `46886dba` (consultar `git log --oneline -1` para el actual)
-- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S32: 4650 passed, 0 failed, 2 skipped. pyflakes LIMPIO, compileall OK.
+- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S33: 4600 passed, 0 failed, 2 skipped. pyflakes LIMPIO, compileall OK.
 - Validation Gate: 11/11
 - Working tree: limpio
-- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 304 items. Validador reforzado.
+- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 308 items. Validador reforzado.
 - Corpus documental: v3 (Consolidacion_Documentos/00-08)
 - Contratos temporales: 13 (`_IMPLEMENTED_CONTRACTS`). 9 originales + 4 nuevos (SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO).
 - Scheduled: ultimo run real 41833890715 (04-11 12:58 UTC, gate=true, head bf384387). Ver `gh run list`.
 - Fase 2 (auditoria por bloques): COMPLETA (B1-B8). Ver HANDOFF seccion 1.
+- Universo operado: 713 tickers unicos. Coherencia entre descarga,
+  analisis, Wyckoff y catalogo (S33).
 
 **Contratos vigentes y decisiones estructurales** (los detalles viven en `04_HISTORICO.md`; aqui solo lo que no se puede olvidar):
 
@@ -177,7 +179,9 @@ EU-HOLDINGS-DOWNLOAD-CAP (FIXED d6c3ebb4).
   -n auto + timeout 600s. 137s vs >10 min.
 ### 4.2. Frente Wyckoff (sistema holdings, sesion 3 cerrada)
 
-Sistema holdings-based en produccion desde sesion 3 (2026-10-24). Modulos, pre-registros fallidos (docs 60 y 61) y limitaciones (PSY/PS dead code, `ACCUMULATION=0`, cobertura USA 231/504 holdings pendiente de ampliacion): detalle en `04_HISTORICO.md`. Cobertura `n_valid_rs` por sector: `sector_concentration.csv`.
+Sistema holdings-based en produccion desde sesion 3 (2026-10-24). Modulos, pre-registros fallidos (docs 60 y 61) y limitaciones (PSY/PS dead code, `ACCUMULATION=0`): detalle en `04_HISTORICO.md`.
+
+S33 (2026-11-07): `TARGET_WEIGHT_COVERAGE` paso de 0.85 a 1.0. Clasifica universo completo del sector, no top-20 por peso disfrazado. `sector_wyckoff_distribution.n_total` = holdings completos (XLK 74, XLF 76, XLI 81, XLV 60). Cobertura `n_valid_rs` por sector sigue en `sector_concentration.csv`. WYCKOFF-5BX (BLOCKED_EXTERNAL) queda como referencia historica.
 
 ### 4.3. Pendientes vivos
 

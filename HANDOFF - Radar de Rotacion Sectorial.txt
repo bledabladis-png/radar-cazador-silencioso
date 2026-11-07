@@ -8,15 +8,15 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 ---
 
 
-## 1. ESTADO AL CIERRE (2026-11-07, sesion 32)
+## 1. ESTADO AL CIERRE (2026-11-07, sesion 33)
 
-HEAD: `46886dba` (consultar `git log --oneline -1` para el actual).
+HEAD: `fcee63a2` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4650 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4600 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 304 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 308 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 13 (_IMPLEMENTED_CONTRACTS), 5 familias.
@@ -26,13 +26,13 @@ Fase 2 (auditoria por bloques): COMPLETA. B1-B8 auditados.
 Fase 0 + Fase 1: COMPLETAS.
 Transversales: cerrados.
 
-Sesion 32 (2026-11-07): continuacion de S31 (misma semana). Cierre de
-6 fixes: 4 del bloque auditoria 2026-11-07 (H5, H2, H3, H11), 1 fix
-propio de frescura detectado por el operador (H12-fix gate walk-back),
-y 1 deuda heredada de la auditoria 2026-10-16 (H7-20261016 freshness
-centralizada). 8 hallazgos del auditor 2026-11-07 restantes son
-decision de producto. Autonomia 13F verificada (workflow active,
-primer disparo 20-nov).
+Sesion 33 (2026-11-07): coherencia de universo. Cierre de 5
+verificaciones tempranas (N-PORT, ISSUES-WRITE-CI-RUNTIME, gate
+local, SSGA, CIRCUIT-BREAKER WONT_FIX) + 3 frentes de codigo nuevos
+(universo completo de sectores, Wyckoff universo completo, idempotencia
+del catalogo). Sistema pasa de universos distintos por capa
+(220 descarga, 504 analisis, 90 Wyckoff, 347 catalogo) a universo
+unico de 713 tickers operado por todas las capas.
 
 ## 2. SESION 2026-11-07 (sesion 32): detalle
 
@@ -180,8 +180,7 @@ estan cubiertos:
 
 | Item | Fecha | Accion |
 |---|---|---|
-| ISSUES-WRITE-CI-RUNTIME | 2026-11-07 | Verificar tras scheduled ~03:26 UTC |
-| TEST-FRESHNESS-UMBRAL-VS-CADENCIA | 2026-11-10 | >=5 filas del observatorio |
+| TEST-FRESHNESS-UMBRAL-VS-CADENCIA | 2026-11-10 | >=5 filas alcanzadas (S33). Decidir cierre |
 | RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
 | H5.3 | 2026-11-20 | Verificar cron trimestral 13F (primer disparo real) |
 
@@ -283,6 +282,47 @@ razonado. Ninguna toca codigo: todas se resuelven con evidencia.
   dejaria pipeline stuck silencioso. Revisar solo si emerge
   patron de 3+ fallos consecutivos en ventana de slots.
   Item en REGISTRO: CIRCUIT-BREAKER-PIPELINE.
+
+### 3.10. Cierres de codigo S33 (2026-11-07)
+
+3 frentes de codigo nuevos, con commits y verificacion end-to-end en
+produccion. Despues de estos, el sistema tiene un solo universo
+operado por todas las capas.
+
+- **UNIVERSO-COMPLETO-SECTORES** (commits `1c2c4004` + `5bd32514` +
+  `470bae02`). `get_stock_list()` dejo de truncar a top-20 por sector;
+  ahora descarga los 504 holdings de `etf_holdings.csv`. Indices USA
+  (SPY/QQQ/DIA/IWM) siguen top-20; breadth sigue top-20 por diseno.
+  `_load_declared_tickers` (regenerate_radar_catalog) se extendio a
+  fuentes canonicas (etf_holdings + index_holdings + xetra_map + yaml)
+  para que el guard MAX_NEW=20 no disparase con los 182 tickers
+  legitimos. Verificado run 42402241958 (success). Cobertura sectorial
+  52-95% -> 91-100%. Catalogo 347 -> 530.
+
+- **WYCKOFF-UNIVERSO-COMPLETO** (commit `0ba11bc5`).
+  `TARGET_WEIGHT_COVERAGE` paso de 0.85 a 1.0. Antes clasificaba 25 de
+  74 en XLK, 34 de 76 en XLF (85% del peso); el CSV publicaba
+  coverage_wyckoff=100% sobre el snapshot filtrado, ocultando la
+  brecha. Ahora `sector_wyckoff_distribution.n_total` = holdings
+  completos del sector: XLK 74, XLF 76, XLI 81, XLV 60, XLC 21.
+  Coste medido 0.6 min extra (504 tickers x 0.069s). Verificado run
+  42409107484 (success). WYCKOFF-5BX se re-etiqueta como referencia
+  historica, no se recalibra.
+
+- **CATALOG-MERGE-ASSIGNMENTS-IDEMPOTENCIA** (commit `cc906492`). Bug:
+  `merge_assignments` anadia una fila nueva por cada ticker sin FIGI
+  (BF-B, PSKY) en cada ejecucion. El catalogo crecia 530->532->534
+  entre runs. Fix: dedupe por ticker cuando FIGI vacio
+  (`by_ticker_no_figi`), y "orphaned" excluye FIGI vacios (no son
+  huerfanos, son pendientes de resolver). Test unico adaptado a FIGI
+  no vacios. `catalog_assignments.csv` 530 estable.
+
+Aprendizaje operativo S33: al cambiar el universo de un modulo, auditar
+los consumidores antes de commitear. `5bd32514` (limpieza del yaml) se
+hizo sin verificar que `_load_declared_tickers` dependia de el; se
+recupero con `470bae02`. El CSV que publica una cobertura debe
+corresponder al universo declarado, no al filtrado.
+
 ## 4. COMO ARRANCAR
 
     Set-Location D:\Macro_Sectorial
