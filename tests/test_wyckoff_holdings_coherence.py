@@ -14,11 +14,14 @@ def test_snapshot_amplia_contrato_columnas():
     assert set(OUTPUT_COLUMNS) == expected
 
 
-def test_snapshot_top20_por_grupo():
-    """Ningun ticker fuera del top-20 de su grupo."""
-    from indicators.wyckoff_holdings_report import (
-        compute_wyckoff_snapshot, TOP_N_HOLDINGS,
-    )
+def test_snapshot_universo_completo_por_grupo():
+    """2026-11-07: universo completo. Con TARGET_WEIGHT_COVERAGE=1.0 el
+    snapshot incluye TODOS los tickers evaluables del grupo (no top-20).
+
+    Fixture: 30 tickers con weights decrecientes. Esperado: los 30 estan
+    en el snapshot (o los que clasifiquen como evaluables), no solo 20.
+    """
+    from indicators.wyckoff_holdings_report import compute_wyckoff_snapshot
     # Fixture: 30 tickers por grupo
     tickers = [f"T{i:02d}" for i in range(30)]
     dates = pd.date_range("2023-01-01", periods=500, freq="B")
@@ -31,11 +34,14 @@ def test_snapshot_top20_por_grupo():
         "ticker": tickers,
         "weight": [30-i for i in range(30)],
     })
-    snap = compute_wyckoff_snapshot(df, holdings, None, None)
+    snap = compute_wyckoff_snapshot(
+        df, holdings, None, None, selection_mode="target_weight")
     if snap.empty:
         return  # puede pasar si classify_phase da INSUFFICIENT en todos
-    # Como maximo TOP_N_HOLDINGS por grupo
-    assert snap.groupby("group").size().max() <= TOP_N_HOLDINGS
+    # Universo completo: sin limite artificial de 20. Todos los evaluables.
+    assert snap.groupby("group").size().max() > 20, (
+        "con TARGET_WEIGHT_COVERAGE=1.0 y selection_mode='target_weight' "
+        "el snapshot debe incluir >20 tickers por grupo (fixture: 30)");
 
 
 def test_phase_since_iso_o_vacio():

@@ -23,11 +23,18 @@ MIN_BARS_THEORETICAL = 200
 MIN_BARS_VALID = 460
 
 # DICT3-TOP20-COBERTURA (2026-10-26): criterio de seleccion por cobertura
-# de peso, no por numero fijo. Reemplaza a TOP_N_HOLDINGS para la
-# seleccion por grupo (se conserva TOP_N_HOLDINGS por compatibilidad
-# hasta Fase A.2). Objetivo 0.85 dentro del rango 80-90% del dictamen.
-TARGET_WEIGHT_COVERAGE = 0.85
-MIN_TICKERS_PER_GROUP = TOP_N_HOLDINGS  # baseline top-20 preservado (P0-H01, v2)
+# de peso, no por numero fijo.
+# 2026-11-07 (coherencia de universo): TARGET_WEIGHT_COVERAGE pasa de
+# 0.85 a 1.0. Tras commit 1c2c4004 (universo completo de sectores USA),
+# el techo real con 460 barras es 91-100% en conteo y 87.7-100% en peso.
+# Clasificar todo el universo elimina la incoherencia con
+# sector_concentration (504 holdings) y hace que coverage_wyckoff del
+# CSV refleje el universo completo del sector, no un top-20 disfrazado.
+# Coste medido: 0.6 min extra de pipeline. WYCKOFF-5BX (BLOCKED_EXTERNAL)
+# fue calibrado con el universo anterior; se re-etiqueta como referencia
+# historica, no se recalibra.
+TARGET_WEIGHT_COVERAGE = 1.0
+MIN_TICKERS_PER_GROUP = 1  # universo completo: cualquier grupo >=1 es valido
 MAX_TICKERS_PER_GROUP = 300
 
 ACC_PHASES = frozenset({"ACCUMULATION", "ACCUMULATION_FORMING", "MARKUP"})
