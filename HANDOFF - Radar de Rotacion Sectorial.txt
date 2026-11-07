@@ -13,7 +13,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 HEAD: `af1ea520` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4620 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4626 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
 Gobernanza: docs/gobernanza/REGISTRO.yaml, 304 items.
@@ -178,7 +178,7 @@ Esperado:
 - HEAD = git log --oneline -1.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests: fuente autoritativa ESTADO_SISTEMA.md (4620 passed, 0 failed).
+- Tests: fuente autoritativa ESTADO_SISTEMA.md (4626 passed, 0 failed).
 - Gobernanza [OK]. Indice H1-H18 [OK]. Bitacora [OK].
 - pyflakes silencio, compileall OK.
 
