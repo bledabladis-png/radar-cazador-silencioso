@@ -41,9 +41,14 @@ _COUNT_BY_SIGNAL_PHASE = {
     'MARKDOWN': 'count_markdown',
 }
 
-def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results, sector_wyckoff_distribution_df=None):
+def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results, sector_wyckoff_distribution_df=None, input_status=None):
     """
     Combina datos existentes y devuelve DataFrame con la matriz.
+
+    H3 (auditoria 2026-11-07): input_status dict declara el estado de
+    los inputs criticos (p.ej. {'sector_breadth': 'DEGRADED'}). Si
+    sector_breadth esta DEGRADED, la matriz hereda el estado y lo
+    publica en su columna 'input_status' para que el render avise.
     """
     if sector_breadth_df is None or sector_flow_df is None or sector_results is None:
         return pd.DataFrame()
@@ -134,6 +139,9 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
     breadth = sector_breadth_df.drop_duplicates(subset='sector', keep='last').set_index('sector')
     flow = sector_flow_df.drop_duplicates(subset='sector', keep='last').set_index('sector')
 
+    # H3: estado del input critico para declarar en cada fila.
+    _is_val = (input_status or {}).get('sector_breadth', 'VALID')
+
     rows = []
     for sector in SECTORS:
         if sector not in breadth.index or sector not in flow.index:
@@ -169,6 +177,7 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
                 'positive_conditions': np.nan,
                 'data_complete': False,
                 'regime_reading': 'N/D',
+                'input_status': _is_val,
             })
             continue
 
@@ -208,6 +217,7 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
             'positive_conditions': positives,
             'data_complete': True,
             'regime_reading': lectura,
+            'input_status': _is_val,
         })
 
     return pd.DataFrame(rows)

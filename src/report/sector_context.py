@@ -18,6 +18,22 @@ def render_matriz_regimen(sector_regime_matrix_data):
     out = []
     if sector_regime_matrix_data is not None and not sector_regime_matrix_data.empty:
         out.append("## Matriz de Régimen Sectorial\n")
+        # H3 (auditoria 2026-11-07): declarar fecha + estado del input
+        # critico (sector_breadth). Sin hardcode: cualquier fecha y
+        # cualquier input_status presente en el df se declara.
+        _h3_date_str = None
+        _h3_status = 'VALID'
+        try:
+            if 'date' in sector_regime_matrix_data.columns and not sector_regime_matrix_data['date'].isna().all():
+                _h3_date_str = pd.Timestamp(sector_regime_matrix_data['date'].iloc[0]).strftime('%Y-%m-%d')
+            if 'input_status' in sector_regime_matrix_data.columns and not sector_regime_matrix_data['input_status'].isna().all():
+                _h3_status = str(sector_regime_matrix_data['input_status'].iloc[0])
+        except (KeyError, TypeError, ValueError, IndexError):
+            pass
+        if _h3_date_str:
+            out.append(f"*Datos al {_h3_date_str}.*\n")
+        if _h3_status == 'DEGRADED':
+            out.append("*[input DEGRADED] Uno o mas inputs criticos con lag o cobertura insuficiente (sector_breadth). La tabla es indicativa, no confirmada.*\n\n")
         out.append("| Sector | Precio 20d | % > EMA50 | Flujo 20d | Fase dominante | Struct | N est | Positivas | Lectura |\n")
         out.append("|--------|------------|-----------|-----------|--------------|--------|-------|-----------|---------|\n")
         for _, row in sector_regime_matrix_data.iterrows():

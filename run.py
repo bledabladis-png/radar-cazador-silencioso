@@ -265,6 +265,7 @@ def main():
         sector_flow_characteristics_df, sector_wyckoff_distribution_df,
         sector_results, financial_regime, real_liq_regime,
         vol_regime, vol_score, real_liq_score, financial_score,
+        sector_breadth_stale_reason=sector_breadth_stale_reason,
     )
     sector_regime_matrix_df = mats['sector_regime_matrix_df']
     evidence_matrix_df = mats['evidence_matrix_df']

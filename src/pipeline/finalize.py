@@ -21,18 +21,41 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
                            sector_flow_characteristics_df,
                            sector_wyckoff_distribution_df, sector_results,
                            financial_regime, real_liq_regime,
-                           vol_regime, vol_score, real_liq_score, financial_score):
+                           vol_regime, vol_score, real_liq_score, financial_score,
+                           sector_breadth_stale_reason=None):
     """Construye Matriz de Regimen Sectorial + Matriz de Evidencia.
+
+    H3 (auditoria 2026-11-07): los derivados de sector_breadth no
+    declaraban si el input critico venia de un walk-back / DATA_PENDING.
+    El lector podia creer que la tabla estaba confirmada al 100%.
+
+    Args:
+        sector_breadth_stale_reason: razon del stale del bloque breadth
+            (DATA_PENDING / MARKET_CLOSED / ERROR / None). Si DATA_PENDING,
+            los derivados publican input_status=DEGRADED.
 
     Returns:
         dict con keys: sector_regime_matrix_df, evidence_matrix_df
     """
+    # H3 (auditoria 2026-11-07): taxonomia de estado del input critico.
+    # Reutiliza indicators.mte.status (VALID/DEGRADED/INVALID). Si
+    # sector_breadth viene de DATA_PENDING (walk-back aplicado), los
+    # derivados heredan DEGRADED y lo publican en su render. Sin
+    # hardcode de modulos: el dict input_status viaja a los productores.
+    from indicators.mte.status import VALID as _IN_VALID, DEGRADED as _IN_DEGRADED
+    _breadth_input_status = (
+        _IN_DEGRADED if sector_breadth_stale_reason == 'DATA_PENDING'
+        else _IN_VALID
+    )
+    _input_status = {'sector_breadth': _breadth_input_status}
+
     sector_regime_matrix_df = None
     try:
         from indicators.sector_regime_matrix import build_sector_regime_matrix
         sector_regime_matrix_df = build_sector_regime_matrix(
             sector_breadth_df, sector_flow_characteristics_df, sector_results,
             sector_wyckoff_distribution_df=sector_wyckoff_distribution_df,
+            input_status=_input_status,
         )
         if sector_regime_matrix_df is not None and not sector_regime_matrix_df.empty:
             persist('sector_regime_matrix', sector_regime_matrix_df)
@@ -57,7 +80,8 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
             real_liquidity_regime=real_liq_regime,
             volatility_regime=vol_regime,
             volatility_score=vol_score,
-            liquidity_score=real_liq_score if real_liq_score is not None else financial_score
+            liquidity_score=real_liq_score if real_liq_score is not None else financial_score,
+            input_status=_input_status,
         )
         if evidence_matrix_df is not None and not evidence_matrix_df.empty:
             persist('evidence_matrix', evidence_matrix_df)

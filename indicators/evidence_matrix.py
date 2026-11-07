@@ -81,11 +81,16 @@ def compute_evidence_matrix(sector_breadth_df=None,
                            real_liquidity_regime=None,
                            volatility_regime=None,
                            volatility_score=None,
-                           liquidity_score=None):
+                           liquidity_score=None,
+                           input_status=None):
     """
     Calcula la Matriz de Evidencia para 11 sectores.
     Devuelve DataFrame con columnas descriptivas.
     Si falta una fuente, la evidencia correspondiente se marca NaN.
+
+    H3 (auditoria 2026-11-07): input_status dict declara el estado de
+    los inputs criticos. Si sector_breadth esta DEGRADED, la matriz
+    hereda el estado y lo publica en 'input_status'.
     """
     # Obtener lista de sectores desde cualquier DataFrame disponible
     sectors = None
@@ -101,6 +106,9 @@ def compute_evidence_matrix(sector_breadth_df=None,
     flow_char = sector_flow_characteristics_df.set_index('sector', drop=False) if sector_flow_characteristics_df is not None else pd.DataFrame()
     concentration = sector_concentration_df.set_index('sector', drop=False) if sector_concentration_df is not None else pd.DataFrame()
     wyckoff = sector_wyckoff_distribution_df.set_index('sector', drop=False) if sector_wyckoff_distribution_df is not None else pd.DataFrame()
+
+    # H3: estado del input critico para declarar en cada fila.
+    _is_val = (input_status or {}).get('sector_breadth', 'VALID')
 
     rows = []
 
@@ -200,6 +208,7 @@ def compute_evidence_matrix(sector_breadth_df=None,
             'wyckoff_quality': wyckoff_quality,
             'credit_quality': credit_quality,
             'volatility_quality': volatility_quality,
+            'input_status': _is_val,
         })
 
     df = pd.DataFrame(rows)

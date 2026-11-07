@@ -111,6 +111,22 @@ def render_matriz_evidencia(evidence_matrix_data):
         # En regimenes homogeneos, la mayoria cae en FAVORABLE o
         # DESFAVORABLE, no en MIXTA.
         out.append("\n## Matriz de Evidencia\n\n")
+        # H3 (auditoria 2026-11-07): declarar fecha + estado del input
+        # critico. Sin hardcode: cualquier fecha y cualquier
+        # input_status presente en el df se declara.
+        _h3_date_str = None
+        _h3_status = 'VALID'
+        try:
+            if 'date' in evidence_matrix_data.columns and not evidence_matrix_data['date'].isna().all():
+                _h3_date_str = pd.Timestamp(evidence_matrix_data['date'].iloc[0]).strftime('%Y-%m-%d')
+            if 'input_status' in evidence_matrix_data.columns and not evidence_matrix_data['input_status'].isna().all():
+                _h3_status = str(evidence_matrix_data['input_status'].iloc[0])
+        except (KeyError, TypeError, ValueError, IndexError):
+            pass
+        if _h3_date_str:
+            out.append(f"*Datos al {_h3_date_str}.*\n")
+        if _h3_status == 'DEGRADED':
+            out.append("*[input DEGRADED] Uno o mas inputs criticos con lag o cobertura insuficiente (sector_breadth). La tabla es indicativa, no confirmada.*\n\n")
         # H13 (2026-10-16, auditoria): el nombre "Flujo 1º" no declaraba
         # el horizonte. Se cambia a "Flujo 1º 20d" y se anade nota
         # metodologica. La columna se calcula sobre primary_flow_evidence
