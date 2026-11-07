@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Tests de data/universe_expansions.yaml y su integracion en get_stock_list.
 
-DICT3-TOP20-COBERTURA: grupos con cola larga anaden tickers por encima
-del top-20 sin cambiar TOP_N_SECTOR_COMPONENTS. El yaml es la fuente
-de verdad, versionada, con cobertura documentada.
+2026-11-07: las secciones de sector fueron eliminadas al activar el
+universo completo (commit 1c2c4004). Este fichero prueba los bloques
+que quedan (expansiones de INDICES USA: SPY, QQQ) y verifica que no
+se reintroducen secciones de sector.
 """
 from pathlib import Path
 
@@ -15,13 +16,11 @@ EXP_PATH = Path("data/universe_expansions.yaml")
 ETF_HOLDINGS = Path("data/etf_holdings.csv")
 INDEX_HOLDINGS = Path("data/index_holdings.csv")
 
+SECTORES = {"XLK","XLF","XLI","XLV","XLY","XLP","XLB","XLU","XLRE","XLC","XLE"}
+
 
 def _holdings_for_etf(etf):
-    """Devuelve DataFrame de holdings del ETF (sector o indice).
-
-    Sectores en etf_holdings.csv. Indices (SPY/QQQ/DIA/IWM, FEZ...)
-    en index_holdings.csv. Devuelve None si no se encuentra.
-    """
+    """Devuelve DataFrame de holdings del ETF (sector o indice)."""
     if ETF_HOLDINGS.exists():
         h = pd.read_csv(ETF_HOLDINGS)
         if (h["etf"] == etf).any():
@@ -65,99 +64,24 @@ def test_tickers_sin_duplicados_entre_bloques():
             vistos[t] = key
 
 
-def test_xli_extra_no_esta_en_top20_xli():
-    """Los tickers de xli_extra NO estan en top-20 de XLI (redundancia)."""
-    if not ETF_HOLDINGS.exists():
-        pytest.skip("etf_holdings.csv no disponible")
+def test_yaml_no_contiene_secciones_de_sector():
+    """Centinela 2026-11-07: el yaml solo contiene expansion de INDICES.
+
+    Las secciones de sector (XLK, XLF, etc.) son redundantes desde que
+    get_stock_list descarga holdings completos (commit 1c2c4004).
+    Si alguien reintroduce una, este test falla y obliga a justificar.
+    """
     exp = _cargar_yaml()
-    xli = exp.get("xli_extra")
-    if xli is None:
-        pytest.skip("xli_extra no en yaml")
-    h = pd.read_csv(ETF_HOLDINGS)
-    xli_h = h[h["etf"] == "XLI"].sort_values("weight", ascending=False)
-    top20 = set(xli_h.head(20)["ticker"].tolist())
-    redundantes = top20 & set(xli["tickers"])
-    assert not redundantes, f"tickers redundantes con top-20: {sorted(redundantes)}"
-
-
-def test_xli_cobertura_objetivo_en_80_90():
-    """cobertura_tras_expansion esta en [80, 90] (objetivo del dictamen)."""
-    exp = _cargar_yaml()
-    xli = exp.get("xli_extra")
-    if xli is None:
-        pytest.skip("xli_extra no en yaml")
-    cob = xli["cobertura_tras_expansion"]
-    assert 80.0 <= cob <= 90.0, f"cobertura {cob} fuera de [80, 90]"
-
-
-def test_xli_cobertura_top20_coincide_con_etf_holdings():
-    """cobertura_top20_actual declarada == calculada desde etf_holdings."""
-    if not ETF_HOLDINGS.exists():
-        pytest.skip("etf_holdings.csv no disponible")
-    exp = _cargar_yaml()
-    xli = exp.get("xli_extra")
-    if xli is None:
-        pytest.skip("xli_extra no en yaml")
-    h = pd.read_csv(ETF_HOLDINGS)
-    xli_h = h[h["etf"] == "XLI"].sort_values("weight", ascending=False).reset_index(drop=True)
-    cob_calc = xli_h.head(20)["weight"].sum()
-    assert abs(cob_calc - xli["cobertura_top20_actual"]) < 0.5, (
-        f"top-20 calculado {cob_calc:.2f} vs yaml {xli['cobertura_top20_actual']}"
+    sect_blocks = [
+        (k, v.get("etf"))
+        for k, v in exp.items()
+        if isinstance(v, dict) and v.get("etf") in SECTORES
+    ]
+    assert not sect_blocks, (
+        f"yaml contiene secciones de SECTOR: {sect_blocks}. "
+        f"El universo completo de sectores ya no las necesita. "
+        f"Si es intencional, anadir justificacion y actualizar este test."
     )
-
-
-def test_xli_cobertura_top20_mas_extra_coincide_con_etf_holdings():
-    """cobertura_top20_mas_extra == peso(top-20 UNION xli_extra)."""
-    if not ETF_HOLDINGS.exists():
-        pytest.skip("etf_holdings.csv no disponible")
-    exp = _cargar_yaml()
-    xli = exp.get("xli_extra")
-    if xli is None:
-        pytest.skip("xli_extra no en yaml")
-    h = pd.read_csv(ETF_HOLDINGS)
-    xli_h = h[h["etf"] == "XLI"].sort_values("weight", ascending=False).reset_index(drop=True)
-    top20_tickers = set(xli_h.head(20)["ticker"].tolist())
-    todos = top20_tickers | set(xli["tickers"])
-    cob_calc = xli_h[xli_h["ticker"].isin(todos)]["weight"].sum()
-    assert abs(cob_calc - xli["cobertura_top20_mas_extra"]) < 0.5, (
-        f"top-20+extra calculado {cob_calc:.2f} vs yaml {xli['cobertura_top20_mas_extra']}"
-    )
-
-
-def test_xli_cobertura_tras_expansion_coincide_top50():
-    """cobertura_tras_expansion == peso de los 50 XLI mas pesados (top-50)."""
-    if not ETF_HOLDINGS.exists():
-        pytest.skip("etf_holdings.csv no disponible")
-    exp = _cargar_yaml()
-    xli = exp.get("xli_extra")
-    if xli is None:
-        pytest.skip("xli_extra no en yaml")
-    h = pd.read_csv(ETF_HOLDINGS)
-    xli_h = h[h["etf"] == "XLI"].sort_values("weight", ascending=False).reset_index(drop=True)
-    cob_calc = xli_h.head(50)["weight"].sum()
-    assert abs(cob_calc - xli["cobertura_tras_expansion"]) < 0.5, (
-        f"top-50 calculado {cob_calc:.2f} vs yaml {xli['cobertura_tras_expansion']}"
-    )
-
-
-def test_get_stock_list_incluye_xli_extra():
-    """get_stock_list devuelve los tickers de xli_extra."""
-    exp = _cargar_yaml()
-    xli = exp.get("xli_extra")
-    if xli is None:
-        pytest.skip("xli_extra no en yaml")
-    from src.stock_data_loader import get_stock_list
-    tickers = set(get_stock_list())
-    faltantes = [t for t in xli["tickers"] if t not in tickers]
-    assert not faltantes, f"get_stock_list NO incluye: {faltantes}"
-
-
-# --- Tests genericos (2026-10-27, xlk_extra + xlv_extra) ---
-# Los tests anteriores son especificos de xli_extra. Estos validan
-# cualquier bloque del yaml con las mismas reglas, para que anadir un
-# bloque nuevo no requiera duplicar asserts.
-
-import pytest as _pytest
 
 
 def _todos_bloques():
@@ -165,15 +89,12 @@ def _todos_bloques():
     return [(k, v) for k, v in exp.items() if isinstance(v, dict) and "tickers" in v]
 
 
-@_pytest.mark.parametrize("key,block", _todos_bloques())
+@pytest.mark.parametrize("key,block", _todos_bloques())
 def test_generico_no_esta_en_top20_del_etf(key, block):
-    """Los tickers ELEGIBLES del bloque NO estan en top-20 del ETF.
-
-    Tickers DELISTED declarados en el bloque (documentacion de caso
-    conocido, p.ej. WBD en xlc_extra_90) se excluyen."""
+    """Los tickers ELEGIBLES del bloque NO estan en top-20 del ETF."""
     h = _holdings_for_etf(block["etf"])
     if h is None:
-        _pytest.skip("holdings no disponibles para " + block["etf"])
+        pytest.skip("holdings no disponibles para " + block["etf"])
     from src.ticker_health import is_eligible
     etf = block["etf"]
     sub = h[h["etf"] == etf].sort_values("weight", ascending=False)
@@ -183,12 +104,12 @@ def test_generico_no_esta_en_top20_del_etf(key, block):
     assert not redundantes, f"{key}: redundantes con top-20: {sorted(redundantes)}"
 
 
-@_pytest.mark.parametrize("key,block", _todos_bloques())
+@pytest.mark.parametrize("key,block", _todos_bloques())
 def test_generico_cobertura_top20_coincide(key, block):
-    """cobertura_top20_actual declarada == calculada desde etf_holdings."""
+    """cobertura_top20_actual declarada == calculada desde holdings."""
     h = _holdings_for_etf(block["etf"])
     if h is None:
-        _pytest.skip("holdings no disponibles para " + block["etf"])
+        pytest.skip("holdings no disponibles para " + block["etf"])
     etf = block["etf"]
     sub = h[h["etf"] == etf].sort_values("weight", ascending=False).reset_index(drop=True)
     tot = sub["weight"].sum()
@@ -198,12 +119,12 @@ def test_generico_cobertura_top20_coincide(key, block):
     )
 
 
-@_pytest.mark.parametrize("key,block", _todos_bloques())
+@pytest.mark.parametrize("key,block", _todos_bloques())
 def test_generico_cobertura_top20_mas_extra_coincide(key, block):
     """cobertura_top20_mas_extra == peso(top-20 UNION tickers del bloque)."""
     h = _holdings_for_etf(block["etf"])
     if h is None:
-        _pytest.skip("holdings no disponibles para " + block["etf"])
+        pytest.skip("holdings no disponibles para " + block["etf"])
     etf = block["etf"]
     sub = h[h["etf"] == etf].sort_values("weight", ascending=False).reset_index(drop=True)
     tot = sub["weight"].sum()
@@ -215,12 +136,9 @@ def test_generico_cobertura_top20_mas_extra_coincide(key, block):
     )
 
 
-@_pytest.mark.parametrize("key,block", _todos_bloques())
+@pytest.mark.parametrize("key,block", _todos_bloques())
 def test_generico_get_stock_list_incluye_tickers(key, block):
-    """get_stock_list devuelve todos los tickers ELEGIBLES del bloque.
-
-    Tickers DELISTED declarados en el bloque (documentacion de caso
-    conocido) NO estan en get_stock_list por diseno."""
+    """get_stock_list devuelve todos los tickers ELEGIBLES del bloque."""
     from src.stock_data_loader import get_stock_list
     from src.ticker_health import is_eligible
     tickers = set(get_stock_list())

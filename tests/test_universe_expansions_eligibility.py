@@ -7,9 +7,8 @@ Estos tests fijan 4 invariantes:
      ticker DELISTED llega al universo, independientemente de la fuente.
   2. La foto actual del universo no contiene DELISTED.
   3. WBD (DELISTED 2026-10-06, adquirida por Paramount Skydance) esta
-     declarado en universe_expansions.yaml::xlc_extra_90 para documentar
-     el caso, y el filtro final lo descarta. Si WBD se re-listea en el
-     futuro, aparece sin tocar el YAML.
+     documentado en ticker_health.yaml y el filtro final lo descarta.
+     Si WBD se re-listea en el futuro, aparece sin tocar el YAML.
   4. Cobertura de peso: cada ETF sectorial USA cubre >=90% de su peso
      con los tickers en get_stock_list(). Si SPDR rebalancea y baja el
      peso cubierto por debajo del 90%, el test falla y avisa. Es una
@@ -68,23 +67,31 @@ def test_ningun_delisted_llega_a_universo():
     )
 
 
-def test_wbd_en_yaml_pero_no_en_universo():
-    """WBD esta en YAML (xlc_extra_90) y no en get_stock_list()."""
+def test_wbd_delisted_documentado_y_fuera_de_universo():
+    """WBD esta documentado en ticker_health.yaml y no llega a get_stock_list().
+
+    2026-11-07: la documentacion de WBD vivia tambien en
+    universe_expansions.yaml::xlc_extra_90, seccion eliminada al
+    activar el universo completo de sectores (commit 1c2c4004). La
+    fuente canonica es ticker_health.yaml.
+    """
     import yaml
-    yp = ROOT / "data" / "universe_expansions.yaml"
+    yp = ROOT / "data" / "mappings" / "ticker_health.yaml"
     if not yp.exists():
-        pytest.skip("universe_expansions.yaml no disponible")
-    exp = yaml.safe_load(yp.read_text(encoding="utf-8")) or {}
-    assert "xlc_extra_90" in exp, (
-        "xlc_extra_90 no existe en el YAML. Si es intencional, retirar este test."
+        pytest.skip("ticker_health.yaml no disponible")
+    th = yaml.safe_load(yp.read_text(encoding="utf-8")) or {}
+    tickers = th.get("tickers", {})
+    assert "WBD" in tickers, (
+        "WBD no documentado en ticker_health.yaml. "
+        "Si es intencional, retirar este test."
     )
-    assert "WBD" in exp["xlc_extra_90"]["tickers"], (
-        "WBD no esta en xlc_extra_90. Si es intencional, retirar este test."
+    assert tickers["WBD"].get("estado") == "DELISTED", (
+        "WBD no tiene estado DELISTED en ticker_health.yaml"
     )
     universe = get_stock_list()
     assert "WBD" not in universe, (
         "WBD (DELISTED 2026-10-06) llego a get_stock_list(). "
-        "El filtro final no se aplica a los tickers del YAML."
+        "El filtro final no se aplica."
     )
 
 
