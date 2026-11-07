@@ -62,28 +62,88 @@ def _load_current_catalog(path: Path) -> pd.DataFrame:
 
 
 def _load_declared_tickers(path: Path | None = None) -> set:
-    """Tickers declarados en universe_expansions.yaml.
+    """Tickers declarados en las fuentes canonicas del universo.
 
-    Estas expansiones son incorporaciones aprobadas y conocidas
-    (XLI, XLK, XLV...). No son anomalia y no deben disparar el
-    sanity MAX_NEW. El sanity aborta solo si los nuevos NO
-    declarados superan el umbral.
+    2026-11-07 (coherencia de universo): get_stock_list() descarga los
+    holdings completos de sector (commit 1c2c4004). Las fuentes
+    canonicas del universo son etf_holdings.csv, index_holdings.csv,
+    config/xetra_ticker_map.csv y universe_expansions.yaml (complemento).
+    Cualquier ticker que aparezca en stock_prices y NO este en ninguna
+    de estas fuentes sigue disparando el sanity MAX_NEW.
     """
-    target = path if path is not None else UNIVERSE_EXPANSIONS
-    if not target.exists():
-        return set()
-    with target.open("r", encoding="utf-8") as f:
-        data = yaml.safe_load(f) or {}
     declared = set()
-    for block in data.values():
-        if not isinstance(block, dict):
-            continue
-        tickers = block.get("tickers")
-        if not isinstance(tickers, list):
-            continue
-        for t in tickers:
-            if isinstance(t, str) and t:
-                declared.add(t)
+
+    # Compatibilidad + tests: si path es explicito, solo lee ese yaml.
+    if path is not None:
+        if not path.exists():
+            return set()
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+        except (OSError, yaml.YAMLError):
+            return set()
+        for block in data.values():
+            if not isinstance(block, dict):
+                continue
+            tickers = block.get("tickers")
+            if not isinstance(tickers, list):
+                continue
+            for tk in tickers:
+                if isinstance(tk, str) and tk:
+                    declared.add(tk)
+        return declared
+
+    # 1) Holdings de sectores USA.
+    etf_csv = ROOT / "data" / "etf_holdings.csv"
+    if etf_csv.exists():
+        try:
+            df = pd.read_csv(etf_csv)
+            if "ticker" in df.columns:
+                declared.update(
+                    t for t in df["ticker"].dropna().astype(str) if t)
+        except (OSError, ValueError, pd.errors.ParserError):
+            pass
+
+    # 2) Holdings de indices USA/EU.
+    idx_csv = ROOT / "data" / "index_holdings.csv"
+    if idx_csv.exists():
+        try:
+            df = pd.read_csv(idx_csv)
+            if "ticker" in df.columns:
+                declared.update(
+                    t for t in df["ticker"].dropna().astype(str) if t)
+        except (OSError, ValueError, pd.errors.ParserError):
+            pass
+
+    # 3) Mapa Xetra (europeos declarados en providers).
+    xetra_csv = ROOT / "config" / "xetra_ticker_map.csv"
+    if xetra_csv.exists():
+        try:
+            df = pd.read_csv(xetra_csv)
+            if "yahoo_ticker" in df.columns:
+                declared.update(
+                    t for t in df["yahoo_ticker"].dropna().astype(str) if t)
+        except (OSError, ValueError, pd.errors.ParserError):
+            pass
+
+    # 4) Expansiones declarativas (complemento).
+    target = UNIVERSE_EXPANSIONS
+    if target.exists():
+        try:
+            with target.open("r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+            for block in data.values():
+                if not isinstance(block, dict):
+                    continue
+                tickers = block.get("tickers")
+                if not isinstance(tickers, list):
+                    continue
+                for t in tickers:
+                    if isinstance(t, str) and t:
+                        declared.add(t)
+        except (OSError, yaml.YAMLError):
+            pass
+
     return declared
 
 
