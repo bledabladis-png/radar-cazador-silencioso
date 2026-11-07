@@ -7617,3 +7617,63 @@ items:
     sin datos que lo justifiquen; umbral mal calibrado dejaria
     pipeline stuck silencioso. Revisar solo si emerge patron de
     3+ fallos consecutivos en ventana de slots.
+
+
+- id: UNIVERSO-COMPLETO-SECTORES
+  tipo: deuda_tecnica
+  ciclo: 2026-11-07
+  estado: FIXED
+  descripcion: >
+    Descarga de sectores USA limitada a top-20 por peso en
+    get_stock_list. El resto del sistema (sector_concentration,
+    wyckoff_holdings, darkpool_io, holdings_snapshot, _ticker_list)
+    ya operaba sobre etf_holdings.csv completo. Resultado: universos
+    distintos por capa (n_total=504, n_valid=220). Cobertura sectorial
+    52-95% ocultaba la brecha.
+  commit: '470bae02'
+  test: tests/test_universo_completo_sectores.py
+  evidencia: >
+    Cobertura sectorial 52-95% -> 91-100%. Catalogo radar 347 -> 530.
+    Runs 42402241958 y 42409107484 success. 284 tickers extra, +1 min
+    de pipeline (medido 0.20s/ticker). Centinela AST verifica que el
+    cap de 20 se mantiene solo en indices USA (SPY/QQQ/DIA/IWM).
+
+- id: WYCKOFF-UNIVERSO-COMPLETO
+  tipo: deuda_tecnica
+  ciclo: 2026-11-07
+  estado: FIXED
+  descripcion: >
+    TARGET_WEIGHT_COVERAGE=0.85 limitaba la clasificacion Wyckoff al
+    85% del peso (25 de 74 tickers en XLK). Tras el cambio de universo
+    completo en get_stock_list, la incoherencia era visible:
+    sector_concentration veia 504 holdings, Wyckoff veia 90. El CSV
+    sector_wyckoff_distribution publicaba coverage_wyckoff=100% sobre
+    el snapshot filtrado, ocultando la brecha con el sector completo.
+  commit: '0ba11bc5'
+  test: tests/test_wyckoff_target_weight_completo.py
+  evidencia: >
+    XLK 25->74, XLF 34->76, XLI 44->81, XLV 26->60 en
+    sector_wyckoff_distribution.n_total (run 42409107484). Coste
+    medido: 0.6 min extra de pipeline (504 tickers x 0.069s). Test de
+    coherencia ajustado para exigir >20 por grupo con
+    selection_mode=target_weight. WYCKOFF-5BX se re-etiqueta como
+    referencia historica, no se recalibra.
+
+- id: CATALOG-MERGE-ASSIGNMENTS-IDEMPOTENCIA
+  tipo: bug
+  ciclo: 2026-11-07
+  estado: FIXED
+  descripcion: >
+    merge_assignments anadia una fila nueva por cada ticker sin FIGI
+    resuelto (BF-B, PSKY) en cada ejecucion. El catalogo crecia
+    530->532->534 entre runs, rompiendo idempotencia. Dos tests
+    fallaban: test_idempotencia y test_share_class_figi_unico_en_assignments.
+    La rama de "orphaned" contaba los FIGI vacios como huerfanos.
+  commit: 'cc906492'
+  test: tests/test_build_catalog_csvs.py
+  evidencia: >
+    catalog_assignments.csv 534 -> 530 estable entre ejecuciones.
+    catalog_key, radar_ticker y share_class_figi (no vacios) unicos
+    tras el fix. Dedupe por ticker para FIGI vacio (by_ticker_no_figi).
+    Orphaned excluye vacios. Test unico adaptado a FIGI no vacios.
+
