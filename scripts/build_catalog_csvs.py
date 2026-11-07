@@ -214,22 +214,32 @@ def merge_assignments(asg_prev, snap, alta_date, new_date_prefix):
     con valid_to) queda pendiente hasta que exista un caso real.
     """
     by_figi = {}
+    by_ticker_no_figi = {}
     for _, r in asg_prev.iterrows():
         f = str(r.get("share_class_figi", "")).strip()
+        t_tk = str(r.get("radar_ticker", "")).strip()
         if f:
             by_figi[f] = r
+        elif t_tk:
+            # 2026-11-07: tickers sin FIGI. Dedupe por ticker. Sin esto,
+            # cada ejecucion anade una fila nueva para el mismo ticker
+            # (rompe idempotencia y unicidad de share_class_figi).
+            by_ticker_no_figi[t_tk] = r
 
     snap_sorted = snap.sort_values("radar_ticker").reset_index(drop=True)
 
     # Defensa: detectar figis de asg_prev que ya no estan en snap.
     # Bajo monotonia (diseno actual) esto no ocurre nunca.
+    # 2026-11-07: filas con FIGI vacio NO son huerfanas (son tickers
+    # sin resolver por OpenFIGI). Solo cuentan filas con FIGI no vacio.
     snap_figis = set(
         str(v).strip() for v in snap["share_class_figi"].tolist() if str(v).strip()
     )
     orphaned = [
         (r["catalog_key"], r["radar_ticker"])
         for _, r in asg_prev.iterrows()
-        if str(r.get("share_class_figi", "")).strip() not in snap_figis
+        if str(r.get("share_class_figi", "")).strip()
+        and str(r.get("share_class_figi", "")).strip() not in snap_figis
     ]
     if orphaned:
         print(
@@ -248,11 +258,16 @@ def merge_assignments(asg_prev, snap, alta_date, new_date_prefix):
     for _, row in snap_sorted.iterrows():
         ticker = str(row["radar_ticker"]).strip()
         figi = str(row["share_class_figi"]).strip()
-        if figi in by_figi:
+        if figi and figi in by_figi:
             k = str(by_figi[figi]["catalog_key"]).strip()
             if str(by_figi[figi]["radar_ticker"]).strip() != ticker:
                 updates[k] = ticker
-        else:
+            continue
+        if not figi and ticker in by_ticker_no_figi:
+            # Ticker sin FIGI ya existe: no anadir. Idempotencia.
+            continue
+        # Fila nueva (ticker nuevo, con o sin FIGI).
+        if True:
             suffix = str(next_n).zfill(4)
             entity_suffix = str(next_e).zfill(4)
             new_rows.append({

@@ -77,8 +77,15 @@ def test_radar_ticker_unico_en_assignments():
 
 
 def test_share_class_figi_unico_en_assignments():
+    """Cada share_class_figi no vacio es unico.
+
+    2026-11-07: tickers sin FIGI resuelto (NaN en OpenFIGI) se guardan
+    con share_class_figi vacio. Multiples vacios son legitimos: no son
+    el mismo entity. Solo se exige unicidad entre FIGIs no vacios.
+    """
     df = pd.read_csv(ASSIGN, dtype=str, keep_default_na=False)
-    assert df["share_class_figi"].is_unique
+    non_empty = df[df["share_class_figi"] != ""]["share_class_figi"]
+    assert non_empty.is_unique
 
 
 def test_membership_catalog_keys_en_assignments():
