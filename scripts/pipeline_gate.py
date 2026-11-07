@@ -335,6 +335,11 @@ def _validate_receipt_schema(receipt, target_session):
         return False
     if not receipt.get("completed_at"):
         return False
+    # FRESH-WALK-BACK-GATE (2026-11-07): effective_session opcional.
+    # Receipts pre-fix no lo traen; se aceptan como CURRENT.
+    eff = receipt.get("effective_session")
+    if eff is not None and not isinstance(eff, str):
+        return False
     return True
 
 
@@ -404,16 +409,40 @@ def _find_completion_receipt_impl(target_session):
 # ---------------- Gate ----------------
 
 
-def evaluate(target_session):
-    """Determina el estado del gate para un target_session dado."""
+def evaluate(target_session, is_last_slot=False):
+    """Determina el estado del gate para un target_session dado.
+
+    FRESH-WALK-BACK-GATE (auditoria 2026-11-07): si existe receipt
+    pero declara effective_session < target_session (walk-back),
+    el pipeline no esta realmente al dia. En slots intermedios
+    (is_last_slot=False) se devuelve READY para reintentar; en el
+    ultimo slot (is_last_slot=True) se acepta CURRENT para no
+    bloquear el reporte final del dia.
+    Receipts sin effective_session (pre-fix) -> CURRENT (compat).
+    """
     receipt = find_completion_receipt(target_session)
     if receipt is not None:
+        eff = receipt.get("effective_session")
+        if (eff and eff < target_session
+                and not is_last_slot):
+            return {
+                "state": "READY",
+                "should_run": True,
+                "reason": "walk-back receipt: effective={0} < target={1} (run {2})".format(
+                    eff, target_session, receipt["run_id"]),
+                "expected_session": target_session,
+                "effective_session": eff,
+                "probe_coverage": None,
+                "manifest_coverage": None,
+                "receipt_run_id": receipt["run_id"],
+            }
         return {
             "state": "CURRENT",
             "should_run": False,
             "reason": "completion receipt for {0} (run {1})".format(
                 target_session, receipt["run_id"]),
             "expected_session": target_session,
+            "effective_session": eff,
             "probe_coverage": None,
             "manifest_coverage": None,
             "receipt_run_id": receipt["run_id"],
@@ -512,8 +541,9 @@ def main():
     else:
         target = resolve_target_session()
 
-    result = evaluate(target)
-    result["is_known_slot"], result["is_last_slot"] = resolve_slot_flags(args.slot)
+    is_known, is_last = resolve_slot_flags(args.slot)
+    result = evaluate(target, is_last_slot=is_last)
+    result["is_known_slot"], result["is_last_slot"] = is_known, is_last
 
     print(json.dumps(result, indent=2, ensure_ascii=False))
     _write_github_output(result)

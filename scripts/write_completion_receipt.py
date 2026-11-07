@@ -182,6 +182,13 @@ def main():
         "commit_sha": commit_sha,
         "manifest_sha256": manifest_sha,
         "manifest_coverage_pct": float(coverage),
+        # FRESH-WALK-BACK-GATE (auditoria 2026-11-07): persistir
+        # effective_session para que el gate pueda distinguir un
+        # receipt con walk-back (effective < target) de uno completo.
+        # El manifest ya lo emite (resolve_effective_date), el writer
+        # solo lo propaga. Aditivo: receipts antiguos sin el campo
+        # se aceptan como CURRENT.
+        "effective_session": quality.get("effective_session"),
         "guard_coverage": guard_coverage,
         "validation_gate": validation_gate,
         "pipeline_conclusion": "success",
