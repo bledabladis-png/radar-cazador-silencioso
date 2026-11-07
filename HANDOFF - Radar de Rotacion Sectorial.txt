@@ -10,7 +10,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-07, sesion 32)
 
-HEAD: `39252de7` (consultar `git log --oneline -1` para el actual).
+HEAD: `46886dba` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        4650 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
@@ -27,10 +27,12 @@ Fase 0 + Fase 1: COMPLETAS.
 Transversales: cerrados.
 
 Sesion 32 (2026-11-07): continuacion de S31 (misma semana). Cierre de
-5 fixes del bloque auditoria 2026-11-07 (12 hallazgos externos). Los
-4 fixes verificables con codigo + 1 fix propio de frescura detectado
-por el operador. 8 hallazgos restantes son decision de producto.
-Autonomia 13F verificada (workflow active, primer disparo 20-nov).
+6 fixes: 4 del bloque auditoria 2026-11-07 (H5, H2, H3, H11), 1 fix
+propio de frescura detectado por el operador (H12-fix gate walk-back),
+y 1 deuda heredada de la auditoria 2026-10-16 (H7-20261016 freshness
+centralizada). 8 hallazgos del auditor 2026-11-07 restantes son
+decision de producto. Autonomia 13F verificada (workflow active,
+primer disparo 20-nov).
 
 ## 2. SESION 2026-11-07 (sesion 32): detalle
 
@@ -38,7 +40,8 @@ Autonomia 13F verificada (workflow active, primer disparo 20-nov).
 del informe externo recibido). (b) Verificar frescura de datos del
 sistema contra fuentes reales. (c) Confirmar autonomia 13F.
 
-**Hecho (20 commits desde f4747ce5).**
+**Hecho (23 commits propios desde f4747ce5; ver git log para el
+rango exacto).**
 
 Bloque auditoria 2026-11-07:
 
@@ -138,7 +141,7 @@ Bloque auditoria 2026-11-07:
 - **DICT3-H04-INTERVALS**: OPEN sin accion propia. Registro
   historico del rechazo del IC95 inferencial.
 
-### 3.3. OPEN activos (3)
+### 3.3. OPEN activos (5)
 
 - **SEMANTICA-SIN-CONTRATO-INVENTARIO**: OPEN con inventario
   parcial (bce81bf4). 3 conceptos sin contrato identificados.
