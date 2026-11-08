@@ -5725,32 +5725,34 @@ items:
 - id: MACRO-SCORE-EMPTY-LATENTE
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
+  estado: FALSE_POSITIVE
   descripcion: 'B5.4 cerro el crash de save_regime_history con macro_score vacio
 
-    (skip NO_DATA en el writer). Pero el reporte no maneja ese caso:
-
-    render_regimenes / render_macro probablemente asumen macro_score
-
-    presente. Si el bloque de senales fallara completamente en
-
-    produccion, finalize skipearia el CSV pero el reporte pintaria
-
-    con campos ausentes o fallaria.
+    (skip NO_DATA en el writer). El item sospechaba que render_regimenes /
+    render_macro asumen macro_score presente y pintarian campos ausentes o
+    fallarian si el bloque de senales fallase por completo.
 
     '
-  siguiente_accion: 'Auditar src/report/header.py::render_regimenes y el bloque de
-
-    macro_score del reporte. Guard if macro_score vacio -> ''N/D'' con
-
-    nota. Cubrir con test. Bajo ROI: escenario de fallo masivo, no
-
-    ocurre hoy. Diferible a B6 (reporte).
+  commit: 3e76a5e6
+  test: tests/test_macro_score_empty_guard.py
+  evidencia: 'Verificado en S34 (2026-11-08). Guard presente en
+    src/report/header.py desde la extraccion inicial (d5b94209), acotado en
+    bbfeb193. Empiricamente, macro_score None / Series vacia / Series NaN /
+    NaN escalar pintan Score: N/D sin excepcion. compute_macro_regime (H1
+    B6, 2026-10-31) devuelve macro_conf=0.0 y regime=NO_DATA con input
+    vacio; nunca None/NaN. El unico gap real era la ausencia de test
+    centinela: cubierto por tests/test_macro_score_empty_guard.py (5 tests,
+    verdes).
 
     '
-  evidencia: 'Detectado al cerrar B5.4. El writer ya no crashea; el render no
-
-    esta verificado para ese caso.
+  razon: 'El bug descrito no existe. El guard de render_regimenes esta
+    presente desde d5b94209 (anterior al item), verificado empiricamente
+    con 4 casos limite (None, Series vacia, Series NaN, NaN escalar) y con
+    compute_macro_regime sobre input vacio (macro_conf=0.0, regime=NO_DATA).
+    El riesgo real que quedaba (macro_conf None formateado en
+    src/pipeline/regimes.py:122) esta bloqueado por construccion:
+    compute_macro_regime nunca devuelve None/NaN en conf. Gap de cobertura
+    de test cerrado en S34 con tests/test_macro_score_empty_guard.py.
 
     '
 - id: B1-FX-PER-PAIR
