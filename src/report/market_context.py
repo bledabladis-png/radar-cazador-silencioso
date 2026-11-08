@@ -10,6 +10,12 @@ import pandas as pd
 from src.report.helpers import _fmt_num, _fmt_signed
 
 
+# 2026-11-07: constante unica para el numero de lideres por sector.
+# El codigo y la nota descriptiva la referencian. Cambiar aqui
+# actualiza ambos sin tocar el texto ni los tests de composicion.
+TOP_LEADERS_PER_SECTOR = 5
+
+
 def render_liderazgo_interno(rs_internal_data):
     """Renderiza la tabla Liderazgo relativo interno.
 
@@ -20,7 +26,7 @@ def render_liderazgo_interno(rs_internal_data):
         _rs_latest = rs_internal_data[pd.to_datetime(rs_internal_data['date']) == pd.to_datetime(rs_internal_data['date']).max()]
         top_tickers = set()
         for sector in _rs_latest['sector'].unique():
-            top = _rs_latest[_rs_latest['sector'] == sector].nlargest(5, 'price_ret_20d')['ticker']
+            top = _rs_latest[_rs_latest['sector'] == sector].nlargest(TOP_LEADERS_PER_SECTOR, 'price_ret_20d')['ticker']
             top_tickers.update(top)
         report_df = (_rs_latest[_rs_latest['ticker'].isin(top_tickers)]
                      .sort_values(['sector', 'price_ret_20d'], ascending=[True, False]))
@@ -30,7 +36,12 @@ def render_liderazgo_interno(rs_internal_data):
         for _, row in report_df.iterrows():
             out.append(f"| {row['sector']} | {row['ticker']} | {_fmt_num(row['rs_abs_20d'], '{:.2%}')} | {_fmt_num(row['rs_internal_20d'], '{:.2%}')} | {row['classification']} |\n")
         out.append("\n")
-        out.append("*Criterio: los 5 tickers de mayor price_ret_20d del sector, ordenados desc. La primera fila de cada sector coincide con la columna Lider de Concentracion del liderazgo (mismo criterio: retorno 20d maximo). No coincide con la primera fila de Representatividad, que ordena por WLS.*\n\n")
+        out.append(f"*Criterio: los {TOP_LEADERS_PER_SECTOR} tickers de mayor "
+                   f"price_ret_20d del sector, ordenados desc. La primera "
+                   f"fila de cada sector coincide con la columna Lider de "
+                   f"Concentracion del liderazgo (mismo criterio: retorno "
+                   f"20d maximo). No coincide con la primera fila de "
+                   f"Representatividad, que ordena por WLS.*\n\n")
         out.append("*No coincide con 'Divergencia sector-lideres', que usa top-5 por WLS (mismo sector, distinto subconjunto de tickers).*\n\n")
         out.append("*vs mercado 20d = retorno relativo 20d del ticker frente al mercado (rs_abs_20d). Distinto de 'Ret Lider' de Concentracion, que es retorno absoluto (leader_return20). Nombre heredado (D-07 auditoria 2026-09-26); ambos se mantienen para no romper series.*\n\n")
         # H13 (2026-10-15, auditoria externa): declarar el benchmark
@@ -46,10 +57,10 @@ def render_liderazgo_interno(rs_internal_data):
                    "Discrepancias contra ^GSPC en el mismo horizonte son "
                    "diferencias de fuente, no de calculo.*\n\n")
         # H3 (2026-10-21): sesgo de seleccion. Esta tabla muestra los
-        # top-5 por sector, no el universo completo. Los top-5 baten al
+        # top-N por sector, no el universo completo. Los top-N baten al
         # sector por construccion. En el universo completo (rs_internal.csv)
-        # la distribucion es heterogenea: ~50% doble, ~32% debilidad, ~17%
-        # fortaleza sectorial, ~2% interno debil (2026-10-20, 230 tickers).
+        # la distribucion es heterogenea y depende de la fecha y del
+        # universo. Ver rs_internal.csv para la distribucion actual.
         out.append("*Nota de sesgo de seleccion: esta tabla muestra los 5 "
                    "tickers de mayor retorno 20d de cada sector, no el "
                    "universo completo. Por construccion, los top-5 baten a "
