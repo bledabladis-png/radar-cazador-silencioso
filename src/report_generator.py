@@ -136,7 +136,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # C2 - ANALISIS SECTORIAL
     # =========================================================================
-    _ad_conf = (confirmation_data or {}).get("ad_net", {}) or {}
+    _ad_conf = (confirmation_data or {}).get("ad", {}) or {}
     _n_universo_conf = _ad_conf.get("total_tickers")
     lines.extend(render_sector_breadth(
         sector_breadth_data,
