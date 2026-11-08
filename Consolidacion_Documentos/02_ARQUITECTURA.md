@@ -591,25 +591,27 @@ consumidor especifico de esa fecha. Documentado por
 
 ## 16. UNIVERSOS DE TICKERS
 
-Cuatro cifras distintas de "universo" conviven en el sistema. Cada una responde a un contrato diferente. No son contradictorias: son vistas distintas de la misma cadena.
+S33 (2026-11-07): el sistema paso de universos distintos por capa (220 descarga, 504 analisis, 90 Wyckoff, 347 catalogo) a un universo unico de 713 tickers operado por todas las capas. El cambio se hizo en dos commits (`1c2c4004` amplia `get_stock_list` a holdings completos; `0ba11bc5` amplia Wyckoff a universo completo). S33-bis (`573822fb`) regenere el crosswalk CUSIP para que el IAE vea el mismo universo.
 
 | Universo | Tamano | Fuente | Consumer |
 |---|---:|---|---|
-| `get_usa_tickers()` | 220 | `etf_holdings.csv`, top-20 por weight y sector | metricas intra-sectoriales (breadth, stock_metrics, wyckoff_holdings) |
-| `_ticker_list()` (`data_loader`) | 504 | `etf_holdings.csv` completo + `MARKET_TICKERS` | descarga. Despues se filtra con `_is_equity_ticker` al leer Close. |
-| `darkpool_io` | 504 + `MARKET_TICKERS` | `etf_holdings.csv` + `config/tickers.py` | concentracion ATS. Reporte declara `n=534` explicito. |
-| `get_stock_list()` | 329 | 4 fuentes: top-20 sector + top-20 indices + `radar_target_catalog` + europeos de providers | descarga completa del pipeline |
-| Parquet `stock_prices` USA | 255 | filtrado `_is_equity_ticker` sobre la descarga | metricas del radar |
-| Parquet `stock_prices` total | 329 | descarga completa (USA + EU) | analisis cross-market |
-| `radar_target_catalog.csv` | 255 | OpenFIGI + curacion | IAE crosswalk CUSIP-ticker |
+| `get_usa_tickers()` | 504 | `etf_holdings.csv` completo (holdings de sector USA) | metricas intra-sectoriales |
+| `_ticker_list()` (`data_loader`) | 504 | `etf_holdings.csv` completo + `MARKET_TICKERS` | descarga legacy. Filtra con `_is_equity_ticker` al leer Close. |
+| `darkpool_io` | 504 + `MARKET_TICKERS` | `etf_holdings.csv` + `config/tickers.py` | concentracion ATS |
+| `get_stock_list()` | 713 | 5 fuentes: holdings completos de sector + top-20 de indices USA + `radar_target_catalog` + europeos de providers + `universe_expansions.yaml` (spy_extra, qqq_extra) | descarga completa del pipeline |
+| Parquet `stock_prices` USA | 662 | descarga de no-europeos | metricas del radar + Wyckoff |
+| Parquet `stock_prices` total | 713 | descarga completa (USA + EU) | analisis cross-market |
+| `sector_breadth.py` | 20 por sector (220 total) | `etf_holdings.csv` truncado a top-20 | breadth (por diseno A1, mide grandes) |
+| `sector_concentration.py` | 504 (holdings completos) | `etf_holdings.csv` | concentracion, medianas, cobertura |
+| `wyckoff_holdings.py` | 504 (holdings completos, `TARGET_WEIGHT_COVERAGE=1.0`) | `etf_holdings.csv` | clasificacion de fase por holding |
+| `radar_target_catalog.csv` | 530 | OpenFIGI + curacion | IAE crosswalk CUSIP-ticker |
+| `cusip_radar_crosswalk.csv` | 526 tickers | SEC-EDGAR (regenerado trimestral) | IAE TARGET observable |
 
-**Relacion:** 220 subset 255 subset 329. El CSV fuente (`etf_holdings.csv`) tiene 504; cada consumer corta (o no) segun su contrato.
+**Relacion:** `sector_breadth` corta a top-20 por diseno (A1). El resto de capas opera sobre el universo completo (504 holdings de sector, 713 totales). No hay incoherencia: la diferencia entre 220 y 504 en breadth es decision deliberada, la diferencia entre 220 y 504 en concentracion era bug corregido en S33.
 
-**De donde vienen los 35 tickers entre 220 y 255:** son componentes del top-20 de indices USA (Russell 2000 sobre todo) que no caen en el top-20 de su sector ETF. Estan en `index_holdings.csv` y en `radar_target_catalog.csv`. Ejemplos: BX, CASY, CMG, CRM, ES, FOX, GD, JXN, PNC, PRAX, WY.
+**Regla derivada:** un consumer que lee `etf_holdings.csv` o `index_holdings.csv` directamente debe declarar en su docstring si corta a top-N o usa el pool completo. Un cambio silencioso de uno a otro altera el universo de la metrica sin senal. Si un numero del render declara el tamano del universo, debe derivarse del df/dict en runtime, no hardcodearse.
 
-**Regla derivada:** un consumer que lee `etf_holdings.csv` o `index_holdings.csv` directamente debe declarar en su docstring si corta a top-N o usa el pool completo. Un cambio silencioso de uno a otro altera el universo de la metrica sin senal.
-
-Verificado 2026-10-08 (sesion de verificacion del sistema). Sin bug. Ningun huerfano. Cifras cuadran entre manifest, parquet y catalogo.
+Verificado 2026-11-08 (sesion 33-bis). Cifras cuadran entre `stock_prices.parquet.manifest.json` (713 tickers, 1318 filas, cobertura 95.51%), `sector_concentration.csv` (504 holdings de sector, 91-100% cobertura por sector) y `radar_target_catalog.csv` (530 filas).
 
 ---
 

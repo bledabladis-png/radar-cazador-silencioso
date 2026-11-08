@@ -166,3 +166,16 @@ Reglas que fallaron y que el metodo ya tenia:
 Regla nueva: **antes de `WriteAllText`/`WriteAllLines` sobre un path, `Test-Path` primero**. Si existe, `.orig` antes. Si no, OK. Esto no es solo para ficheros que voy a modificar: es para cualquier fichero que escriba, porque puedo no saber que ya existia (ej. test centinela con nombre generico).
 
 La red de seguridad que lo habria bloqueado antes: si el pre-commit hook hubiera sido obligatorio en S30 (lo fue a partir de `9443f7da`), `pyflakes` habria detectado imports no usados en la nueva version (perdida de cobertura AST). Pero el hook no estaba activo aun en `9a368461`. Leccion: instalar los hooks antes de empezar a tocar codigo, no despues.
+
+### Leccion S33-bis (2026-11-08): un literal obsoleto se deriva, no se borra
+
+En S33-bis se sustituyeron tres notas de reporte con literales del universo viejo (~220 tickers, ~313 tickers, top-20 mostrado) por prosa vaga ("universo completo del pipeline"). Eso violo la regla de hardcodear con garantias: no es arreglar el literal, es eliminar la informacion para no mantenerla. Peor que el literal original.
+
+El fix correcto: derivar cada numero de su fuente en runtime. `220 = sum(n_total)` del df de breadth. `713 = confirmation_data["ad"]["total_tickers"]`. `5 = TOP_LEADERS_PER_SECTOR` (constante unica). El texto va en f-string con la fuente.
+
+Reglas derivadas:
+- **Un literal con valor informativo se sustituye por f-string sobre el df/dict, no por prosa vaga.**
+- **Si el numero no esta disponible en el contexto del render, se omite el numero (no se inventa) y se deja el texto descriptivo.** Ej: sin `n_universo_confirmation`, la nota dice "universo completo del pipeline" sin cifra.
+- **Cablear el render contra la clave correcta del dict productor.** Bug S33-bis: el consumidor leia `confirmation_data["ad_net"]` pero el productor emite `confirmation_data["ad"]`; el numero llegaba `None`. Dos tests de integracion cubren este tipo de bug: uno verifica el productor, otro el consumidor.
+- **Antes de regenerar un CSV, dry-run.** El crosswalk CUSIP (S33-bis) se regenero 245 a 533 sin dry-run previo; el dry-run habria mostrado 532 filas antes de escribir. Se hizo despues. No es grave porque la operacion es idempotente, pero el orden correcto es dry-run, revisar, escribir.
+

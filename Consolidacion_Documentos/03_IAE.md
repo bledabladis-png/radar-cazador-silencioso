@@ -59,7 +59,7 @@ Pipeline contractual: **§10.1 -> §10.7** (catalogo -> identidad -> delta share
 - `catalog_key.py` (375) - B1: identidad administrativa del catalogo.
 - `openfigi_client.py` (180) - Cliente productivo OpenFIGI.
 - `period_state.py` (212) - B1: estados por periodo.
-- `radar_target_catalog.py` (154) - Identidad estable de los ~242 tickers del radar.
+- `radar_target_catalog.py` (154) - Identidad estable de los ~530 tickers del radar (S33; antes 242).
 - `target_builder.py` (181) - Materializacion del TargetUniverse.
 - `target_universe.py` (171) - Resolver CUSIP_13F -> target membership.
 - `__init__.py` (13).
@@ -255,10 +255,10 @@ Los ficheros de evidencia son reproducibles con los scripts de la Seccion 5.
 | `catalog_manifest.json` | 754 | Manifest del catalogo |
 | `catalog_membership.csv` | 28330 | Membership de identidades |
 | `cusip_equivalence.csv` | 103 | Equivalencia CUSIP (manual) |
-| `cusip_radar_crosswalk.csv` | 22491 | Crosswalk CUSIP <-> radar (~246 filas, 242 tickers) |
+| `cusip_radar_crosswalk.csv` | ~58K | Crosswalk CUSIP <-> radar (~533 filas, 526 tickers; S33-bis) |
 | `cusip_to_radar_figi.csv` | 11958 | Mapa CUSIP -> FIGI |
 | `cusip_to_radar_figi_crosswalk.csv` | 8827 | Crosswalk CUSIP -> FIGI |
-| `radar_target_catalog.csv` | 29986 | Catalogo radar (~243 filas) |
+| `radar_target_catalog.csv` | ~64K | Catalogo radar (~530 filas; S33) |
 
 Snapshots PIT: `data/mappings/catalog_snapshots/snapshot_*.csv` + `.sha256`.
 
@@ -367,7 +367,7 @@ Regeneracion automatica:
 
 **Alcance del NIPC:** solo posiciones declaradas en filings 13F sobre el universo del radar. `§10.1` filtro explicito. No es NIPC del mercado completo.
 
-**Cobertura del catalogo:** declarada 99.17% sobre 242 tickers. Cobertura TARGET construido: 100% por construccion (endogeneidad por diseño: el TARGET se construye desde el catalogo, asi que la cobertura TARGET es 100% por definicion).
+**Cobertura del catalogo:** declarada 98.68% sobre 529 tickers (S33-bis; antes 99.17% sobre 242). Cobertura TARGET construido: 100% por construccion (endogeneidad por diseño: el TARGET se construye desde el catalogo, asi que la cobertura TARGET es 100% por definicion). Los 7 tickers no observables (4 sin crosswalk: BF-B, OKE, PSKY, VYLR; 3 con eventos societarios en ambos trimestres) se excluyen del TARGET. coverage_quality=COMPLETE significa que el subconjunto observable alcanza el umbral interno (0.95); no implica cobertura del 100% del catalogo.
 
 **Latencia regulatoria:** N-PORT ~60 dias, 13F trimestral (~45d post cierre trimestre). **Lag efectivo del sistema: 50d** (`SEC_13F_QUARTER_LAG_DAYS`), margen de 5d sobre la latencia regulatoria, alineado con el cron 20-feb/may/ago/nov y con `update_sec_13f.py --latest`.
 
