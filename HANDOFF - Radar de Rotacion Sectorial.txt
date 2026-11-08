@@ -10,13 +10,13 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-08, sesion 33-bis)
 
-HEAD: `d41c223e` (consultar `git log --oneline -1` para el actual).
+HEAD: `9d712c28` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4621 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4622 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 311 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 312 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 13 (_IMPLEMENTED_CONTRACTS), 5 familias.
@@ -192,6 +192,13 @@ estan cubiertos:
   security_identity.py::load_crosswalk_internal, que cargaba el fallback
   etf_holdings sin normalizar y producia BRK.B para el mismo CUSIP.
   Ver item CATALOG-BRK-FALLBACK-NORMALIZE en REGISTRO.
+
+- **RS-INTERNAL-TICKER-NORMALIZE** (S34, FIXED en 9d712c28): mismo patron
+  que CATALOG-BRK. indicators/rs_internal.py publicaba el ticker crudo de
+  holdings_df (BF.B) en lugar del normalizado (BF-B). Ademas
+  _compute_rs_internal no pasaba replace_date=True a persist, por lo que
+  una fila huerfana del historico (BF.B) coexistia con la nueva (BF-B) en
+  la misma fecha. Ver item RS-INTERNAL-TICKER-NORMALIZE en REGISTRO.
 
 - **TEST-COUNT-DUP**: el conteo de tests esta duplicado en 4
   sitios (ESTADO_SISTEMA auto-generado + 3 literales en

@@ -5780,6 +5780,32 @@ items:
     gestores.
 
     '
+- id: RS-INTERNAL-TICKER-NORMALIZE
+  tipo: bug
+  ciclo: '2026-11-08'
+  estado: FIXED
+  commit: 9d712c28
+  test: tests/test_rs_internal.py
+  descripcion: 'rs_internal publicaba el ticker crudo de holdings_df (BF.B)
+    en lugar del normalizado (BF-B), conviviendo dos grafias del mismo activo
+    en el CSV y en la tabla Liderazgo relativo interno del reporte. Ademas,
+    _compute_rs_internal no pasaba replace_date=True a persist, por lo que
+    una fila huerfana del historico (BF.B del 2026-11-06) seguia publica
+    incluso tras el cambio de normalizacion en runs posteriores.
+
+    '
+  evidencia: 'Detectado en S34 (2026-11-08) al verificar el cierre de
+    CATALOG-BRK-FALLBACK-NORMALIZE. Sintoma visible en el reporte real:
+    linea 650 | XLP | BF.B | 22.70% ... con BRK.B tambien presente en XLF.
+    Fix: (1) indicators/rs_internal.py:83 publicar ticker_norm en lugar de
+    ticker. (2) src/pipeline/sector_metrics.py:45 pasar replace_date=True
+    a persist, mismo patron que wyckoff_holdings.py:108. Verificacion: 4622
+    passed 2 skipped, pyflakes 0, compileall 0. E2E run.py real (1087s,
+    exit 0, gate 11/11): rs_internal.csv reescribe 2026-11-06 con BF-B (sin
+    BF.B residual), fechas anteriores conservan BF.B/BRK.B como historico
+    append-only. Reporte post publica BF-B y BRK-B.
+
+    '
 - id: B1-FX-PER-PAIR
   tipo: bug
   ciclo: '2026-10-31'
