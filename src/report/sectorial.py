@@ -64,10 +64,11 @@ def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None
             out.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_ad_net(row['advances'], row['declines'], row['ad_net'])} | {int(row['n_valid_nhnl']) if pd.notna(row.get('n_valid_nhnl')) else 'N/D'} | {cov_label} |\n")
         out.append("\n")
         out.append(f"*[BAJA] = cobertura < {MIN_SECTOR_COVERAGE:.0%} del universo del sector. Los ratios se calculan sobre la parte valida; el valor puede no ser representativo del sector completo. Los derivados (Opportunity Map, scores) usan estos mismos ratios sin invalidacion automatica.*\n\n")
-        out.append("*La columna A/D de esta tabla agrega solo top-20 por sector "
-                   "(suma total = ~220 tickers). No coincide con la metrica "
+        out.append("*La columna A/D de esta tabla agrega solo top-20 por "
+                   "sector (por diseno de breadth), no el universo "
+                   "completo del sector. No coincide con la metrica "
                    "Advance/Decline Net de Confirmation Data (universo "
-                   "completo, ~313 tickers).*\n\n")
+                   "completo del pipeline).*\n\n")
         # P2.3 (2026-10-13, auditor): aclarar semantica de NH/NL.
         out.append("*NH/NL = componentes que marcan maximo/minimo de 52 "
                    "semanas (252 sesiones previas). Un 0 es resultado real "
@@ -98,18 +99,19 @@ def render_sector_concentration(sector_concentration_data):
         for _, row in conc_latest.iterrows():
             out.append(f"| {row['sector']} | {_fmt_num(row['top1_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top3_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top5_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['rs_median'], '{:.4f}')} | {_fmt_num(row['momentum_median'], '{:.2%}')} | {_fmt_num(row['flow_median'], '{:.2f}')} | {_fmt_num(row['wyckoff_median'], '{:.2f}')} | {_fmt_num(row['wls_median'], '{:.2f}')} | {row['leader_ticker']} | {_fmt_num(row['leader_return20'], '{:.2%}')} | {int(row['n_valid_rs']) if pd.notna(row.get('n_valid_rs')) else 'N/D'} | {_fmt_num(row['coverage_rs'], '{:.0f}%')} | {_fmt_num(row['coverage_momentum'], '{:.0f}%')} | {_fmt_num(row['coverage_flow'], '{:.0f}%')} | {_fmt_num(row['coverage_wyckoff'], '{:.0f}%')} | {_fmt_num(row['coverage_wls'], '{:.0f}%')} | {_fmt_num(row.get('coverage_rs_sobre_descarga'), '{:.0f}%')} | {_fmt_num(row.get('coverage_peso'), '{:.0f}%')} |\n")
         out.append("\n")
-        out.append("*Criterio 'Lider': ticker con mayor retorno 20d. Universo: top-20 por weight del ETF sectorial. Coincide con la primera fila de Liderazgo interno (mismo criterio). No coincide con Representatividad, que ordena por WLS.*\n\n")
+        out.append("*Criterio 'Lider': ticker con mayor retorno 20d. "
+                   "Universo: todos los holdings del ETF sectorial con "
+                   "metricas disponibles. Coincide con la primera fila de "
+                   "Liderazgo interno (mismo criterio). No coincide con "
+                   "Representatividad, que ordena por WLS.*\n\n")
         out.append("*N valid = numero de tickers del universo del ETF con datos "
                    "suficientes para las metricas de la tabla (interseccion comun de "
                    "rs, momentum, flow, wyckoff y wls). Coincide con n_valid_rs del "
                    "CSV. Una Cob baja con N valid bajo indica que las medianas "
                    "describen a pocos tickers, no al sector completo.*\n\n")
         # P2 (2026-10-22, auditor externo): denominador de cobertura.
-        out.append("*Nota: la cobertura (Cob *) se calcula sobre n_total, "
-                   "el universo completo del ETF sectorial (decenas de "
-                   "tickers), no sobre el top-20 mostrado. Un 20% de "
-                   "cobertura con 5 lideres visibles es coherente: son "
-                   "5 de los tickers validos dentro del universo. "
+        out.append("*Nota: la cobertura (Cob *) se calcula sobre "
+                   "n_total, el universo completo del ETF sectorial. "
                    "Denominador exacto en la columna n_total de "
                    "sector_concentration.csv.*\n\n")
         out.append("*Ret Lider = retorno absoluto 20d del ticker lider (leader_return20). Distinto de 'vs mercado 20d' de Liderazgo interno, que es retorno relativo (rs_abs_20d). Nombre heredado (D-07 auditoria 2026-09-26); ambos se mantienen para no romper series.*\n\n")
