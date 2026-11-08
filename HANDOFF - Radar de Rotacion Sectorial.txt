@@ -10,13 +10,13 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-08, sesion 33-bis)
 
-HEAD: `79b4cb07` (consultar `git log --oneline -1` para el actual).
+HEAD: `d41c223e` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4612 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4621 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 310 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 311 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 13 (_IMPLEMENTED_CONTRACTS), 5 familias.
@@ -186,11 +186,12 @@ estan cubiertos:
 
 ### 3.6. Deuda detectada sesiones anteriores (no accionada)
 
-- **CATALOG-BRK-DUPLICADO** (S33-bis): `BRK-B` y `BRK.B` coexisten en
-  `radar_target_catalog.csv`. Mismo activo Berkshire clase B con dos
-  nombres. No afecta cobertura (cuenta ambos), pero el bloque
-  "Excluidos" del IAE los trata como eventos separados. Heredado del
-  cierre SOW-HOLDOUT. No urgente.
+- **CATALOG-BRK** (S33-bis, FIXED S34 en d41c223e): la descripcion
+  original (BRK-B y BRK.B coexisten en radar_target_catalog.csv) era
+  imprecisa: en el catalogo solo hay BRK-B. El sintoma real venia de
+  security_identity.py::load_crosswalk_internal, que cargaba el fallback
+  etf_holdings sin normalizar y producia BRK.B para el mismo CUSIP.
+  Ver item CATALOG-BRK-FALLBACK-NORMALIZE en REGISTRO.
 
 - **TEST-COUNT-DUP**: el conteo de tests esta duplicado en 4
   sitios (ESTADO_SISTEMA auto-generado + 3 literales en
@@ -378,7 +379,7 @@ Esperado:
 - HEAD = git log --oneline -1.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests: fuente autoritativa ESTADO_SISTEMA.md (4650 passed, 0 failed).
+- Tests: fuente autoritativa ESTADO_SISTEMA.md (4621 passed, 0 failed).
 - Gobernanza [OK]. Indice H1-H18 [OK]. Bitacora [OK].
 - pyflakes silencio, compileall OK.
 

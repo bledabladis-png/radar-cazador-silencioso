@@ -5755,6 +5755,31 @@ items:
     de test cerrado en S34 con tests/test_macro_score_empty_guard.py.
 
     '
+- id: CATALOG-BRK-FALLBACK-NORMALIZE
+  tipo: bug
+  ciclo: '2026-11-08'
+  estado: FIXED
+  commit: d41c223e
+  test: tests/test_security_identity_normalize_etf_holdings.py
+  descripcion: 'security_identity.py::load_crosswalk_internal cargaba
+    cusip_ticker_exceptions y etf_holdings sin normalizar el ticker. El
+    mismo CUSIP 084670702 producia BRK-B por el crosswalk y BRK.B por el
+    fallback etf_holdings, y aggregate_by_ticker los trataba como dos
+    activos distintos.
+
+    '
+  evidencia: 'Diagnostico en S34 (2026-11-08). Sintoma visible en el
+    reporte del run 42438558910: bloque Excluidos listaba BRK-B como
+    salida masiva y BRK.B como posicion nueva, mismo activo. Idem BF.B
+    (holding XLP). Fix: import normalize_yahoo_ticker y aplicar en las
+    dos ramas de carga del crosswalk (cusip_ticker_exceptions y
+    etf_holdings). Verificacion: 4 tests centinela, suite completa
+    4621 passed 2 skipped, pyflakes 0, compileall 0. E2E run.py real
+    (1471s, exit 0, gate 11/11): reporte post ya no lista BRK.B en
+    Excluidos, BRK-B aparece en tabla Distribuyendo normal con 5096
+    gestores.
+
+    '
 - id: B1-FX-PER-PAIR
   tipo: bug
   ciclo: '2026-10-31'
