@@ -39,6 +39,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.instrument_registry import normalize_yahoo_ticker
+
 from src.institutional_accumulation.temporal_validity import (
     aggregate_status as _aggregate_op_status,
     resolve_source_status as _resolve_op_source_status,
@@ -270,7 +272,7 @@ def load_crosswalk_internal(
         for _, r in e.iterrows():
             rows.append({
                 "CUSIP": str(r["CUSIP"]).strip(),
-                "ticker": str(r["ticker"]).strip(),
+                "ticker": normalize_yahoo_ticker(str(r["ticker"]).strip()),
                 "valid_from": r.get("valid_from"),
                 "valid_to": r.get("valid_to"),
                 "source": "cusip_ticker_exceptions",
@@ -282,7 +284,7 @@ def load_crosswalk_internal(
         for _, r in h.iterrows():
             rows.append({
                 "CUSIP": str(r["identifier"]).strip(),
-                "ticker": str(r["ticker"]).strip(),
+                "ticker": normalize_yahoo_ticker(str(r["ticker"]).strip()),
                 "valid_from": None,
                 "valid_to": None,
                 "source": "etf_holdings",
