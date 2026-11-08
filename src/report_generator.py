@@ -136,9 +136,14 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # C2 - ANALISIS SECTORIAL
     # =========================================================================
-    lines.extend(render_sector_breadth(sector_breadth_data,
-                                       is_stale=sector_breadth_is_stale,
-                                       stale_reason=sector_breadth_stale_reason, stale_context=sector_breadth_stale_context))
+    _ad_conf = (confirmation_data or {}).get("ad_net", {}) or {}
+    _n_universo_conf = _ad_conf.get("total_tickers")
+    lines.extend(render_sector_breadth(
+        sector_breadth_data,
+        is_stale=sector_breadth_is_stale,
+        stale_reason=sector_breadth_stale_reason,
+        stale_context=sector_breadth_stale_context,
+        n_universo_confirmation=_n_universo_conf))
     lines.extend(render_sector_concentration(sector_concentration_data))
     lines.extend(render_sector_dispersion(sector_concentration_data))
     lines.extend(render_ranking_sectorial_unificado(

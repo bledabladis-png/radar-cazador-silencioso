@@ -10,7 +10,8 @@ from config.settings import MIN_SECTOR_COVERAGE
 from src.report.helpers import _fmt_num, _fmt_ad_net, _shared_vars_note
 
 
-def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None, stale_context=None):
+def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None,
+                          stale_context=None, n_universo_confirmation=None):
     """Renderiza la tabla Sector Breadth & Health.
 
     C2-followup (2026-09-12): is_stale=True indica que la observacion
@@ -64,11 +65,28 @@ def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None
             out.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_ad_net(row['advances'], row['declines'], row['ad_net'])} | {int(row['n_valid_nhnl']) if pd.notna(row.get('n_valid_nhnl')) else 'N/D'} | {cov_label} |\n")
         out.append("\n")
         out.append(f"*[BAJA] = cobertura < {MIN_SECTOR_COVERAGE:.0%} del universo del sector. Los ratios se calculan sobre la parte valida; el valor puede no ser representativo del sector completo. Los derivados (Opportunity Map, scores) usan estos mismos ratios sin invalidacion automatica.*\n\n")
-        out.append("*La columna A/D de esta tabla agrega solo top-20 por "
-                   "sector (por diseno de breadth), no el universo "
-                   "completo del sector. No coincide con la metrica "
-                   "Advance/Decline Net de Confirmation Data (universo "
-                   "completo del pipeline).*\n\n")
+        # N derivados del df: suma de n_total por sector (top-20 de
+        # breadth) y universo de Confirmation Data (via parametro).
+        # Sin literales hardcodeados.
+        _n_top20 = int(breadth_latest["n_total"].sum()) if "n_total" in breadth_latest.columns else None
+        if _n_top20 is not None and n_universo_confirmation is not None:
+            out.append(f"*La columna A/D de esta tabla agrega solo top-20 "
+                       f"por sector (suma total = {_n_top20} tickers). "
+                       f"No coincide con la metrica Advance/Decline Net de "
+                       f"Confirmation Data (universo completo, "
+                       f"{int(n_universo_confirmation)} tickers).*\n\n")
+        elif _n_top20 is not None:
+            out.append(f"*La columna A/D de esta tabla agrega solo top-20 "
+                       f"por sector (suma total = {_n_top20} tickers). "
+                       f"No coincide con la metrica Advance/Decline Net de "
+                       f"Confirmation Data (universo completo del "
+                       f"pipeline).*\n\n")
+        else:
+            out.append("*La columna A/D de esta tabla agrega solo top-20 "
+                       "por sector (por diseno de breadth), no el universo "
+                       "completo del sector. No coincide con la metrica "
+                       "Advance/Decline Net de Confirmation Data (universo "
+                       "completo del pipeline).*\n\n")
         # P2.3 (2026-10-13, auditor): aclarar semantica de NH/NL.
         out.append("*NH/NL = componentes que marcan maximo/minimo de 52 "
                    "semanas (252 sesiones previas). Un 0 es resultado real "
