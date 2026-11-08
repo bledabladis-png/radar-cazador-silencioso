@@ -42,7 +42,7 @@ def _compute_rs_internal(df_stocks, holdings_df, df_market, temporal_meta=None):
             rs_internal_df = compute_rs_internal(df_stocks, holdings_df, df_market, benchmark="SPY", temporal_meta=temporal_meta)
             if not rs_internal_df.empty:
                 date_val = rs_internal_df["date"].max()
-                persist("rs_internal", rs_internal_df, date_value=date_val)
+                persist("rs_internal", rs_internal_df, date_value=date_val, replace_date=True)
                 print("  RS Interno y Absoluto calculado.")
             else:
                 skip("rs_internal", "EMPTY_DF")

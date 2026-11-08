@@ -11,11 +11,13 @@ def test_classify_rs():
 
 
 def test_compute_rs_internal_normaliza_ticker_de_holdings():
-    """Holdings con BRK.B, parquet con BRK-B (2026-10-30).
+    """Holdings con BRK.B se normalizan a BRK-B en la salida (S34).
 
-    Antes: get_col(df_stocks, 'BRK.B', 'Close') -> KeyError -> continue
-    silencioso. BRK.B nunca aparecia en rs_internal aunque estuviera
-    descargado. Bug medido en XLF: 33 tickers vs 34 de sector_concentration.
+    Historia: 2026-10-30 se corrigio que get_col('BRK.B') lanzaba KeyError
+    y descartaba la fila. Pero la fila se seguia publicando con el ticker
+    crudo BRK.B, produciendo dos grafias del mismo activo en el sistema
+    (BRK-B por parquet e IAE, BRK.B por holdings). S34 normaliza el ticker
+    de salida para que el CSV sea consistente con el resto del sistema.
     """
     import pandas as pd
     import numpy as np
@@ -47,8 +49,10 @@ def test_compute_rs_internal_normaliza_ticker_de_holdings():
     )
     assert not out.empty
     tickers = set(out["ticker"].tolist())
-    assert "BRK.B" in tickers, (
-        f"BRK.B de holdings no aparece en rs_internal. "
-        f"Tickers: {sorted(tickers)}. Bug: get_col sin normalizar "
-        f"descarta BRK.B (parquet tiene BRK-B)."
+    assert "BRK-B" in tickers, (
+        f"BRK.B de holdings debe normalizarse a BRK-B en la salida. "
+        f"Tickers: {sorted(tickers)}. Bug: el CSV publicaba dos grafias "
+        f"del mismo activo (BRK.B crudo vs BRK-B del parquet)."
     )
+    assert "BRK.B" not in tickers
+    assert "AAPL" in tickers

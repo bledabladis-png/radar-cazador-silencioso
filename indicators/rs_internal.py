@@ -85,7 +85,7 @@ def compute_rs_internal(df_stocks, holdings_df, df_market, benchmark='SPY', temp
                 'expected_date': _eff_meta.get('expected_date'),
                 'coverage': _eff_meta.get('coverage'),
                 'sector': sector_etf,
-                'ticker': ticker,
+                'ticker': ticker_norm,
                 'price_ret_20d': price_ret,
                 'sector_ret_20d': sector_ret,
                 'benchmark_ret_20d': bench_ret,

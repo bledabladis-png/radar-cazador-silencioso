@@ -88,6 +88,31 @@ def test_rs_internal_ok(tmp_path, monkeypatch):
     assert p.exists()
 
 
+def test_rs_internal_pasa_replace_date_true(tmp_path, monkeypatch):
+    """S34: rs_internal debe pasar replace_date=True a persist.
+
+    Sin replace_date=True, una fila huerfana (p.ej. BF.B viejo) coexiste
+    con la nueva (BF-B) tras cambiar normalizacion. append_dedup solo
+    anade/reemplaza por (date,sector,ticker); claves distintas coexisten,
+    y el render publica ambas al ser la misma fecha.
+    """
+    _setup_tmp(tmp_path, monkeypatch)
+    captured = {}
+    def _fake_persist(name, df, **kwargs):
+        captured["name"] = name
+        captured.update(kwargs)
+        return None
+    monkeypatch.setattr(sm, "persist", _fake_persist)
+    with patch("src.pipeline.sector_metrics.compute_rs_internal",
+               return_value=_df_fake({"ticker": "AAA"})):
+        sm._compute_rs_internal(_df_stocks(), pd.DataFrame(), pd.DataFrame())
+    assert captured.get("name") == "rs_internal"
+    assert captured.get("replace_date") is True, (
+        "rs_internal debe pasar replace_date=True a persist; sin esto "
+        "el CSV acumula filas huerfanas al cambiar normalizacion."
+    )
+
+
 def test_rs_internal_pasa_benchmark_spy(tmp_path, monkeypatch):
     _setup_tmp(tmp_path, monkeypatch)
     captured = {}
