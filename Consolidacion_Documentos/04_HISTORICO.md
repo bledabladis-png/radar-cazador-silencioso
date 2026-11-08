@@ -3822,3 +3822,49 @@ detecto el sintoma, no la causa.
 - WYCKOFF-5BX: re-etiquetado como referencia historica; no se
   recalibra hasta que haya caso real (umbral 550, hoy 34-40).
 
+## Sesion 2026-11-08 (sesion 33-bis) - Coherencia IAE y notas de reporte
+
+Cinco commits adicionales tras S33. La sesion detecto dos
+desalineaciones entre el universo declarado y lo efectivamente operado
+en el IAE y en las notas del reporte.
+
+**1. Notas de reporte con literales del universo viejo.**
+
+Tres notas de `src/report/sectorial.py` declaraban `~220 tickers`,
+`~313 tickers`, `top-20 mostrado` o `top-20 por weight del ETF`, todos
+obsoletos tras S33. `0b2944e5` los sustituyo por prosa vaga ("universo
+completo del pipeline"), violando la regla de hardcodear con garantias:
+en lugar de eliminar la informacion, hay que derivarla. `34858639`
+reintrodujo los numeros derivados del df y del dict (sum(n_total),
+confirmation_data["ad"]["total_tickers"]). `c7362f1f` extrajo el 5 de
+la nota de Lider a TOP_LEADERS_PER_SECTOR. `79b4cb07` corrigio un bug
+adicional: el cableado leia confirmation_data["ad_net"] (inexistente)
+en lugar de ["ad"], por lo que n_universo_confirmation siempre llegaba
+None.
+
+**2. Crosswalk CUSIP stale.**
+
+El catalogo crecio 347 -> 530 en S33 pero el crosswalk CUSIP se
+mantuvo en 245. Consecuencia: la cobertura observable del IAE cayo de
+69.65% a 45.75% sin que fuera regresion del pipeline. `573822fb`
+regenero el crosswalk (245 -> 533 filas, 526 tickers). Run 42438558910:
+cobertura 45.75% -> 98.68% (522/529), coverage_quality=COMPLETE,
+catalog_coverage_warning ausente. 4 tickers quedan sin crosswalk
+(BF-B, OKE, PSKY, VYLR) por eventos societarios o IPO reciente.
+
+**Errores propios.**
+
+- `0b2944e5`: sustituir literales por prosa vaga. Regla aplicada
+  despues: derivar del df/dict, no borrar la informacion.
+- `34858639`: cablear la clave equivocada (ad_net vs ad).
+- Dry-run del crosswalk: se hizo despues de escribir; deberia haberse
+  hecho antes.
+
+**Estado al cierre S33-bis:**
+
+- Tests: 4612 passed, 2 skipped.
+- Gobernanza: 310 items (308 + 2).
+- IAE: cobertura 98.68%, COMPLETE, sin warning.
+- Reporte: notas sin literales obsoletos; cableado corregido.
+- Deuda nueva: BRK-B / BRK.B coexisten en el catalogo. No urgente.
+

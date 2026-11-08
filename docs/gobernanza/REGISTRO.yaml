@@ -7677,3 +7677,42 @@ items:
     tras el fix. Dedupe por ticker para FIGI vacio (by_ticker_no_figi).
     Orphaned excluye vacios. Test unico adaptado a FIGI no vacios.
 
+
+- id: REPORT-LITERALES-UNIVERSO-S33
+  tipo: deuda_tecnica
+  ciclo: 2026-11-08
+  estado: FIXED
+  descripcion: >
+    Notas del reporte con literales hardcodeados del universo viejo
+    (~220 tickers, ~313 tickers, top-20 mostrado, top-20 por weight
+    del sector). Ademas, el cableado n_universo_confirmation leia
+    confirmation_data["ad_net"] pero el productor (mte_confirmation)
+    emite "ad", por lo que n_universo_confirmation llegaba None.
+  commit: '79b4cb07'
+  test: tests/test_sectorial_notas_integracion.py
+  evidencia: >
+    Nota A/D: 220 derivado de sum(n_total) del df; 713 derivado de
+    confirmation_data["ad"]["total_tickers"]. Nota Lider: derivada de
+    TOP_LEADERS_PER_SECTOR constante. Sin literales en src/report/
+    (run 42438558910 confirma ausencia de "~220", "~313", "top-20
+    mostrado"). Cableado corregido en 79b4cb07; "713 tickers" se
+    vera en el proximo scheduled.
+
+- id: IAE-CROSSWALK-UNIVERSO-S33
+  tipo: deuda_tecnica
+  ciclo: 2026-11-08
+  estado: FIXED
+  descripcion: >
+    Coherencia de universo incompleta en IAE: catalogo 347->530 (S33)
+    pero crosswalk CUSIP estatico en 245. Cobertura observable del
+    catalogo 69.65% -> 45.75% sin que fuera regresion del pipeline
+    (crosswalk stale).
+  commit: '573822fb'
+  test: tests/test_regenerate_cusip_crosswalk.py
+  evidencia: >
+    Crosswalk 245 -> 533 filas (526 tickers unicos). Cobertura
+    observable 242/529 (45.75%) -> 522/529 (98.68%) en run
+    42438558910. coverage_quality=COMPLETE, catalog_coverage_warning
+    ausente. Filas observables 935.574 -> 939.213. 4 tickers sin
+    crosswalk (BF-B, OKE, PSKY, VYLR) por eventos societarios o IPO.
+

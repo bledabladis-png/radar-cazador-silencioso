@@ -22,7 +22,7 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 4600 passed, 2 skipped (sin filtro; suite completa)
+- **Resumen:** 4612 passed, 2 skipped (sin filtro; suite completa)
 - **Exit code:** 0
 
 **Tests skip:**
@@ -85,9 +85,9 @@ porque el commit que lo contiene cambia HEAD.
   - bytes: 65536
   - lineas: 531
 - `data/mappings/cusip_radar_crosswalk.csv`
-  - sha256: `c344bee55fa5149853ed029e59ee2acbccd94d39990f1b493048ea0cb06a60cc`
-  - bytes: 22491
-  - lineas: 246
+  - sha256: `77338bd71ba457f3e15436dcff305e7830eb8af6ac5e691c1b35d1d87c3c4e46`
+  - bytes: 47912
+  - lineas: 534
 - `data/mappings/cusip_equivalence.csv`
   - sha256: `688e7d4996bd1a2bfc0dddeab5389d554148466ec606cb55d07e5bf3bc0e0de8`
   - bytes: 430

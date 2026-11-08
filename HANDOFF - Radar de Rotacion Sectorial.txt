@@ -8,15 +8,15 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 ---
 
 
-## 1. ESTADO AL CIERRE (2026-11-07, sesion 33)
+## 1. ESTADO AL CIERRE (2026-11-08, sesion 33-bis)
 
-HEAD: `fcee63a2` (consultar `git log --oneline -1` para el actual).
+HEAD: `79b4cb07` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4600 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4612 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 308 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 310 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 13 (_IMPLEMENTED_CONTRACTS), 5 familias.
@@ -186,6 +186,12 @@ estan cubiertos:
 
 ### 3.6. Deuda detectada sesiones anteriores (no accionada)
 
+- **CATALOG-BRK-DUPLICADO** (S33-bis): `BRK-B` y `BRK.B` coexisten en
+  `radar_target_catalog.csv`. Mismo activo Berkshire clase B con dos
+  nombres. No afecta cobertura (cuenta ambos), pero el bloque
+  "Excluidos" del IAE los trata como eventos separados. Heredado del
+  cierre SOW-HOLDOUT. No urgente.
+
 - **TEST-COUNT-DUP**: el conteo de tests esta duplicado en 4
   sitios (ESTADO_SISTEMA auto-generado + 3 literales en
   00_ARRANQUE + HANDOFF x2). Desincronizado 5 veces en S31-S32.
@@ -322,6 +328,38 @@ los consumidores antes de commitear. `5bd32514` (limpieza del yaml) se
 hizo sin verificar que `_load_declared_tickers` dependia de el; se
 recupero con `470bae02`. El CSV que publica una cobertura debe
 corresponder al universo declarado, no al filtrado.
+
+### 3.11. Cierres de codigo S33-bis (2026-11-08)
+
+5 commits adicionales tras §3.10, con verificacion end-to-end en
+produccion.
+
+- **REPORT-LITERALES-UNIVERSO-S33** (commits `34858639` + `c7362f1f` +
+  `79b4cb07`; `0b2944e5` reemplazado por `34858639`). Tres notas del
+  reporte con literales del universo viejo (~220, ~313, top-20
+  mostrado, top-20 por weight del sector). Ahora: A/D deriva 220 de
+  sum(n_total) del df y 713 de confirmation_data["ad"]["total_tickers"];
+  Lider deriva de TOP_LEADERS_PER_SECTOR (constante unica); cobertura
+  sin "top-20 mostrado". Bug adicional: el cableado leia
+  confirmation_data["ad_net"] (inexistente) en vez de ["ad"], por lo
+  que n_universo_confirmation llegaba siempre None. Run 42438558910
+  confirma ausencia de literales; "713 tickers" se verificara en el
+  proximo scheduled.
+
+- **IAE-CROSSWALK-UNIVERSO-S33** (commit `573822fb`). Catalogo crecio
+  347 -> 530 en S33 pero crosswalk CUSIP quedo en 245. Cobertura
+  observable IAE cayo 69.65% -> 45.75% sin que fuera regresion del
+  pipeline (crosswalk stale). Crosswalk 245 -> 533 filas (526
+  tickers). Run 42438558910: 45.75% -> 98.68% (522/529),
+  coverage_quality=COMPLETE, catalog_coverage_warning ausente. 4
+  tickers sin crosswalk (BF-B, OKE, PSKY, VYLR) por eventos
+  societarios o IPO. Serie historica IAE cortada aqui: n_delta_observable
+  y NIPC no comparables con pre-573822fb.
+
+Errores propios: `0b2944e5` sustituyo los literales por prosa vaga en
+vez de derivarlos; `34858639` cableo la clave "ad_net" en vez de "ad".
+Ambos corregidos. Regla aplicada: si un numero aporta valor, derivarlo
+del df/dict en runtime; no borrarlo.
 
 ## 4. COMO ARRANCAR
 
