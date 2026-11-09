@@ -44,6 +44,51 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-08 — Sesion 34: 3 hermanos de normalizacion + MACRO-SCORE false positive
+
+**Objetivo.** Cerrar deudas de codigo abiertas, no solo documentacion. Foco
+en la clase "ticker crudo vs normalizado en output de writers", tras
+detectar que IAE publicaba BRK-B y BRK.B como activos distintos.
+
+**Hecho.**
+- MACRO-SCORE-EMPTY-LATENTE (OPEN desde 2026-10-31) -> FALSE_POSITIVE.
+  Guard de render_regimenes existe desde d5b94209. compute_macro_regime
+  nunca devuelve None/NaN en conf. Gap real: test centinela. Anadido
+  tests/test_macro_score_empty_guard.py (5 tests verdes).
+- CATALOG-BRK-FALLBACK-NORMALIZE FIXED (d41c223e). security_identity.py
+  cargaba cusip_ticker_exceptions y etf_holdings sin normalizar. Mismo
+  CUSIP producia BRK-B por crosswalk y BRK.B por fallback. Fix:
+  normalize_yahoo_ticker en ambas ramas. E2E run.py real.
+- RS-INTERNAL-TICKER-NORMALIZE FIXED (9d712c28). rs_internal.py publicaba
+  ticker crudo (BF.B) en lugar de ticker_norm (BF-B). Ademas no pasaba
+  replace_date=True a persist -> fila huerfana coexistia con la nueva.
+  Dos fixes + 2 tests. E2E run.py real.
+- WYCKOFF-HOLDINGS-TICKER-NORMALIZE FIXED (4132dae3). _evaluate_holding
+  publicaba ticker crudo aunque usaba ticker_norm para lookup. 1 linea +
+  test nuevo. Verificado por probe + unit test; E2E sin regresion (la
+  condicion no se dispara en el run actual).
+- Deuda S3 limpiada: 19 ficheros .bak/.orig (18 duplicados identicos de
+  sector_wyckoff_distribution v1 + 1 p1_h02_cobertura_efectiva).
+- Las 3 docs-sync: cierres coherentes de HANDOFF + ARRANQUE + REGISTRO +
+  ESTADO_SISTEMA. TEST-COUNT-DUP cerrado de facto.
+
+**Commits.** `6026e699`, `d41c223e`, `9d712c28`, `4132dae3`, `15487996`,
+`e0e0c7f4`, `c6ebc36b`.
+
+**Pendiente.**
+- 7 OPEN restantes: H5.3 (cron 13F 20-nov), REP-AUDIT-LAG (17-nov),
+  TEST-FRESHNESS-UMBRAL-VS-CADENCIA (vence ya), TEMPORAL-EFFECTIVE-DATE /
+  MTE-DEGRADED-STATE / FRESHNESS-POR-BLOQUE (decision producto),
+  SEMANTICA-SIN-CONTRATO, DICT3-H04 (registro historico).
+- 2 BLOCKED_EXTERNAL sin novedad: C2-920, WYCKOFF-5BX.
+- Scheduled 23:17 UTC del 2026-11-09: primer run con los 3 fixes en main.
+  Verificar nota 713 (pendiente por cadencia desde S33-bis), CSVs Wyckoff,
+  crosswalk estable, sin regresiones.
+
+**Proximo paso sugerido.** Verificar scheduled 2026-11-09 23:17 UTC
+(artefacto daily-report del run). Despues: TEST-FRESHNESS-UMBRAL-VS-CADENCIA
+(cierre o prorroga segun observador) y las 3 decisiones de producto.
+
 ### 2026-11-07 — Sesion 32: 5 fixes de frescura y aritmetica (auditoria 2026-11-07)
 
 **Objetivo.** Cerrar bloque auditoria 2026-11-07 (12 hallazgos),
@@ -1468,132 +1513,6 @@ a6a8f017, b8b0de96, 4150a68e, 780930e6, 45d48c5d, f7749f69,
 1. Enviar v1.1 + doc 74 al auditor (usuario).
 2. Verificar proximo run scheduled (operativo).
 3. Backlog externo en BACKLOG_BLOQUEADO_EXTERNO.md como indice.
-
-### 2026-10-27 (sesion 14) - 9 tickets cerrados + 5 bugs reales + 3 docs contrato
-
-**Objetivo.** Aprovechar nucleos del procesador para tests (derivado
-a: cerrar deuda acumulada y endurecer CI).
-
-**Hecho.**
-- Paralelizacion: pytest-xdist==3.8.0, -n auto --dist loadfile.
-  Suite 246s -> 120s. Comando de arranque actualizado con dos variantes
-  (smoke check + suite autoritativa).
-- 9 tickets cerrados: PCT-FLOAT-ROUNDING-DIVERGENCE (FIXED con doble
-  run byte-identico), ARRANQUE-C6-GHOST (renombrado, premisa falsa),
-  HANDOFF-MD-OBSOLETO, GOVERNANZA-CI-NO-STEP (step Verify governance
-  en CI), GOVERNANZA-HANDOFF-OBSOLETO (verificador lee HANDOFF raiz),
-  TOP20-EU-HOLDINGS-INCOMPLETOS, CURRENT-PHASE-BASIS-CSV (WONT_FIX
-  medido), ACCUMULATION-ZERO (nota en reporte), VALIDATION-GATE-NO-
-  STANDALONE (WONT_FIX), YAHOO-PARTIAL-HISTORY-PREEXISTING (WONT_FIX).
-- 5 bugs reales destapados y corregidos:
-  1. FEZ 27 tickers sin sufijo (Yahoo resolvia a ADRs erroneos:
-     DG=Dollar General, EL=Estee Lauder, BN=Brookfield, AD=Kroger).
-     27 mapeos verificados + validacion Yahoo. NDA FI excluido por D11.
-  2. sys.path roto en update_european_holdings.py. Regresion de
-     c4f99795 (25-oct). Test test_scripts_sys_path.py ampliado a 5
-     scripts. Diagnostico inicial "26 dias fallando" era FALSO:
-     corregido en REGISTRO.
-  3. PIT snapshot no era append-only real. sort_by global reescribia
-     el historico entero en orden alfabetico (diff 3000+3000 lineas
-     cosmeticas). Fix: sort_by=None. Test de contrato anadido.
-  4. Truncamiento [:20] en 3 parsers EU. Causa raiz de
-     TOP20-EU-HOLDINGS-INCOMPLETOS. FEZ 20->47, DAXEX 20->32,
-     ISF.L 20->88, LYXI 20->35. Cobertura 95/85/84/99%.
-  5. head(20) en get_stock_list para indices EU. 112 tickers fuera
-     del parquet aunque el CSV estuviera completo. Fix:
-     EU_INDEX_ETFS_NO_CAP. get_stock_list 359 -> 471.
-- 3 documentos redactados: 57_contrato_v1_10.md (SOW-BEAR-CONFIRMATION),
-  58_contrato_holdout_inmutable.md (SOW-HOLDOUT-IMMUTABLE, corrige
-  cifra 7/8 -> 35/40), 59_pre_registro_reaccumulation.md
-  (DICT3-REACCUMULATION, R1-R5 + C1-C3).
-- 2 tickets nuevos: EU-HOLDINGS-DOWNLOAD-CAP (IN_PROGRESS,
-  verificacion proximo run), TOP20-USA-INDICES (medicion real:
-  SPY n=167, QQQ n=41, DIA n=20).
-
-**Commits.** 20+ commits: dc809efd, e5d1cc6b, ffd3c401, a390494a,
-af811cfc, 353bcea8, a9a90cfa, 6fd537f8, f29a44f6, a1dbb692,
-dbdbf5c5, 678a9a8d, ee7aac87, f939fb7e, 194f77dd, f31dbd8b,
-17619aa9, 46a3b370, 3a682884, 3a383592, 14feb408, 0bff883f,
-2683ed68, 57bdaa52, 1a719507, b31b878a, ea7f45df, 49fa3a82.
-
-**Lecciones aprendidas.**
-- `git add` selectivo omitio scripts en varios commits. Local pasaba
-  (working tree con fix), CI fallaba (version antigua). Antes de cada
-  commit de gobernanza: `git status -sb` completo.
-- `AppendAllLines` no acepta encoding. Leer + concatenar + WriteAllLines.
-- Here-string multilinea en consola interactiva rompe el parser. Usar
-  arrays de lineas.
-- Diagnostico "26 dias fallando" en REGISTRO era falso; corregido tras
-  verificar cronologia de runs con gh. Leccion: verificar premisas del
-  ticket antes de actuar.
-- Runs locales SIEMPRE en consola visible, nunca Start-Process Hidden
-  (instruccion del usuario).
-
-**Pendiente.**
-- Verificar EU-HOLDINGS-DOWNLOAD-CAP end-to-end en proximo run autonomo.
-- Enviar 3 docs al auditor externo (57, 58, 59).
-- IWM-HOLDINGS-EXPANSION: decision de producto pendiente (top-20 cubre
-  6.8%, llegar a 50% requiere ~700 tickers).
-
-**Proximo paso sugerido.** Verificar autonomia de EU en proximo run
-(2026-10-28 11:17 UTC). Confirmar cobertura FEZ/DAXEX/ISF.L/LYXI
-~95/85/84/99% con `py scripts/audit/p1_h02_cobertura_efectiva.py`.
-Si OK: EU-HOLDINGS-DOWNLOAD-CAP -> FIXED. Si no: investigar
-cache-check de download_stock_prices.
-### 2026-10-27 (sesion 13) - Normalizacion tickers + regen historico + run.py
-
-**Objetivo.** Cerrar `WYCKOFF-CLASSIFY-PHASE-HANG`, arreglar el bug real
-detectado durante el probe (WYCKOFF-TICKER-NORMALIZATION), regenerar
-el historico con el fix y actualizar `data_quality.csv`.
-
-**Hecho.**
-- WYCKOFF-CLASSIFY-PHASE-HANG: probe 360/360 OK, 21.6s. Falso positivo.
-  `classify_phase` no cuelga. REGISTRO OPEN -> FALSE_POSITIVE.
-- WYCKOFF-TICKER-NORMALIZATION descubierto: holdings usa `BRK.B`,
-  parquet usa `BRK-B`. 3 sitios afectados (`_evaluate_holding`,
-  `_get_tickers`, `_procesar_ticker`). XLF perdia BRK.B (12.32%
-  de peso). Fix `4e94bf2e` + 1 test regresion.
-- Snapshot diario: 527 -> 528 filas. XLF `ev_n` 22 -> 23,
-  `ev_peso` 63.74 -> 76.05. Resto de grupos sin cambio.
-- p1_h02 calcula `evaluable` real via `compute_wyckoff_snapshot`
-  (era proxy con_datos). `68e64e6b`.
-- Regeneracion historica (1086 fechas, 56.5 min, 248 tickers):
-  solo XLF cambia (`n_total` 22 -> 23 en las 1086 fechas). 0
-  regresiones. Invariantes P1-H03 post-swap 5/6 OK. `f71eb49c`.
-- `p1_h03_invariantes.py::check_5` reformulado: compara activo
-  contra `v2_full.csv` post-swap, no contra `.bak` pre-swap.
-- `py run.py` manual (~23 min): `data_quality.csv` a 2026-10-26
-  (624 filas). Gate 11/11. 6 CSVs holdings regenerados.
-  `sector_wyckoff_distribution.csv` revertido a HEAD (ruido de
-  float ULP sin cambio semantico). `e86d6f04`.
-
-**Commits.** Rango `4dba82d2..e86d6f04` (3 commits):
-- 4dba82d2 REGISTRO WYCKOFF-TICKER-NORMALIZATION -> FIXED + doc 72 §7.
-- f71eb49c Regeneracion historica con BRK.B en XLF.
-- e86d6f04 data(outputs): run 2026-10-27.
-Mas en el mismo dia (sesion 12 continuada):
-- 842c9aaf WYCKOFF-CLASSIFY-PHASE-HANG -> FALSE_POSITIVE.
-- 4e94bf2e fix normalizacion tickers.
-- 68e64e6b p1_h02 calcula evaluable real.
-- 89e24705 REGISTRO WYCKOFF-TICKER-NORMALIZATION registrado.
-
-**Pendiente.**
-- DICT3-TOP20-COBERTURA: solicitar cierre a A.2c (doc 70-v2d). Auditor.
-- DICT3-H04-INTERVALS: OPEN, rechazado por auditor H-04.
-- DICT3-H04-INFERENCE-V2: OPEN, 4 decisiones de diseno.
-- TOP20-FALTANTES-DATOS: 52 tickers (7 holdout SOW, 1 MRNA
-  ausente, 44 descarga nueva).
-- TOP20-EU-HOLDINGS-INCOMPLETOS, TOP20-USA-INDICES, TOP20-EU-INDICES.
-- SOW-HOLDOUT-IMMUTABLE, GOVERNANZA-CI-NO-STEP.
-- Ruido de float ULP entre regenerate_wyckoff_history.py y
-  sector_metrics.py (candidato a ticket `PCT-FLOAT-ROUNDING-
-  DIVERGENCE`).
-
-**Proximo paso sugerido.** Prioridad tecnica: ticket de redondeo
-de `pct_*` (evita ruido en cada `py run.py` post-regeneracion
-historica). Prioridad datos: TOP20-FALTANTES-DATOS (descarga de los
-44 + decision sobre 7 holdout SOW). Prioridad gobernanza: GOVERNANZA-
-CI-NO-STEP (5 min, cierra el hueco de verificacion en CI).
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 

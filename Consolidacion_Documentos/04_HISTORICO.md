@@ -3868,3 +3868,66 @@ catalog_coverage_warning ausente. 4 tickers quedan sin crosswalk
 - Reporte: notas sin literales obsoletos; cableado corregido.
 - Deuda nueva: BRK-B / BRK.B coexisten en el catalogo. No urgente.
 
+---
+
+## N. Sesiones 13 y 14 (2026-10-27): nota compacta
+
+Portadas desde `05_BITACORA.md` al podar (regla 10 sesiones). El detalle
+vive en `git log 2026-10-27`.
+
+- **Sesion 13**: WYCKOFF-CLASSIFY-PHASE-HANG cerrado como FALSE_POSITIVE
+  (probe 360/360 OK, 21.6s, no cuelga). WYCKOFF-TICKER-NORMALIZATION
+  descubierto y arreglado (`4e94bf2e`): holdings usa BRK.B, parquet usa
+  BRK-B; 3 sitios afectados (_evaluate_holding, _get_tickers,
+  _procesar_ticker). XLF perdia BRK.B (12.32% peso). Regen del historico
+  con el fix + `data_quality.csv` actualizado.
+- **Sesion 14**: paralelizacion de tests con pytest-xdist==3.8.0
+  (-n auto --dist loadfile), suite 246s -> 120s. 9 tickets cerrados
+  (PCT-FLOAT-ROUNDING-DIVERGENCE, ARRANQUE-C6-GHOST,
+  HANDOFF-MD-OBSOLETO, GOVERNANZA-CI-NO-STEP,
+  GOVERNANZA-HANDOFF-OBSOLETO, y 4 mas).
+
+Ancestro directo del cierre S34 WYCKOFF-HOLDINGS-TICKER-NORMALIZE
+(`4132dae3`): el fix 2026-10-27 (`4e94bf2e`) normalizo el lookup;
+S34 normaliza el output.
+
+---
+
+## N+1. SESION 34 (2026-11-08): 3 hermanos de normalizacion + MACRO-SCORE false positive
+
+### La clase de bug "ticker crudo vs normalizado en output de writers"
+
+Tres writers publicaban `ticker` (crudo de holdings_df) en el output
+aunque usaban `ticker_norm` para el lookup. Mismo sintoma: BRK-B y BRK.B
+como activos distintos en el reporte.
+
+- **IAE** (`d41c223e`). `security_identity.py::load_crosswalk_internal`
+  cargaba `cusip_ticker_exceptions` y `etf_holdings` sin normalizar. Fix:
+  `normalize_yahoo_ticker` en ambas ramas. E2E real.
+- **rs_internal** (`9d712c28`). Publicaba `ticker` crudo en lugar de
+  `ticker_norm`. Ademas no pasaba `replace_date=True` a `persist` ->
+  fila huerfana coexiste con la nueva al cambiar normalizacion. E2E real.
+- **wyckoff_holdings** (`4132dae3`). `_evaluate_holding` publicaba ticker
+  crudo. Verificado por probe + unit test.
+
+Leccion estructural: **"lo que se usa para lookup es lo que se publica"**.
+
+### MACRO-SCORE-EMPTY-LATENTE -> FALSE_POSITIVE
+
+Guard de `render_regimenes` existe desde `d5b94209`. `compute_macro_regime`
+nunca devuelve None/NaN en conf. Unico gap: test centinela ausente.
+Anadido `tests/test_macro_score_empty_guard.py` (5 tests).
+
+### Deuda S3 limpiada
+
+19 ficheros `.bak`/`.orig` (18 duplicados sha256 de
+`sector_wyckoff_distribution.v2_full.csv.bak` + 1 `p1_h02.bak`).
+Verificados untracked + gitignored + sin evidencia unica antes de borrar.
+
+### Estado al cierre S34
+
+- Tests: 4624 passed, 2 skipped.
+- Gobernanza: 313 items (310 + 3 FIXED + 1 FALSE_POSITIVE).
+- OPEN: 7. BLOCKED_EXTERNAL: 2.
+- IAE 98.68% (522/530).
+- `main == origin/main`, tree limpio.
