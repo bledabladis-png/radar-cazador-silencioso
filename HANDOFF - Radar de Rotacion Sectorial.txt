@@ -10,13 +10,13 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-08, sesion 33-bis)
 
-HEAD: `9d712c28` (consultar `git log --oneline -1` para el actual).
+HEAD: `4132dae3` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4622 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4624 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 312 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 313 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 13 (_IMPLEMENTED_CONTRACTS), 5 familias.
@@ -199,6 +199,11 @@ estan cubiertos:
   _compute_rs_internal no pasaba replace_date=True a persist, por lo que
   una fila huerfana del historico (BF.B) coexistia con la nueva (BF-B) en
   la misma fecha. Ver item RS-INTERNAL-TICKER-NORMALIZE en REGISTRO.
+
+- **WYCKOFF-HOLDINGS-TICKER-NORMALIZE** (S34, FIXED en 4132dae3): tercer
+  cierre de la clase. _evaluate_holding publicaba ticker crudo (BRK.B) en
+  el dict de salida aunque usaba ticker_norm para el lookup. Alineado con
+  IAE (d41c223e) y rs_internal (9d712c28). Ver item en REGISTRO.
 
 - **TEST-COUNT-DUP**: el conteo de tests esta duplicado en 4
   sitios (ESTADO_SISTEMA auto-generado + 3 literales en

@@ -5806,6 +5806,31 @@ items:
     append-only. Reporte post publica BF-B y BRK-B.
 
     '
+- id: WYCKOFF-HOLDINGS-TICKER-NORMALIZE
+  tipo: bug
+  ciclo: '2026-11-08'
+  estado: FIXED
+  commit: 4132dae3
+  test: tests/test_wyckoff_holdings_ticker_norm.py
+  descripcion: '_evaluate_holding publicaba el ticker crudo de holdings_df
+    (BRK.B) en lugar del normalizado (BRK-B). El lookup en df_stocks y
+    classify_phase ya usaba ticker_norm desde 2026-10-30 (P1-H02), pero
+    el dict de salida publicaba ticker. Tercer cierre de la clase S34:
+    IAE (d41c223e), rs_internal (9d712c28), wyckoff_holdings (este).'
+
+  evidencia: 'Detectado en S34 por grep de patrones hermanos. Probe
+    directo sobre _evaluate_holding con hrow={ticker:BRK.B, ticker_norm:BRK-B}
+    y df_stocks con BRK-B confirmo output ticker:BRK.B. Fix: 1 linea en
+    indicators/wyckoff_holdings_report.py (ticker -> ticker_norm).
+    Verificacion: 4624 passed 2 skipped, pyflakes 0, compileall 0. Probe
+    post-fix devuelve BRK-B. E2E run.py real (1148s, exit 0, gate 11/11):
+    no regresion en los 6 CSVs Wyckoff (la condicion del bug no se dispara
+    en el run actual, pero tampoco aparece BRK.B/BF.B nuevo). Fix
+    verificado por probe + unit test, no por E2E.'
+
+  razon: 'Mismo patron que d41c223e (IAE) y 9d712c28 (rs_internal):
+    publicar el ticker normalizado, alineado con parquet, crosswalk y
+    el resto del sistema.'
 - id: B1-FX-PER-PAIR
   tipo: bug
   ciclo: '2026-10-31'
