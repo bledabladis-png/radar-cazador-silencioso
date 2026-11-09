@@ -320,7 +320,7 @@ def _evaluate_holding(df_stocks, group_key, hrow, group_type, has_name, obs_date
         "date": obs_date,
         "group": group_key,
         "group_type": group_type,
-        "ticker": ticker,
+        "ticker": ticker_norm,
         "name": name,
         "weight": float(hrow["weight"]),
         "phase": fp.phase,

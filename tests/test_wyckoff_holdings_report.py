@@ -208,9 +208,12 @@ def test_eu_index_type_and_ordering(monkeypatch):
 
 
 def test_dotted_ticker_normalized_before_parquet_lookup(monkeypatch):
-    """Regresion P1-H02 2026-10-26: holdings trae BRK.B, parquet tiene
+    """Regresion P1-H02 2026-10-26 + S34: holdings trae BRK.B, parquet tiene
     BRK-B. _evaluate_holding debe normalizar antes de get_col y
-    classify_phase; si no, la fila se pierde (12.32% de XLF)."""
+    S34 (2026-11-08): el output se normaliza a BRK-B. La fila no se
+    pierde (lookup ya usaba ticker_norm desde 2026-10-30), pero el CSV
+    ahora publica el ticker normalizado (consistente con IAE y rs_internal).
+    """
     from indicators import wyckoff_holdings_report as wr
 
     calls = {"get_col": [], "classify_phase": []}
@@ -243,4 +246,4 @@ def test_dotted_ticker_normalized_before_parquet_lookup(monkeypatch):
     assert row is not None, "BRK.B debe producir fila, no None"
     assert calls["get_col"] == ["BRK-B"], "get_col debe recibir BRK-B (normalizado)"
     assert calls["classify_phase"] == ["BRK-B"], "classify_phase debe recibir BRK-B"
-    assert row["ticker"] == "BRK.B", "row.ticker debe preservar nombre original (holdings)"
+    assert row["ticker"] == "BRK-B", "row.ticker debe estar normalizado en la salida (S34): nombre original (holdings)"
