@@ -82,6 +82,19 @@ def render_wyckoff_sectorial(sector_wyckoff_distribution_data):
     out = []
     if sector_wyckoff_distribution_data is not None and not sector_wyckoff_distribution_data.empty:
         out.append("## Distribución Wyckoff sectorial\n")
+        _h3_date_str = None
+        _h3_status = 'VALID'
+        try:
+            if 'date' in sector_wyckoff_distribution_data.columns and not sector_wyckoff_distribution_data['date'].isna().all():
+                _h3_date_str = pd.Timestamp(sector_wyckoff_distribution_data['date'].iloc[0]).strftime('%Y-%m-%d')
+            if 'input_status' in sector_wyckoff_distribution_data.columns and not sector_wyckoff_distribution_data['input_status'].isna().all():
+                _h3_status = str(sector_wyckoff_distribution_data['input_status'].iloc[0])
+        except (KeyError, TypeError, ValueError, IndexError):
+            pass
+        if _h3_date_str:
+            out.append(f"*Datos al {_h3_date_str}.*\n")
+        if _h3_status == 'DEGRADED':
+            out.append("*[input DEGRADED] Uno o mas inputs criticos con lag o cobertura insuficiente.*\n\n")
         out.append("| Sector | AccF | Acc | Markup | Range | DistF | Dist | Markdown | Conflict | N | Cob Wyckoff |\n")
         out.append("|--------|------|-----|--------|-------|-------|------|----------|----------|---|-----------|\n")
         # Mostrar solo la última fecha para evitar duplicados históricos
@@ -148,6 +161,19 @@ def render_momentum_amplitud(sector_breadth_momentum_data):
     out = []
     if sector_breadth_momentum_data is not None and not sector_breadth_momentum_data.empty:
         out.append("## Momentum de amplitud\n")
+        _h3_date_str = None
+        _h3_status = 'VALID'
+        try:
+            if 'date' in sector_breadth_momentum_data.columns and not sector_breadth_momentum_data['date'].isna().all():
+                _h3_date_str = pd.Timestamp(sector_breadth_momentum_data['date'].iloc[0]).strftime('%Y-%m-%d')
+            if 'input_status' in sector_breadth_momentum_data.columns and not sector_breadth_momentum_data['input_status'].isna().all():
+                _h3_status = str(sector_breadth_momentum_data['input_status'].iloc[0])
+        except (KeyError, TypeError, ValueError, IndexError):
+            pass
+        if _h3_date_str:
+            out.append(f"*Datos al {_h3_date_str}.*\n")
+        if _h3_status == 'DEGRADED':
+            out.append("*[input DEGRADED] Uno o mas inputs criticos con lag o cobertura insuficiente.*\n\n")
         out.append("| Sector | Δ1d EMA20 | Δ5d EMA20 | Δ20d EMA20 | Δ5d EMA50 | Δ5d EMA200 | Expansión | Deterioro |\n")
         out.append("|--------|-----------|-----------|------------|-----------|------------|-----------|-----------|\n")
         # Mostrar solo la última fecha para evitar duplicados históricos

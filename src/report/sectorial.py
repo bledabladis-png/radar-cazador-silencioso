@@ -31,6 +31,9 @@ def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None
         latest_date = pd.to_datetime(sector_breadth_data['date']).max()
         breadth_latest = sector_breadth_data[pd.to_datetime(sector_breadth_data['date']) == latest_date]
         out.append("## Sector Breadth & Health\n")
+        if not is_stale:
+            _bh_date_str = pd.Timestamp(latest_date).strftime('%Y-%m-%d')
+            out.append(f"*Datos al {_bh_date_str}.*\n")
         if is_stale:
             _latest_str = pd.Timestamp(latest_date).strftime('%Y-%m-%d')
             if stale_reason == 'DATA_PENDING':
@@ -112,6 +115,19 @@ def render_sector_concentration(sector_concentration_data):
         latest_date = pd.to_datetime(sector_concentration_data['date']).max()
         conc_latest = sector_concentration_data[pd.to_datetime(sector_concentration_data['date']) == latest_date]
         out.append("## Concentración del liderazgo\n")
+        _h3_date_str = None
+        _h3_status = 'VALID'
+        try:
+            if 'date' in sector_concentration_data.columns and not sector_concentration_data['date'].isna().all():
+                _h3_date_str = pd.Timestamp(sector_concentration_data['date'].iloc[0]).strftime('%Y-%m-%d')
+            if 'input_status' in sector_concentration_data.columns and not sector_concentration_data['input_status'].isna().all():
+                _h3_status = str(sector_concentration_data['input_status'].iloc[0])
+        except (KeyError, TypeError, ValueError, IndexError):
+            pass
+        if _h3_date_str:
+            out.append(f"*Datos al {_h3_date_str}.*\n")
+        if _h3_status == 'DEGRADED':
+            out.append("*[input DEGRADED] Uno o mas inputs criticos con lag o cobertura insuficiente.*\n\n")
         out.append("| Sector | Top1 | Top3 | Top5 | RS med | Mom med | Flow med | Wyckoff med | WLS med | Líder | Ret Líder | N valid | Cob RS | Cob Mom | Cob Flow | Cob Wyckoff | Cob WLS | Cob descarga | Cob peso |\n")
         out.append("|--------|------|------|------|--------|---------|----------|-------------|---------|-------|----------|---------|--------|---------|----------|-------------|---------|-------------|---------|\n")
         for _, row in conc_latest.iterrows():

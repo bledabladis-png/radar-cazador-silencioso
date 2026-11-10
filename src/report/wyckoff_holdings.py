@@ -76,6 +76,18 @@ def _render_section(tables, title, keys, group_label, section_note):
 
     out = []
     out.append("\n## {}\n\n".format(title))
+    # H3 extendido (S35): fecha efectiva del primer df no vacio.
+    _h3_date_str = None
+    for _k in keys:
+        _df = tables.get(_k) if tables else None
+        if _df is not None and not _df.empty and 'date' in _df.columns:
+            try:
+                _h3_date_str = pd.Timestamp(_df['date'].iloc[0]).strftime('%Y-%m-%d')
+                break
+            except (KeyError, TypeError, ValueError, IndexError):
+                continue
+    if _h3_date_str:
+        out.append(f"*Datos al {_h3_date_str}.*\n")
     subtitles = ("USA sectores", "USA indices", "Indices europeos")
     for key, subtitle, gl in zip(keys, subtitles, group_label):
         _render_subsection(out, subtitle, tables.get(key), gl)
