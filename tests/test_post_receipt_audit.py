@@ -107,6 +107,64 @@ def test_append_csv_nuevo(tmp_path):
     assert len(result) == 1
 
 
+def test_append_csv_actualiza_estado_lagged_a_ok(tmp_path):
+    """Fix S34: rerun con nuevo estado reemplaza fila previa (last-wins).
+
+    Caso real 2026-11-10: run 04:38 UTC produjo LAGGED con receipt_date
+    2026-11-06 (sector_breadth SKIP). Run 11:10 UTC, con sector_breadth
+    ya disponible, produjo OK con receipt_date 2026-11-09. Bajo el
+    contrato anterior ("primera escritura gana") el CSV quedaba con
+    LAGGED del primer run. Con last-wins, el consumidor health_check
+    ve el estado final del dia (OK).
+
+    Contrato: 1 fila por (target_session, writer) con el estado del
+    ultimo run. No duplica.
+    """
+    p = tmp_path / "audit.csv"
+    df_lagged = pd.DataFrame([{"target_session": "2026-11-09",
+                               "writer": "evidence_matrix",
+                               "status": "LAGGED",
+                               "receipt_date": "2026-11-06",
+                               "csv_path": "p"}],
+                             columns=pra.AUDIT_COLUMNS)
+    df_ok = pd.DataFrame([{"target_session": "2026-11-09",
+                           "writer": "evidence_matrix",
+                           "status": "OK",
+                           "receipt_date": "2026-11-09",
+                           "csv_path": "p"}],
+                         columns=pra.AUDIT_COLUMNS)
+    pra._append_csv(df_lagged, p)
+    pra._append_csv(df_ok, p)
+    result = pd.read_csv(p)
+    assert len(result) == 1
+    assert result.iloc[0]["status"] == "OK"
+    assert result.iloc[0]["receipt_date"] == "2026-11-09"
+
+
+def test_append_csv_last_wins_preserva_otras_sesiones(tmp_path):
+    """Rerun de una sesion no toca filas de otras sesiones."""
+    p = tmp_path / "audit.csv"
+    df_s1 = pd.DataFrame([{"target_session": "2026-11-06",
+                           "writer": "x", "status": "OK",
+                           "receipt_date": "2026-11-06", "csv_path": "p"}],
+                         columns=pra.AUDIT_COLUMNS)
+    df_s2_lagged = pd.DataFrame([{"target_session": "2026-11-09",
+                                  "writer": "x", "status": "LAGGED",
+                                  "receipt_date": "2026-11-06", "csv_path": "p"}],
+                                columns=pra.AUDIT_COLUMNS)
+    df_s2_ok = pd.DataFrame([{"target_session": "2026-11-09",
+                              "writer": "x", "status": "OK",
+                              "receipt_date": "2026-11-09", "csv_path": "p"}],
+                            columns=pra.AUDIT_COLUMNS)
+    pra._append_csv(df_s1, p)
+    pra._append_csv(df_s2_lagged, p)
+    pra._append_csv(df_s2_ok, p)
+    result = pd.read_csv(p)
+    assert len(result) == 2
+    by_s = result.set_index("target_session")["status"].to_dict()
+    assert by_s == {"2026-11-06": "OK", "2026-11-09": "OK"}
+
+
 def test_append_csv_dedup(tmp_path):
     """Rerun con misma (target_session, writer) no duplica."""
     p = tmp_path / "audit.csv"

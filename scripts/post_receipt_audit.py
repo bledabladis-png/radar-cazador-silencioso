@@ -107,25 +107,39 @@ def audit(receipts: list[dict], target_session: str | None) -> pd.DataFrame:
 
 
 def _append_csv(df: pd.DataFrame, path: Path) -> None:
+    """Escribe df en el CSV de auditoria.
+
+    Politica: ULTIMA ESCRITURA GANA por (target_session, writer). Un mismo
+    target_session puede ejecutarse en multiples runs scheduled el mismo
+    dia (05 slots). El primer run puede escribir un estado LAGGED que el
+    segundo, con sector_breadth ya disponible, actualiza a OK. Bajo la
+    politica previa de "primera escritura gana" el CSV quedaba congelado
+    con el estado del primer run (bug S34: 12 writers LAGGED sobre
+    2026-11-09 arrastraban el estado del run 04:38 aunque el run 11:10
+    producia VALID). Ver REP-AUDIT-20261020-RECEIPT-AUDIT-LAG.
+
+    Contrato del consumidor (health_check.check_receipt_audit): 1 fila
+    por (target_session, writer), con el estado final del dia. Filtra
+    MISSING/CSV_MISSING; LAGGED y OK son informativos.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists():
-        existing = pd.read_csv(path)
-        existing_keys = set(zip(existing["target_session"].astype(str),
-                                existing["writer"].astype(str)))
-        mask = ~df.apply(
-            lambda r: (str(r["target_session"]), str(r["writer"])) in existing_keys,
-            axis=1,
-        )
-        new = df.loc[mask]
-    else:
-        new = df
-    if new.empty:
+    if not path.exists():
+        df.to_csv(path, mode="a", header=True, index=False,
+                  encoding="utf-8", lineterminator="\n")
+        print(f"[audit] +{len(df)} filas en {path.name}")
+        return
+    existing = pd.read_csv(path)
+    before = len(existing)
+    combined = pd.concat([existing, df], ignore_index=True)
+    combined = combined.drop_duplicates(
+        subset=["target_session", "writer"], keep="last"
+    ).sort_values(["target_session", "writer"]).reset_index(drop=True)
+    if len(combined) == before and combined.equals(existing.reset_index(drop=True)):
         print(f"[audit] sin nuevas filas para {path.name}")
         return
-    header = not path.exists()
-    new.to_csv(path, mode="a", header=header, index=False,
-               encoding="utf-8", lineterminator="\n")
-    print(f"[audit] +{len(new)} filas en {path.name}")
+    combined.to_csv(path, mode="w", header=True, index=False,
+                    encoding="utf-8", lineterminator="\n")
+    print(f"[audit] reescrito {path.name} ({before} -> {len(combined)} filas)")
 
 
 def main() -> int:
