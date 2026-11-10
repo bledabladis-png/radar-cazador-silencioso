@@ -44,6 +44,45 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-10 â€” Sesion 34-bis: verificacion prod + TEST-FRESHNESS + bug receipt_audit
+
+**Objetivo.** Verificar los 4 cierres de S34 en produccion real y cerrar
+deudas abiertas con evidencia de los runs scheduled del 09-11 y 10-11.
+
+**Hecho.**
+- Verificacion prod de los 3 fixes S34 en runs 42757093154 (04:38 UTC)
+  y 42805253626 (11:10 UTC, run-system success). BRK-B/BF-B en
+  rs_internal del 09-11 (historicos preservados), BRK-B sin BRK.B en
+  IAE del reporte, crosswalk estable 534 lineas. Nota A/D publica
+  "Universo: 711/713" (cableado 79b4cb07 confirmado).
+- TEST-FRESHNESS-UMBRAL-VS-CADENCIA (vence 10-11): WONT_FIX con
+  evidencia. 5/5 filas del observatorio con gap_bus=0,
+  test_would_fail=False. Hipotesis umbral refutada.
+- Bug derivado detectado al revisar run 42805253626: post_receipt_audit
+  deduplicaba por (target_session, writer) con "primera escritura gana".
+  Con 2 runs el mismo dia (04:38 LAGGED, 11:10 OK), receipt_audit.csv
+  quedaba congelado con el estado del primer run. Fix c3c25782: last-wins
+  por par + 2 tests. El reporte era correcto (usa df en memoria, no CSV);
+  el CSV era lo que mentia.
+- Revision integral del reporte 42805253626: 40 secciones identicas al
+  run S33-bis, 40 steps del job run-system todos success, sin regresion
+  estructural. WARN del completion receipt es benigno (by_market ausente,
+  validacion contractual no aplicable; no bloquea).
+
+**Commits.** `81257dd1`, `c3c25782`, `26d66358`.
+
+**Pendiente.**
+- Verificar el fix de receipt_audit (last-wins) en el proximo run
+  scheduled con run-system success sobre c3c25782 o posterior.
+- 6 OPEN restantes: H5.3 (cron 13F 20-nov), DICT3-H04 (registro),
+  TEMPORAL-EFFECTIVE-DATE / MTE-DEGRADED-STATE / FRESHNESS-POR-BLOQUE
+  (decision producto), SEMANTICA-SIN-CONTRATO (inventario).
+- 2 BLOCKED_EXTERNAL sin novedad: C2-920, WYCKOFF-5BX.
+
+**Proximo paso sugerido.** Verificar el siguiente run scheduled con
+run-system success. Despues: tomar las decisiones de producto pendientes
+o esperar H5.3 (20-nov).
+
 ### 2026-11-08 — Sesion 34: 3 hermanos de normalizacion + MACRO-SCORE false positive
 
 **Objetivo.** Cerrar deudas de codigo abiertas, no solo documentacion. Foco
@@ -1424,95 +1463,6 @@ observacionales con fecha (H5.3, RECEIPT-AUDIT-LAG,
 CRON-SLOTS-OBS, SCHEDULER-DELAYS). Considerar pre-registro IWM
 (texto ya consensuado con auditor). Documentar reglas force=true
 y push en 07_RUNBOOK.
-
-### 2026-10-28 — Sesion 15: saneamiento pipeline + 4 tickets deuda
-
-**Objetivo.** Arrancar con estado limpio y atacar tickets de deuda.
-
-**Hecho.**
-- 3 bugs P0 corregidos:
-  - MAX_NEW vs universe_expansions (64866361). Desbloquea pipeline.
-  - .schema gitignored -> migracion en CI (b246154c).
-  - daily_run.yml sin build_catalog_csvs (9e456745).
-- 1 bug P0 de gobernanza: REGISTRO corrompido por append sin
-  separador (61de4d7a). Validador reforzado con 2 checks nuevos.
-- 4 tickets de deuda cerrados (2 commits por ticket: test +
-  REGISTRO):
-  - PARSE-SSGA-FEZ-TEST-MISSING (290f7977 + a04d259d): 6 tests.
-  - EU-INDEX-NO-CAP-TEST-MISSING (62e04dba + c98feba1): 5 tests.
-  - TEST-SCRIPTS-SYS-PATH-DYNAMIC (90080ff8 + 01e1cdf0): 4 tests.
-  - COMPLETION-ATTEMPT-NO-STEP-AWARENESS (206702f9 + 76983040):
-    5 tests.
-- Tests: 3845 -> 3880 (+35). Gobernanza: 164 -> 165 items.
-- 13 commits pusheados. HEAD al cierre: 76983040.
-
-**Commits.** b2f3e30f..76983040 (13 commits: 5 de saneamiento,
-8 de cierre de los 4 tickets de deuda).
-
-**Pendiente.**
-- Verificar proximo run scheduled (~04-06Z del 29/10): append de
-  sector_wyckoff_distribution.csv (no regresion a 12 lineas),
-  sector_regime_matrix.csv, receipt escrito.
-- EU-HOLDINGS-DOWNLOAD-CAP: verificar en proximo run que el
-  parquet tiene los 112 tickers EU.
-- Deudas externas: SOW-BEAR-CONFIRMATION, SOW-HOLDOUT-IMMUTABLE,
-  DICT3-*, TOP20-*, IWM-HOLDINGS-EXPANSION, C2-920, WYCKOFF-5BX.
-
-**Proximo paso sugerido.**
-1. Verificar el primer run scheduled con el .schema versionado:
-   confirmar append de sector_wyckoff_distribution. Si no, ticket.
-2. Verificar el step Regenerar catalog CSVs en el scheduled.
-3. Si ambos OK: EU-HOLDINGS-DOWNLOAD-CAP verificable -> cerrar.
-
-### 2026-10-28 (continuacion) - Sesion 15 parte 2: bug hunt + SOW-HOLDOUT
-
-**Objetivo.** Continuar el saneamiento iniciado en la primera mitad
-del dia. Derivado a: bug hunt de codigo + respuesta a 2 dictamenes
-externos del mismo dia.
-
-**Hecho.**
-
-Bug hunt de codigo (5 frentes, 14 bugs reales, guards AST):
-- P7 look-ahead (4 commits): iloc[-N:] con huecos
-  (slice_last_n_sessions), endDate NY Fed determinista,
-  resolve_observation_date vs resolve_reference_date (7 funciones
-  migradas), bug de propagacion del raise en 3 funciones.
-- Except silenciosos (1): fail-close manifest, str(be),
-  run.py pass->print.
-- Cache freshness (1): validacion de tickers en cache-hit, CSV
-  legacy eliminado, CACHE_MIN_COVERAGE.
-- Rate limiting (1): backoff desde attempt+1, sleep entre retries
-  individuales (try/finally).
-
-SOW-HOLDOUT-IMMUTABLE (6 commits):
-- Infraestructura H-01/H-03: holdout_manifest.py (SHA-256 +
-  hash canonico), holdout_intersection.py (interseccion 266/268).
-- Fix CI: skipif en tests que hashean parquets gitignored.
-- Doc 74: 5 hechos del analisis + decisiones H-04 (opcion B con
-  historial) y H-07 (declarar poblacion real).
-- H-02: capture_experiment_env.py (commit, prereg ancestro de
-  HEAD, requirements SHA, validators, modules, params, seed,
-  holdout manifest).
-- Contrato v1.1 redactado: doc 58 de 259 -> 482 lineas, 14
-  secciones, H-01..H-08.
-- Backlog bloqueado externo consolidado en 1 documento (12 items,
-  indice unico).
-
-**Commits (parte 2).** 1cd608bc, 86ff433c, cee53c02, a4a28d9e,
-a6a8f017, b8b0de96, 4150a68e, 780930e6, 45d48c5d, f7749f69,
-93bc595d, d90f2600, a5a26bdb, 43bf21e0.
-
-**Pendiente.**
-- Enviar v1.1 SOW-HOLDOUT + doc 74 al auditor externo (canal).
-- SOW-BEAR v1.10.1: no redactar hasta decision del usuario.
-- Tests T6-T10 de SOW-HOLDOUT: no implementar hasta firma v1.1.
-- Verificar proximo run scheduled (~04-06Z): .schema append,
-  Regenerar catalog CSVs, EU-HOLDINGS-DOWNLOAD-CAP.
-
-**Proximo paso sugerido.**
-1. Enviar v1.1 + doc 74 al auditor (usuario).
-2. Verificar proximo run scheduled (operativo).
-3. Backlog externo en BACKLOG_BLOQUEADO_EXTERNO.md como indice.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 

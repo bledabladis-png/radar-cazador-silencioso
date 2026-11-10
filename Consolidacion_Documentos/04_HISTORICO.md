@@ -3931,3 +3931,81 @@ Verificados untracked + gitignored + sin evidencia unica antes de borrar.
 - OPEN: 7. BLOCKED_EXTERNAL: 2.
 - IAE 98.68% (522/530).
 - `main == origin/main`, tree limpio.
+
+---
+
+## N+2. SESION 34-bis (2026-11-10): verificacion prod + receipt_audit last-wins
+
+### Verificacion de los 3 fixes de S34 en produccion real
+
+Runs scheduled 42757093154 (04:38 UTC) y 42805253626 (11:10 UTC), ambos
+con `run-system: success` sobre `target_session=2026-11-09`:
+
+- **rs_internal.csv**: filas 2026-11-09 con `BRK-B` y `BF-B`. Historicas
+  (<= 2026-11-06) conservan `BRK.B`/`BF.B` intactas. Fix `9d712c28`
+  confirma comportamiento append-only + normalizacion.
+- **IAE del reporte**: `BRK-B` sin `BRK.B`, 21 salidas masivas + 3 nuevas
+  (antes BRK.B aparecia duplicado en ambas). Fix `d41c223e` funciona.
+- **Nota A/D**: `Universo: 711/713 tickers`. Cableado `79b4cb07`
+  confirmado. Deuda S33-bis (nota sin 713) cerrada por cadencia.
+- **Crosswalk**: 534 lineas sin cambios desde `573822fb`. Estable.
+- **Wyckoff CSVs**: sin BRK.B/BF.B, sin regresion. La condicion no se
+  dispara hoy (no estan en top-N), pero el fix `4132dae3` esta en main.
+
+### TEST-FRESHNESS-UMBRAL-VS-CADENCIA -> WONT_FIX
+
+Observatorio `outputs/history/freshness_gap_observation.csv` acumulo 5
+filas (2026-11-03 a 2026-11-09), todas con `gap_days_business=0`,
+`test_would_fail=False`, `coverage_pct_effective=0.994671` estable.
+Hipotesis umbral (MAX_DAILY_AGE=4 demasiado estricto) refutada. Los
+fallos originales eran por parquets locales stale, no por umbrales.
+Cierre WONT_FIX razonado con condicion de reapertura (gap_bus>4 en
+alguna sesion futura).
+
+### Bug derivado: receipt_audit "primera escritura gana"
+
+Detectado al revisar el run 42805253626. `post_receipt_audit.py`
+deduplicaba por `(target_session, writer)` con "primera escritura gana".
+Con multiples slots scheduled el mismo dia, el primer run puede escribir
+estados LAGGED (sector_breadth SKIP) que runs posteriores actualizan a
+OK. El CSV quedaba congelado con el estado del primer run.
+
+El reporte del 11:10 era correcto (usa df en memoria, no el CSV). El
+`receipt_audit.csv` era lo que mentia. `health_check.check_receipt_audit`
+consume ese CSV los lunes y veria anomalias inexistentes.
+
+Fix `c3c25782`: `_append_csv` pasa a last-wins (concat +
+`drop_duplicates(keep=last)` + sort). 2 tests nuevos. El contrato del
+consumidor no cambia (1 fila por par, estado final del dia).
+`REP-AUDIT-20261020-RECEIPT-AUDIT-LAG` cerrado como FIXED.
+
+### Estado al cierre S34-bis
+
+- Tests: 4626 passed, 2 skipped.
+- Gobernanza: 313 items (250 FIXED, 38 WONT_FIX, 13 FALSE_POSITIVE,
+  6 OPEN, 4 SUPERSEDED, 2 BLOCKED_EXTERNAL).
+- IAE 98.68% (522/530).
+- `main == origin/main`, tree limpio.
+
+---
+
+## N+3. Sesiones 15 y 15p2 (2026-10-28): nota compacta
+
+Portadas desde `05_BITACORA.md` al podar. Detalle en `git log 2026-10-28`.
+
+- **Sesion 15 (saneamiento)**: 3 bugs P0 corregidos (MAX_NEW vs
+  universe_expansions 64866361, .schema gitignored->migracion CI
+  b246154c, daily_run.yml build_catalog_csvs 9e456745). 1 bug P0
+  gobernanza: REGISTRO corrompido por append sin separador (61de4d7a),
+  validador reforzado. 4 tickets deuda cerrados con test+REGISTRO:
+  PARSE-SSGA-FEZ-TEST-MISSING, EU-INDEX-NO-CAP-TEST-MISSING,
+  TEST-SCRIPTS-SYS-PATH-DYNAMIC, COMPLETION-ATTEMPT-NO-STEP-AWARENESS.
+  Tests 3845 -> 3880 (+35). Gobernanza 164 -> 165 items.
+- **Sesion 15p2 (bug hunt)**: 14 bugs reales en 5 frentes con guards
+  AST. P7 look-ahead (slice_last_n_sessions, endDate NY Fed
+  determinista, resolve_observation_date vs reference_date migrado en
+  7 funciones, propagacion del raise). Except silenciosos
+  (fail-close manifest). Cache freshness (validacion de tickers
+  cache-hit, CSV legacy eliminado, CACHE_MIN_COVERAGE). Rate limiting
+  (backoff desde attempt+1, sleep entre retries).
+  SOW-HOLDOUT-IMMUTABLE (6 commits) como WONT_FIX razonado.
