@@ -193,12 +193,12 @@ S33 (2026-11-07): `TARGET_WEIGHT_COVERAGE` paso de 0.85 a 1.0. Clasifica univers
 - **SEMANTICA-SIN-CONTRATO-INVENTARIO:** OPEN. Inventariar conceptos con semantica sin contrato. ROI bajo, no urgente.
 - **DAILY-RUN-FAIL-40992758129:** WONT_FIX razonado 2026-11-06. Ultimo fallo 30-10 (`89b6e0a2`), sin reaparicion en 7 dias. `cron_slots` WARN tampoco en ultimos 30 runs.
 - **H5.3:** cron 20-nov-2026 06:17 UTC.
-- **RECEIPT-AUDIT-LAG:** cierre 17-nov-2026 (4 semanas de obs).
+- **RECEIPT-AUDIT-LAG:** CERRADO FIXED (c3c25782, S34). Bug last-wins de receipt_audit reproducido 10-11 (04:38 vs 11:10 UTC); corregido en S34, ver item en REGISTRO.
 - **CRON-SLOTS-OBS:** FIXED 2026-11-06 (revision adelantada). 21/22 dias con >=1 run scheduled en ventana 22 dias, 1 solo dia con 0/5 slots (16-10) < umbral 2. Evidencia en 04_HISTORICO S30. Commit `bbd9e4b4`.
 - **SCHEDULER-DELAYS:** WONT_FIX razonado 2026-11-06 (revision adelantada). p95 <=8h cumple criterio del propio item. Delays no son metrica util con slots nominales que solapan 1-9h. 4 fallos de la ventana son `340bfadc` (cerrado S29). Evidencia en 04_HISTORICO S30. Commit `bbd9e4b4`.
 - **INVESTIGAR-TESTS-MAIN-SIN-MONKEYPATCH-PATH:** CERRADO en S28.
 - **2 tests skipped** (`test_freshness.py` network, opt-in).
-- **test_freshness**: hipotesis inicial refutada 2026-11-05. Los 3 tests se auto-resuelven con un refresh real del bot (post-3172eaf5: 4469 passed, 0 failed). Item OPEN `TEST-FRESHNESS-UMBRAL-VS-CADENCIA` en REGISTRO: observatorio `freshness_gap_observer.py` recoge serie hasta 11-10; cierre formal con >=5 filas.
+- **test_freshness**: CERRADO WONT_FIX (S34). Hipotesis de umbral refutada 2026-11-05; 5/5 filas del observatorio `freshness_gap_observer.py` con gap_bus=0. 2 tests skip por `--run-network`, no accionables sin red real.
 
 ### 4.4. Deudas documentadas (sin accion pendiente)
 

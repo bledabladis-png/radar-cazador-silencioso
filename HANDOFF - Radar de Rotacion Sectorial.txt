@@ -158,7 +158,12 @@ Bloque auditoria 2026-11-07:
 - **DICT3-H04-INTERVALS**: OPEN sin accion propia. Registro
   historico del rechazo del IC95 inferencial.
 
-### 3.3. OPEN activos (5)
+### 3.3. Items del bloque auditor 2026-11-07 (2 OPEN + 1 pendiente de abrir + 2 FIXED)
+
+> Nota S35-cierre: `TEMPORAL-EFFECTIVE-DATE-POR-MODULO` y `FRESHNESS-POR-BLOQUE` ya estan
+> FIXED (`b3a23bc7`). Se mantienen aqui por trazabilidad. Los OPEN reales de este
+> bloque son `MTE-DEGRADED-STATE` y `SEMANTICA-SIN-CONTRATO-INVENTARIO`.
+> `Q12-DATOS-CRUDOS` sigue pendiente de abrir como item formal.
 
 - **SEMANTICA-SIN-CONTRATO-INVENTARIO**: OPEN con inventario
   parcial (bce81bf4). 3 conceptos sin contrato identificados.
@@ -443,7 +448,7 @@ Esperado:
 - HEAD = git log --oneline -1.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests: fuente autoritativa ESTADO_SISTEMA.md (4621 passed, 0 failed).
+- Tests: fuente autoritativa ESTADO_SISTEMA.md (4665 passed, 0 failed).
 - Gobernanza [OK]. Indice H1-H18 [OK]. Bitacora [OK].
 - pyflakes silencio, compileall OK.
 
