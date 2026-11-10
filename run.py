@@ -360,7 +360,7 @@ def main():
 
                           all_signals=all_signals, provenance=_provenance,
                           wyckoff_holdings_data=wh_tables,
-                          liquidity_state=_liquidity_state)
+                          liquidity_state=_liquidity_state, temporal_meta=temporal_meta)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
     # Side effects + cobertura europea (C1-10 + C2-12)
