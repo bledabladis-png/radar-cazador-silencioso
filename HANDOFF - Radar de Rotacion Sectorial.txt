@@ -10,10 +10,10 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-08, sesion 33-bis)
 
-HEAD: `3fe719ca` (consultar `git log --oneline -1` para el actual).
+HEAD: `c3c25782` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4624 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4626 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
 Gobernanza: docs/gobernanza/REGISTRO.yaml, 313 items.
@@ -181,7 +181,7 @@ estan cubiertos:
 | Item | Fecha | Accion |
 |---|---|---|
 | TEST-FRESHNESS-UMBRAL-VS-CADENCIA | 2026-11-10 | **CERRADO WONT_FIX** (5/5 filas gap_bus=0, hipotesis umbral refutada) |
-| RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
+| RECEIPT-AUDIT-LAG | 2026-11-17 | **CERRADO FIXED c3c25782** (last-wins receipt_audit; bug reproducido 10-11 en 04:38 vs 11:10 UTC) |
 | H5.3 | 2026-11-20 | Verificar cron trimestral 13F (primer disparo real) |
 
 ### 3.6. Deuda detectada sesiones anteriores (no accionada)

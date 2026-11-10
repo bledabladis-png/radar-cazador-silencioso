@@ -1006,15 +1006,13 @@ items:
 - id: REP-AUDIT-20261020-RECEIPT-AUDIT-LAG
   tipo: auditoria_interna
   ciclo: '2026-10-20'
-  estado: OPEN
-  descripcion: post_receipt_audit compara written=True con existencia de fila con
-    fecha igual a receipt.date, no con target_session. Writers con lag de publicacion
-    (sector_flow_characteristics con input hasta 2026-10-16, target 2026-10-19) pasan
-    como OK con fecha distinta al target. Mismo patron que el audit del 09-oct debia
-    detectar.
-  siguiente_accion: Anadir status LAGGED cuando written=True y receipt.date distinto
-    de target_session. Observacion 4 semanas antes de decidir si bloquea. Caso testigo
-    sector_flow_characteristics (R1 correcto).
+  estado: FIXED
+  commit: c3c25782
+  test: tests/test_post_receipt_audit.py
+  descripcion: 'post_receipt_audit comparaba written=True con existencia de fila con fecha igual a receipt.date, no con target_session. Writers con lag de publicacion pasaban como OK con fecha distinta al target. Status LAGGED anadido 2026-10-20.'
+  evidencia: 'Detectado bug derivado al revisar run 42805253626 (S34 post-prod). Con 2 runs scheduled el mismo dia (04:38 y 11:10 UTC, target_session=2026-11-09), el primero produjo 12 writers LAGGED (sector_breadth SKIP) y los persiste en receipt_audit.csv. El segundo run, con sector_breadth disponible, produce OK; pero _append_csv deduplicaba por (target_session, writer) y descartaba la actualizacion. receipt_audit.csv quedaba congelado con el estado LAGGED del primer run. Fix: _append_csv pasa a last-wins (concat + drop_duplicates keep=last + sort). El consumidor health_check.check_receipt_audit sigue viendo 1 fila por par con el estado final del dia. 2 tests nuevos cubren LAGGED->OK en rerun y preservacion de sesiones previas. Suite completa 4626 passed 2 skipped.'
+  razon: 'Bug de codigo, no de documentacion. Bajo el contrato anterior ("primera escritura gana") el CSV congelaba el estado del primer run del dia; con 5 slots scheduled, cualquier mejora posterior (sector_breadth SKIP->OK) no se reflejaba. La observacion de 4 semanas del item original no era necesaria: el bug se reprodujo con evidencia real en el mismo dia (04:38 vs 11:10 UTC).'
+
 - id: REP-AUDIT-20261020-WARN-TRIMESTRALES
   tipo: auditoria_interna
   ciclo: '2026-10-20'
