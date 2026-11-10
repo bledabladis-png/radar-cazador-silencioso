@@ -8,7 +8,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 ---
 
 
-## 1. ESTADO AL CIERRE (2026-11-08, sesion 33-bis)
+## 1. ESTADO AL CIERRE (2026-11-10, sesion 35)
 
 HEAD: `b3a23bc7` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
@@ -25,6 +25,23 @@ Hooks activos: pre-commit (pyflakes + compileall) y pre-push (pytest xdist).
 Fase 2 (auditoria por bloques): COMPLETA. B1-B8 auditados.
 Fase 0 + Fase 1: COMPLETAS.
 Transversales: cerrados.
+
+Sesion 35 (2026-11-10): cierre de los 2 hallazgos del auditor externo
+2026-11-03 (10.1 TEMPORAL-EFFECTIVE-DATE-POR-MODULO, 10.3 FRESHNESS-POR-
+BLOQUE) con codigo real + 2 contratos temporales nuevos. 15 contratos en
+total. 9/9 modulos del reporte anotan su fecha efectiva con "*Datos al
+YYYY-MM-DD (lag Nd).*". Ver §3.12.
+
+**Validacion en produccion pendiente.** El run scheduled 18:42 UTC del
+2026-11-10 (head 3f0ce3e9) hizo SKIP de run-system (gate CURRENT).
+Los runs scheduled con run-system success son anteriores a S35. El
+primer run-system success con los 15 contratos sera el scheduled del
+2026-11-10 23:17 UTC o posterior. Verificar entonces: 12 "*Datos al*"
+en el reporte, gate 11/11, sin regresiones.
+
+Sesion 34 (2026-11-08 / 2026-11-10): 3 hermanos de normalizacion
+(IAE, rs_internal, wyckoff) + receipt_audit last-wins + TEST-FRESHNESS
+WONT_FIX. Cierre formal en commits 81257dd1..762ad6cf.
 
 Sesion 33 (2026-11-07): coherencia de universo. Cierre de 5
 verificaciones tempranas (N-PORT, ISSUES-WRITE-CI-RUNTIME, gate
@@ -376,6 +393,38 @@ Errores propios: `0b2944e5` sustituyo los literales por prosa vaga en
 vez de derivarlos; `34858639` cableo la clave "ad_net" en vez de "ad".
 Ambos corregidos. Regla aplicada: si un numero aporta valor, derivarlo
 del df/dict en runtime; no borrarlo.
+
+### 3.12. Cierres S35 (2026-11-10)
+
+4 commits de codigo + 1 docs-only:
+
+- **`3f0ce3e9`** feat(report): anotacion fecha efectiva por contrato en
+  IAE (SEC_13F). Helper `src/report/_temporal_annotation.py::format_
+  effective_date_line`. Test test_report_temporal_annotation.py (11 helper
+  + 3 cableado IAE). E2E run.py real (1652s, gate 11/11): "*Datos al
+  2026-06-30.*" en IAE.
+- **`06e473f1`** feat(report): anotacion fecha efectiva en darkpool
+  (FINRA_DARKPOOL), regimenes (FRED_MACRO), SPDR (SSGA_PRIMARY_FLOW).
+  +6 tests cableado. E2E run.py real (1083s, gate 11/11): 4 secciones
+  con "*Datos al*".
+- **`b9de9554`** feat(temporal): contratos CFTC_POSITION_FLOW (semanal
+  TFF, max_lag 45) y SEC_NPORT (trimestral, deadline 60d, max_lag 180).
+  13 -> 15 contratos. 14 tests nuevos + 7 tests registry actualizados.
+- **`b3a23bc7`** feat(report): "*Datos al*" en 5 secciones derivadas de
+  holdings (sector_breadth, sector_concentration, sector_wyckoff_
+  distribution, sector_breadth_momentum, wyckoff_holdings acc/dist).
+  +6 tests cableado. E2E run.py real (1104s, gate 11/11): 12 "*Datos
+  al*" en el reporte, 9/9 secciones cubiertas.
+- **`829035fd`** docs(cierre-S35): REGISTRO (2 items OPEN -> FIXED),
+  HANDOFF, ARRANQUE, ESTADO_SISTEMA, bitacora, historico.
+
+**Items cerrados:** TEMPORAL-EFFECTIVE-DATE-POR-MODULO (FIXED
+b3a23bc7), FRESHNESS-POR-BLOQUE (FIXED b3a23bc7). **Sigue OPEN:**
+MTE-DEGRADED-STATE (decision producto, mi lectura WONT_FIX razonado).
+
+**Pendiente operativo:** primer run-system success con los 15 contratos
+(scheduled 23:17 UTC del 2026-11-10 o posterior). Verificar 12 "*Datos
+al*" en el reporte, gate 11/11, sin regresiones.
 
 ## 4. COMO ARRANCAR
 
