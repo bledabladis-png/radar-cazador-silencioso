@@ -30,6 +30,8 @@ from src.temporal_contracts.registry import (
     FinraDarkpool,
     SsgaPrimaryFlow,
     FredMacro,
+    CftcPositionFlow,
+    SecNport,
 )
 from src.temporal_contracts.validation import (
     validate_artifact_contracts,
@@ -95,4 +97,6 @@ __all__ = [
     "FinraDarkpool",
     "SsgaPrimaryFlow",
     "FredMacro",
+    "CftcPositionFlow",
+    "SecNport",
 ]

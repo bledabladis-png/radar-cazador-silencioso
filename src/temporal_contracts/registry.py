@@ -25,6 +25,7 @@ from __future__ import annotations
 from src.temporal_contracts.base import TemporalContract
 from src.temporal_contracts.equity_eod import EquityEOD
 from src.temporal_contracts.finra_darkpool import FinraDarkpool
+from src.temporal_contracts.cftc_position_flow import CftcPositionFlow
 from src.temporal_contracts.fred_macro import FredMacro
 from src.temporal_contracts.future_settlement import FutureSettlement
 from src.temporal_contracts.fx_daily_cut import FxDailyCut
@@ -36,6 +37,7 @@ from src.temporal_contracts.index_eod import (
 )
 from src.temporal_contracts.rate_yield import RateYield
 from src.temporal_contracts.sec_13f import Sec13F
+from src.temporal_contracts.sec_nport import SecNport
 from src.temporal_contracts.ssga_primary_flow import SsgaPrimaryFlow
 from src.temporal_contracts.volatility_index import VolatilityIndex
 
@@ -54,6 +56,8 @@ _IMPLEMENTED_CONTRACTS = {
     "FINRA_DARKPOOL": FinraDarkpool,
     "SSGA_PRIMARY_FLOW": SsgaPrimaryFlow,
     "FRED_MACRO": FredMacro,
+    "CFTC_POSITION_FLOW": CftcPositionFlow,
+    "SEC_NPORT": SecNport,
 }
 
 

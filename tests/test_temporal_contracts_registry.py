@@ -22,6 +22,8 @@ EXPECTED_CONTRACTS = [
     "FINRA_DARKPOOL",
     "SSGA_PRIMARY_FLOW",
     "FRED_MACRO",
+    "CFTC_POSITION_FLOW",
+    "SEC_NPORT",
 ]
 
 EXPECTED_FAMILIES = {
@@ -38,13 +40,15 @@ EXPECTED_FAMILIES = {
     "FINRA_DARKPOOL": "FINRA",
     "SSGA_PRIMARY_FLOW": "SSGA",
     "FRED_MACRO": "FRED",
+    "CFTC_POSITION_FLOW": "CFTC",
+    "SEC_NPORT": "SEC",
 }
 
 
 class TestRegistryShape:
 
     def test_trece_contratos(self):
-        assert len(CONTRACTS_REGISTRY) == 13
+        assert len(CONTRACTS_REGISTRY) == 15
 
     def test_nombres_exactos(self):
         assert list(CONTRACTS_REGISTRY.keys()) == EXPECTED_CONTRACTS
@@ -60,7 +64,7 @@ class TestRegistryShape:
         families = {v["family"] for v in CONTRACTS_REGISTRY.values()}
         assert families == {
             "EQUITY", "INDEX", "RATE_YIELD", "FUTURE", "FX",
-            "SEC", "FINRA", "SSGA", "FRED",
+            "SEC", "FINRA", "SSGA", "FRED", "CFTC",
         }
 
     # --- S28: contrato de derivacion (drift guard) ---
