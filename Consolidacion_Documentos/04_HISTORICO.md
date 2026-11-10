@@ -4009,3 +4009,77 @@ Portadas desde `05_BITACORA.md` al podar. Detalle en `git log 2026-10-28`.
   cache-hit, CSV legacy eliminado, CACHE_MIN_COVERAGE). Rate limiting
   (backoff desde attempt+1, sleep entre retries).
   SOW-HOLDOUT-IMMUTABLE (6 commits) como WONT_FIX razonado.
+
+---
+
+## N+4. SESION 35 (2026-11-10): fecha efectiva por modulo + 2 contratos nuevos
+
+### La clase "declaracion de fecha efectiva por bloque"
+
+El auditor externo 2026-11-03 (hallazgos 10.1 y 10.3) observo que el
+reporte publicaba una sola `effective_date_equity` global en provenance
+mientras distintos modulos declaraban fechas heterogeneas en Data
+Freshness. Un lector veia "Sector Breadth 30/10" sin saber que el bloque
+dependia de esa fecha; veia "CURRENT" en Yahoo/CBOE/FRED/FINRA sin saber
+que podia significar "dentro del umbral de la fuente", no "del dia".
+
+Opcion elegida (b) del item 10.1: **cada bloque declara su fecha
+efectiva y lag**. Alternativa (a) "temporal_coherence global = peor de
+los modulos" descartada: es barata pero no dice QUE modulo esta
+retrasado.
+
+### Solucion: helper unico + cableado por render
+
+`src/report/_temporal_annotation.py::format_effective_date_line` lee
+`temporal_meta.by_contract` (autoridad de resolucion temporal, 15
+contratos) y devuelve `*Datos al YYYY-MM-DD (lag Nd).*`. Multi-contrato:
+min effective_date, lag del contrato con effective_date == min. Sin
+hardcode, sin recalculo. Coherente con H3 (S32).
+
+Cableados:
+- **Por contrato temporal** (4 renders): IAE -> SEC_13F; darkpool ->
+  FINRA_DARKPOOL; regimenes -> FRED_MACRO; SPDR -> SSGA_PRIMARY_FLOW.
+- **Por df["date"]** (5 renders derivados de holdings): sector_breadth
+  (solo si no stale), sector_concentration, sector_wyckoff_distribution,
+  sector_breadth_momentum, wyckoff_holdings acc/dist. sector_regime_
+  matrix y evidence_matrix ya lo tenian por H3 (S32).
+- **Por fila** (2 renders, sin cambios): CFTC (row["date"]), NPORT
+  (REPORT_DATE + FILING_DATE con nota de frecuencia).
+
+Resultado: 9/9 modulos citados por el auditor anotan fecha. 12 lineas
+"*Datos al*" en el reporte final (verificado en E2E).
+
+### 2 contratos nuevos: CFTC_POSITION_FLOW y SEC_NPORT
+
+Para que `temporal_meta.by_contract` cubriese las 2 fuentes no-equity
+que aun no tenian contrato:
+- **CFTC_POSITION_FLOW**: semanal TFF. effective_date = max(date) del
+  CSV. expected_date = martes mas reciente con margen 10d. max_lag 45
+  (primer umbral de FRESHNESS_CFTC). Si effective >= expected (CSV por
+  delante del margen), status OK con lag=0.
+- **SEC_NPORT**: trimestral. effective_date = max(REPORT_DATE).
+  expected_date = quarter-end mas reciente con deadline SEC 60d pasado.
+  max_lag 180 (segundo umbral de FRESHNESS_SEC).
+
+13 -> 15 contratos. Registro derivado de _IMPLEMENTED_CONTRACTS (S28
+refactor). Tests: 7+7 + 7 tests de registry actualizados.
+
+### Decision sobre MTE-DEGRADED-STATE (H4)
+
+No tocado. Sigue OPEN como decision de producto. La confidence del MTE
+ya esta declarada "no calibrada" en el propio reporte, y el estado
+(MTE Status: DEGRADED, Futures Status: STALE) se publica por canal
+separado. Degradar numericamente la confidence inventaria calibracion
+que no existe. Mi recomendacion: WONT_FIX razonado. Decision final del
+operador.
+
+### Estado al cierre S35
+
+- Tests: 4665 passed, 2 skipped.
+- Gobernanza: 313 items (2 OPEN -> FIXED: TEMPORAL-EFFECTIVE-DATE,
+  FRESHNESS-POR-BLOQUE).
+- Contratos: 15 (13 + CFTC + NPORT).
+- OPEN: 4 (H5.3, DICT3-H04, MTE-DEGRADED, SEMANTICA-SIN-CONTRATO).
+- BLOCKED_EXTERNAL: 2 (C2-920, WYCKOFF-5BX).
+- `main == origin/main`, tree limpio.
+

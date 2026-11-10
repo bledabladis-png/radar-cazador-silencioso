@@ -7139,7 +7139,9 @@ items:
 - id: TEMPORAL-EFFECTIVE-DATE-POR-MODULO
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
-  estado: OPEN
+  estado: FIXED
+  commit: b3a23bc7
+  test: tests/test_report_temporal_annotation.py
   descripcion: |
     Hallazgo 10.1 de auditoria externa (2026-11-03). El reporte
     publica una sola `effective_date_equity` global (2026-10-30 en
@@ -7149,24 +7151,25 @@ items:
     Wyckoff a 30/10; Yahoo / CBOE / Cross Asset / Sector
     Persistence / Rank History a 02/11; FINRA a 12/10; SEC N-PORT
     a 30/06. Un `temporal_coherence` global no captura esa mezcla.
-  siguiente_accion: |
-    Decision de producto: (a) `temporal_coherence` global pasa a
-    ser la PEOR de las coherencias por modulo (conservador), o
-    (b) cada bloque del reporte declara su propia fecha efectiva
-    en su encabezado o nota. (a) es barato, (b) es correcto. Sin
-    decision, no tocar. El fix WALK_BACK (3c488a22..095e8789) NO
-    cubre esto: resuelve el warning INCOHERENT espurio, no la
-    declaracion por modulo. Estimacion (b): 1-2 sesiones, toca
-    provenance + render_provenance + dict de build_provenance.
   evidencia: |
-    Reporte 41575090209: L11 effective_date_equity=2026-10-30,
-    L111-134 tabla Data Freshness con fechas heterogeneas. L108
-    'Sector Breadth' 30/10. L135 'Yahoo Finance' 02/11. El
-    auditor pide: 'no publicar un diagnostico sectorial
-    consolidado como plenamente actualizado cuando
-    temporal_coherence = INCOHERENT'. Nota: el fix WALK_BACK
-    elimino ese INCOHERENT espurio; queda la declaracion por
-    modulo.
+    Fix S35 (4 commits: 3f0ce3e9 IAE, 06e473f1 darkpool+regimenes
+    +SPDR, b9de9554 2 contratos nuevos, b3a23bc7 5 renders
+    holdings; ultimo b3a23bc7). Opcion (b) del item: cada bloque
+    declara su fecha efectiva. Helper src/report/_temporal_
+    annotation.py::format_effective_date_line. 9/9 modulos
+    anotados con "*Datos al YYYY-MM-DD (lag Nd).*": IAE
+    (SEC_13F), darkpool (FINRA_DARKPOOL), regimenes (FRED_MACRO),
+    SPDR (SSGA_PRIMARY_FLOW), sector_breadth, sector_concentration,
+    sector_regime_matrix, sector_wyckoff_distribution, sector_
+    breadth_momentum, evidence_matrix, wyckoff_holdings (df
+    ["date"] con input_status DEGRADED). CFTC/NPORT por fila
+    (row["date"], REPORT_DATE+FILING_DATE). 15 contratos
+    temporales (13 + CFTC_POSITION_FLOW + SEC_NPORT). Tests: 26
+    en test_report_temporal_annotation.py + 7 test_temporal_
+    contract_cftc.py + 7 test_temporal_contract_sec_nport.py.
+    E2E run.py real: 12 "*Datos al*" en el reporte, 9/9
+    secciones. Gate 11/11.
+
 
 - id: MTE-DEGRADED-STATE
   tipo: deuda_tecnica
@@ -7197,7 +7200,9 @@ items:
 - id: FRESHNESS-POR-BLOQUE
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
-  estado: OPEN
+  estado: FIXED
+  commit: b3a23bc7
+  test: tests/test_report_temporal_annotation.py
   descripcion: |
     Hallazgo 10.3 de auditoria externa (2026-11-03). La tabla
     compacta 'Data Freshness' usa `CURRENT` como umbral por fuente
@@ -7206,22 +7211,16 @@ items:
     cuando puede ser de hace 3-30 dias. El auditor pide que el
     lector sepa cuando una conclusion depende de informacion de
     una sesion anterior.
-  siguiente_accion: |
-    Decision de producto. Observabilidad, no bug. El sistema ya
-    tiene la informacion (tabla completa en Data Freshness,
-    effective_date_equity por fuente). Falta presentacion: que
-    cada bloque del reporte cite las fechas efectivas de las
-    fuentes que lo alimentan, o que la tabla compacta distinga
-    'CURRENT al umbral de la fuente' vs 'sesion actual'. Coste
-    medio-alto. No urgente.
   evidencia: |
-    Reporte 41575090209: tabla compacta L107-113 con CURRENT
-    para Yahoo (02/11), CBOE (02/11), FRED (30/10), FINRA (12/10).
-    Tabla completa L111-135 con 25 fuentes y frecuencia explicita.
-    Auditor: 'el problema no es que todos los datos deban tener
-    frecuencia diaria. El problema es que el gestor necesita saber
-    cuando una conclusion depende de informacion que termina en
-    una sesion anterior'.
+    Fix S35 (commit final b3a23bc7). Via per-block: cada bloque
+    del reporte publica "*Datos al YYYY-MM-DD (lag Nd).*" con la
+    fecha efectiva y el lag del contrato temporal de su fuente.
+    9/9 modulos cubiertos (lista detallada en TEMPORAL-EFFECTIVE-
+    DATE-POR-MODULO). Tests: 26 test_report_temporal_annotation.py.
+    Nota: la opcion alternativa (tabla compacta distinguiendo
+    CURRENT-al-umbral vs sesion-actual) no se aplico; el item
+    ofrecia las dos opciones, se resolvio por per-block.
+
 
 - id: VERIFICAR-IAE-CONSENSO-PROD
   tipo: frente

@@ -44,6 +44,45 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-11-10 — Sesion 35: fecha efectiva por modulo + 2 contratos nuevos
+
+**Objetivo.** Cerrar con codigo real los 2 hallazgos del auditor externo
+2026-11-03 (10.1 TEMPORAL-EFFECTIVE-DATE-POR-MODULO, 10.3 FRESHNESS-POR-
+BLOQUE). Ambos pedian que cada bloque del reporte declarase su fecha
+efectiva y lag, no solo un `effective_date_equity` global.
+
+**Hecho.**
+- Helper `src/report/_temporal_annotation.py::format_effective_date_line`.
+  Lee `temporal_meta.by_contract` directamente (get_effective_meta no
+  propaga lag_days). Multi-contrato: fecha = min, lag del contrato con
+  effective_date == min. Sin hardcode, sin recalculo.
+- 4 renders cableados a contratos existentes: IAE (SEC_13F), darkpool
+  (FINRA_DARKPOOL), regimenes (FRED_MACRO), SPDR (SSGA_PRIMARY_FLOW).
+- 5 renders derivados de holdings anotan "*Datos al*" desde df["date"]
+  con [input DEGRADED] si aplica: sector_breadth (solo si no stale),
+  sector_concentration, sector_wyckoff_distribution, sector_breadth_
+  momentum, wyckoff_holdings acc/dist. sector_regime_matrix y
+  evidence_matrix ya lo tenian por H3 (S32).
+- 2 contratos nuevos: CFTC_POSITION_FLOW (semanal TFF, max_lag 45),
+  SEC_NPORT (trimestral, deadline 60d, max_lag 180). 13 -> 15 contratos.
+- 26 tests en test_report_temporal_annotation.py (11 helper + 15
+  cableado) + 7 test_temporal_contract_cftc.py + 7 test_temporal_
+  contract_sec_nport.py.
+- E2E run.py real (1104s, gate 11/11): 12 "*Datos al*" en el reporte,
+  9/9 secciones cubiertas. Sin regresion en las ya existentes.
+
+**Commits.** `3f0ce3e9`, `06e473f1`, `b9de9554`, `b3a23bc7`.
+
+**Pendiente.**
+- MTE-DEGRADED-STATE (H4-auditor): decision de producto. La confidence
+  del MTE no se degrada por estado, se publica por canal separado.
+  Mi lectura: WONT_FIX razonado.
+- Scheduled 2026-11-10 23:17 UTC: primer run con los 4 commits S35 +
+  15 contratos. Verificar 12 "*Datos al*", gate 11/11, sin regresiones.
+
+**Proximo paso sugerido.** Verificar scheduled; decidir MTE; cierre S35
+documental (este commit).
+
 ### 2026-11-10 â€” Sesion 34-bis: verificacion prod + TEST-FRESHNESS + bug receipt_audit
 
 **Objetivo.** Verificar los 4 cierres de S34 en produccion real y cerrar

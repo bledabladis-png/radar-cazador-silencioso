@@ -91,13 +91,13 @@ Lo que NUNCA haces:
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
 Snapshot al cierre del ultimo commit (2026-11-07, sesion 32):
-- HEAD: `c3c25782` (consultar `git log --oneline -1` para el actual)
-- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S33-bis: 4626 passed, 0 failed, 2 skipped. pyflakes LIMPIO, compileall OK.
+- HEAD: `b3a23bc7` (consultar `git log --oneline -1` para el actual)
+- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S33-bis: 4665 passed, 0 failed, 2 skipped. pyflakes LIMPIO, compileall OK.
 - Validation Gate: 11/11
 - Working tree: limpio
 - Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 313 items. Validador reforzado.
 - Corpus documental: v3 (Consolidacion_Documentos/00-08)
-- Contratos temporales: 13 (`_IMPLEMENTED_CONTRACTS`). 9 originales + 4 nuevos (SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO).
+- Contratos temporales: 15 (`_IMPLEMENTED_CONTRACTS`). 9 originales + 4 S28 (SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO) + 2 S35 (CFTC_POSITION_FLOW, SEC_NPORT).
 - Scheduled: ultimo run real 41833890715 (04-11 12:58 UTC, gate=true, head bf384387). Ver `gh run list`.
 - Fase 2 (auditoria por bloques): COMPLETA (B1-B8). Ver HANDOFF seccion 1.
 - Universo operado: 713 tickers unicos. Coherencia entre descarga,

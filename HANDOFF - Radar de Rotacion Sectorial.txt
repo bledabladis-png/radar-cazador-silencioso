@@ -10,16 +10,16 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-08, sesion 33-bis)
 
-HEAD: `c3c25782` (consultar `git log --oneline -1` para el actual).
+HEAD: `b3a23bc7` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4626 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4665 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
 Gobernanza: docs/gobernanza/REGISTRO.yaml, 313 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
-Contratos temporales: 13 (_IMPLEMENTED_CONTRACTS), 5 familias.
+Contratos temporales: 15 (_IMPLEMENTED_CONTRACTS).
 Hooks activos: pre-commit (pyflakes + compileall) y pre-push (pytest xdist).
 
 Fase 2 (auditoria por bloques): COMPLETA. B1-B8 auditados.
@@ -151,7 +151,9 @@ Bloque auditoria 2026-11-07:
   04_HISTORICO. Requiere CSV reproducible + script.
 
 - **TEMPORAL-EFFECTIVE-DATE-POR-MODULO** (H1-auditor 2026-11-07):
-  OPEN. Tabla de corte efectivo por modulo. Decision de producto.
+  FIXED (b3a23bc7). 9/9 modulos del reporte anotan su fecha
+  efectiva con "*Datos al YYYY-MM-DD (lag Nd).*". 15 contratos
+  temporales. Ver item en REGISTRO.
 
 - **MTE-DEGRADED-STATE** (H4-auditor 2026-11-07): OPEN. La
   confidence del MTE no se degrada por estado. Decision de
@@ -159,8 +161,9 @@ Bloque auditoria 2026-11-07:
   ya esta declarada 'no calibrada' y el estado se publica por
   canal separado).
 
-- **FRESHNESS-POR-BLOQUE** (H10-auditor 2026-11-07): OPEN.
-  Cobertura y frescura por bloque. Decision de producto.
+- **FRESHNESS-POR-BLOQUE** (H10-auditor 2026-11-07): FIXED
+  (b3a23bc7). Resuelto via per-block (cada seccion cita fecha
+  efectiva y lag). Ver item en REGISTRO.
 
 ### 3.4. Auditoria 2026-11-07: 5 hallazgos semanticos (decision producto)
 
@@ -488,11 +491,12 @@ Contrato del gate: docs/auditoria/daily_run_gate_contrato_v1.md +
   enmiendas v1.1, v1.2 y v1.3.
 Expediente Wyckoff (docs/auditoria/wyckoff/): 35+ ficheros.
 
-Contratos temporales (13 en _IMPLEMENTED_CONTRACTS):
+Contratos temporales (15 en _IMPLEMENTED_CONTRACTS):
   - EQUITY_EOD, INDEX_EOD_USA, INDEX_EOD_EUROPA, INDEX_EOD_COMMODITY,
     INDEX_EOD_CURRENCY, VOLATILITY_INDEX, RATE_YIELD,
     FUTURE_SETTLEMENT, FX_DAILY_CUT (9 originales).
   - SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO (4 S28).
+  - CFTC_POSITION_FLOW, SEC_NPORT (2 S35).
 
 Modulos nuevos S31-S32:
   - tests/test_mte_unconfirmed_threshold.py (Q15, 12 tests).
