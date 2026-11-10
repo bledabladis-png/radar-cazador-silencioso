@@ -16,7 +16,7 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
                      volatility_score, vol_regime, vol_conf,
                      real_liquidity_regime, real_liquidity_conf,
                      real_liq_score, real_liq_prev,
-                     sector_regime, confirmation_data=None, liquidity_state=None):
+                     sector_regime, confirmation_data=None, liquidity_state=None, temporal_meta=None):
     """Renderiza la seccion 'Resumen de Regimenes'.
 
     Devuelve lista de lineas markdown. Sin side effects.
@@ -26,6 +26,10 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     # RESUMEN DE REGIMENES
     # =========================================================================
     out.append("## Resumen de Regimenes\n")
+    from src.report._temporal_annotation import format_effective_date_line
+    _date_line = format_effective_date_line(temporal_meta, "FRED_MACRO")
+    if _date_line:
+        out.append(_date_line)
     try:
         score_value = float(macro_score.iloc[-1])
     except (AttributeError, IndexError, ValueError, TypeError):

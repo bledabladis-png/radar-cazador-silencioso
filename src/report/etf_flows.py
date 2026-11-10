@@ -11,7 +11,7 @@ from config.tickers import MARKET_TICKERS
 from src.report.helpers import _fmt_num, _fmt_signed
 
 
-def render_flujo_spdr(etf_primary_flow_data):
+def render_flujo_spdr(etf_primary_flow_data, temporal_meta=None):
     """Renderiza la tabla de Flujo Primario ETF (SPDR).
 
     Devuelve lista de lineas markdown. Sin side effects.
@@ -19,6 +19,10 @@ def render_flujo_spdr(etf_primary_flow_data):
     out = []
     if etf_primary_flow_data is not None and not etf_primary_flow_data.empty:
         out.append("## Flujo Primario ETF (SPDR)\n")
+        from src.report._temporal_annotation import format_effective_date_line
+        _date_line = format_effective_date_line(temporal_meta, "SSGA_PRIMARY_FLOW")
+        if _date_line:
+            out.append(_date_line)
         out.append("| Ticker | NAV | Shares Outstanding | ΔShares | Total Net Assets | Primary Flow $ | Flow % AUM | Flow Z |\n")
         out.append("|--------|-----|---------------------|---------|------------------|----------------|------------|--------|\n")
 

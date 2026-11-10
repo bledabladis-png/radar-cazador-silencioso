@@ -113,7 +113,8 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         real_liq_score, real_liq_prev,
         sector_regime=sector_results['regime'],
         confirmation_data=confirmation_data,
-        liquidity_state=liquidity_state
+        liquidity_state=liquidity_state,
+        temporal_meta=temporal_meta
     ))
     # =========================================================================
     # DATA FRESHNESS + ALERTAS + CROSS-MODULE
@@ -130,7 +131,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_calidad_datos(data_quality_data))
     lines.extend(render_mte(mte_result))
     lines.extend(render_confirmation(confirmation_data))
-    lines.extend(render_darkpool(darkpool_data, reference_date=reference_date))
+    lines.extend(render_darkpool(darkpool_data, reference_date=reference_date, temporal_meta=temporal_meta))
     lines.extend(render_sentimiento_opciones(pcr_data, reference_date=reference_date))
 
     # =========================================================================
@@ -180,7 +181,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # C5 - CONTEXTO INTERNACIONAL
     # =========================================================================
     # Flujos primarios ETF (SPDR diario)
-    lines.extend(render_flujo_spdr(etf_primary_flow_data))
+    lines.extend(render_flujo_spdr(etf_primary_flow_data, temporal_meta=temporal_meta))
     lines.extend(render_flujo_caracteristicas(sector_flow_characteristics_data))
     lines.extend(render_divergencia_precio_flujo(sector_flow_characteristics_data))
     # Flujos primarios internacionales (diarios)

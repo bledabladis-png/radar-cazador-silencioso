@@ -115,3 +115,84 @@ def test_iae_section_con_temporal_meta_sin_contrato_no_anota():
                              "lag_days": 0, "status": "OK"}})
     out = render_iae_section({"status": "FOO"}, temporal_meta=tm)
     assert "Datos al" not in "".join(out)
+
+# --- Cableado: render_darkpool (FINRA_DARKPOOL) ---
+
+def test_darkpool_sin_temporal_meta_no_anota():
+    from src.report.darkpool import render_darkpool
+    dp = {"week": "2026-10-19", "n_tickers": 534, "pct_volume": 25.22,
+          "z_score": 0.14, "percentile": 52, "status": "normal", "z_windows": {}}
+    out = "".join(render_darkpool(dp))
+    assert "Datos al" not in out
+
+
+def test_darkpool_con_temporal_meta_anota_finra():
+    from src.report.darkpool import render_darkpool
+    tm = _tm({"FINRA_DARKPOOL": {"effective_date": date(2026, 10, 19),
+                                  "lag_days": 7, "status": "STALE"}})
+    dp = {"week": "2026-10-19", "n_tickers": 534, "pct_volume": 25.22,
+          "z_score": 0.14, "percentile": 52, "status": "normal", "z_windows": {}}
+    out = "".join(render_darkpool(dp, temporal_meta=tm))
+    assert "*Datos al 2026-10-19 (lag 7d).*" in out
+
+
+# --- Cableado: render_regimenes (FRED_MACRO) ---
+
+def test_regimenes_sin_temporal_meta_no_anota():
+    import pandas as pd
+    from src.report.header import render_regimenes
+    out = "".join(render_regimenes(
+        macro_score=pd.Series([0.0]), macro_regime="MIXED", macro_conf=0.5,
+        liquidity_score=pd.Series([0.0]), financial_regime="NEUTRAL", liq_conf=0.5,
+        volatility_score=pd.Series([0.0]), vol_regime="NORMAL", vol_conf=0.5,
+        real_liquidity_regime="NEUTRAL", real_liquidity_conf=0.5,
+        real_liq_score=pd.Series([0.0]), real_liq_prev=0.0,
+        sector_regime="MIXED",
+    ))
+    assert "Datos al" not in out
+
+
+def test_regimenes_con_temporal_meta_anota_fred():
+    import pandas as pd
+    from src.report.header import render_regimenes
+    tm = _tm({"FRED_MACRO": {"effective_date": date(2026, 11, 6),
+                              "lag_days": 3, "status": "OK"}})
+    out = "".join(render_regimenes(
+        macro_score=pd.Series([0.0]), macro_regime="MIXED", macro_conf=0.5,
+        liquidity_score=pd.Series([0.0]), financial_regime="NEUTRAL", liq_conf=0.5,
+        volatility_score=pd.Series([0.0]), vol_regime="NORMAL", vol_conf=0.5,
+        real_liquidity_regime="NEUTRAL", real_liquidity_conf=0.5,
+        real_liq_score=pd.Series([0.0]), real_liq_prev=0.0,
+        sector_regime="MIXED", temporal_meta=tm,
+    ))
+    assert "*Datos al 2026-11-06 (lag 3d).*" in out
+
+
+# --- Cableado: render_flujo_spdr (SSGA_PRIMARY_FLOW) ---
+
+def test_flujo_spdr_sin_temporal_meta_no_anota():
+    import pandas as pd
+    from src.report.etf_flows import render_flujo_spdr
+    df = pd.DataFrame([{
+        "ticker": "XLK", "nav": 100.0, "shares_outstanding": 1000000.0,
+        "delta_shares": 1000.0, "total_net_assets": 100000000.0,
+        "primary_flow_usd": 100000.0, "primary_flow_pct": 0.001,
+        "flow_z": 0.1, "z_score": 0.1,
+    }])
+    out = "".join(render_flujo_spdr(df))
+    assert "Datos al" not in out
+
+
+def test_flujo_spdr_con_temporal_meta_anota_ssga():
+    import pandas as pd
+    from src.report.etf_flows import render_flujo_spdr
+    tm = _tm({"SSGA_PRIMARY_FLOW": {"effective_date": date(2026, 11, 9),
+                                     "lag_days": 0, "status": "OK"}})
+    df = pd.DataFrame([{
+        "ticker": "XLK", "nav": 100.0, "shares_outstanding": 1000000.0,
+        "delta_shares": 1000.0, "total_net_assets": 100000000.0,
+        "primary_flow_usd": 100000.0, "primary_flow_pct": 0.001,
+        "flow_z": 0.1, "z_score": 0.1,
+    }])
+    out = "".join(render_flujo_spdr(df, temporal_meta=tm))
+    assert "*Datos al 2026-11-09.*" in out

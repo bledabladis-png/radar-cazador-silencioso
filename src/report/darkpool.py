@@ -19,7 +19,7 @@ from src.report.helpers import _classify_finra_freshness, _fmt_num
 from config.settings import DARKPOOL_FULL_HISTORY_WEEKS
 
 
-def render_darkpool(darkpool_data, reference_date=None):
+def render_darkpool(darkpool_data, reference_date=None, temporal_meta=None):
     """Renderiza la seccion Actividad en ATS - Dark Pools (FINRA).
 
     Devuelve lista de lineas markdown. Sin side effects.
@@ -31,6 +31,10 @@ def render_darkpool(darkpool_data, reference_date=None):
     _ref = resolve_reference_date(reference_date)
 
     out.append("## Actividad en ATS - Dark Pools (FINRA v1.0)\n")
+    from src.report._temporal_annotation import format_effective_date_line
+    _date_line = format_effective_date_line(temporal_meta, "FINRA_DARKPOOL")
+    if _date_line:
+        out.append(_date_line)
     out.append("*Nota: FINRA publica datos de ATS con retraso regulatorio de 2 a 4 semanas. Los datos pueden estar desfasados por diseno.*\n")
 
     week = darkpool_data.get('week', 'N/A')
