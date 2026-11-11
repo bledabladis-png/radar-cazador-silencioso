@@ -40,6 +40,7 @@ from config.tickers import validate_sector_universe
 from src.pipeline.output_registry import ReceiptCollector
 from src.pipeline.output_verifier import verify
 from src.pipeline.output_writer import set_collector
+from src.temporal_contracts import persist_temporal_contracts_result
 
 def main():
     # B2 (2026-09-12): reference_date se resuelve UNA vez al inicio del pipeline.
@@ -66,6 +67,14 @@ def main():
     df_market = data['df_market']
     df_macro_manual = data['df_macro_manual']
     temporal_meta = data.get('temporal_meta', {})
+
+    # S35-bis: persistir resolucion de contratos para observabilidad.
+    # Fail-open: si el disco falla, el run continua. Es observabilidad,
+    # no critical path; el gate 11/11 sigue siendo el arbitro.
+    try:
+        persist_temporal_contracts_result(temporal_meta)
+    except Exception as _e:
+        print(f"[temporal_contracts] WARN: persist fallo: {_e}", file=sys.stderr)
 
     regimes = compute_all_regimes(df_market, df_macro_manual, temporal_meta=temporal_meta, reference_date=reference_date)
     financial_score = regimes['financial_score']
