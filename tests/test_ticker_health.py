@@ -114,3 +114,17 @@ def test_yaml_tickers_no_dict_falla(tmp_path, monkeypatch):
     th._reset_cache()
     with pytest.raises(ValueError, match="debe ser dict"):
         th.get_estado("XXX")
+
+
+def test_psky_clasificado_como_truncated_ipo():
+    """PSKY (Paramount Skydance, entidad fusionada post-WBD) es IPO
+    reciente. Historia corta en stock_prices (15 barras no-NaN hasta
+    2026-10-16). Estado correcto: TRUNCATED_IPO. Con esta clasificacion,
+    check_ticker_health deja de alertar como ACTIVE stale."""
+    from src.ticker_health import (
+        get_estado, is_eligible, exclusion_reason, filter_eligible,
+    )
+    assert get_estado("PSKY") == "TRUNCATED_IPO"
+    assert is_eligible("PSKY") is True
+    assert exclusion_reason("PSKY") is None
+    assert "PSKY" in filter_eligible(["PSKY", "AAPL"])

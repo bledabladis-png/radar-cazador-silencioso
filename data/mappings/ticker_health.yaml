@@ -19,3 +19,18 @@ tickers:
       de CUSIP).'
     reabrir_si: 'Yahoo sirve precios post-2026-10-06 bajo WBD; o SKYD
       hereda el CUSIP de WBD.'
+
+  PSKY:
+    estado: TRUNCATED_IPO
+    detectado: '2026-11-12'
+    evento: 'Paramount Skydance (entidad fusionada tras cierre WBD
+      2026-10-06). Cotiza desde 2026-07-29. Historia corta en
+      stock_prices: 15 barras no-NaN entre 2026-07-29 y 2026-10-16.'
+    evidencia: 'stock_prices.parquet: 15 barras no-NaN (ultima
+      2026-10-16). Presente en etf_holdings.csv (XLC, weight
+      0.707004) e index_holdings.csv (SPY, weight 0.00854). En
+      radar_target_catalog.csv sin FIGI (snapshot 2026-11-07 MISS,
+      coherente con IPO reciente sin crosswalk OpenFIGI).'
+    reabrir_si: 'Yahoo sirve barras post-2026-10-16 bajo PSKY; o el
+      proveedor confirma cambio de ticker; o el catalogo reasigna
+      PSKY a otra entidad.'
