@@ -70,3 +70,48 @@ def test_commit_step_stages_outputs_history():
         "El step Commit no stagea outputs/history. Debe haber al menos "
         "un `git add` que lo incluya."
     )
+
+
+def test_commit_step_uses_git_add_a_outputs_state():
+    """Regresion BUG-DAILY-RUN-STATE-UNTRACKED (2026-11-12): el step debe
+    usar git add -A outputs/state (no -u), para stagear writers nuevos
+    cuyo output es untracked la primera vez."""
+    text = _commit_step_run_text()
+    bad = [
+        ln for ln in _non_comment_lines(text)
+        if ln.startswith("git add -u") and "outputs/state" in ln
+    ]
+    assert not bad, (
+        "Regresion BUG-DAILY-RUN-STATE-UNTRACKED: el step Commit usa "
+        "`git add -u` sobre outputs/state. Ver fix del 2026-11-12. "
+        f"Lineas ofensoras: {bad}"
+    )
+    hits = [
+        ln for ln in _non_comment_lines(text)
+        if ln.startswith("git add -A") and "outputs/state" in ln
+    ]
+    assert hits, (
+        "El step Commit no stagea outputs/state con -A. Debe haber al "
+        "menos un `git add -A outputs/state`."
+    )
+
+
+def test_artifact_daily_report_includes_temporal_contracts_result():
+    """temporal_contracts_result.json debe viajar en el artifact daily-report"""
+    data = _load()
+    job = data.get("jobs", {}).get("run-system")
+    assert isinstance(job, dict)
+    for step in job.get("steps", []):
+        if not isinstance(step, dict):
+            continue
+        name = (step.get("name") or "").lower()
+        if "upload" in name and "downloadable report" in name:
+            paths = step.get("with", {}).get("path", "")
+            assert "outputs/state/temporal_contracts_result.json" in paths, (
+                "El artifact daily-report no incluye "
+                "outputs/state/temporal_contracts_result.json."
+            )
+            return
+    raise AssertionError(
+        "Step Upload artifacts (downloadable report) no encontrado."
+    )

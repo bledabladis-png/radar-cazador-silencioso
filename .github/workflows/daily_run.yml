@@ -281,6 +281,7 @@ jobs:
             outputs/state/mte_state.json
             outputs/state/liquidity_state.json
             outputs/state/wyckoff_5bx_counter.json
+            outputs/state/temporal_contracts_result.json
             outputs/audit/pyflakes_report.txt
             outputs/history/wyckoff_usa_sector_accumulation.csv
             outputs/history/wyckoff_usa_sector_distribution.csv
@@ -385,7 +386,15 @@ jobs:
           # requieren -A en outputs/history. State conserva -u para no
           # stagear completion_receipt.json (excluido por contrato).
           git add -A outputs/history
-          git add -u outputs/state
+          # BUG-DAILY-RUN-STATE-UNTRACKED (2026-11-12): -u solo stagea
+          # tracked modificados. Con -u, outputs/state/temporal_contracts_result.json
+          # (writer nuevo) quedaba untracked y el guard UNTRACKED lo detectaba,
+          # bloqueando el push (raiz de los 3 fallos del 12-11). Coherencia
+          # con history: -A stagea tambien untracked. Los JSON de state
+          # excluidos por contrato (completion_receipt, validation_gate_result,
+          # writer_receipts, guard_coverage_result, liquidity_v1_state) siguen
+          # en .gitignore y no se stagean.
+          git add -A outputs/state
           # Completion Receipt v1: no commitear; es evidencia efimera
           # que se sube como artifact. Excluir del staging.
           git reset -q HEAD outputs/state/completion_receipt.json 2>/dev/null || true
