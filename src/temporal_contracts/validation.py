@@ -124,9 +124,10 @@ def _classify_market(market: str, info: dict) -> ContractVerdict:
         if status == "INVALID" or (min_coverage is not None
                                     and isinstance(cov, (int, float))
                                     and cov < min_coverage):
+            contract_label = contract if contract else "(sin mapeo)"
             reasons.append(
                 f"{market}: desviacion no bloqueante en contrato "
-                f"no critico {contract}"
+                f"no critico {contract_label}"
             )
             return ContractVerdict(market, contract, False, STATUS_WARN, reasons)
 

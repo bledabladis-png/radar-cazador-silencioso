@@ -136,3 +136,17 @@ def test_ok_no_bloquea_publicacion():
     r = validate_artifact_contracts(_manifest({"US_EQUITY": _mkt()}))
     assert r.blocks_publication() is False
     assert r.is_ok_or_warn() is True
+
+
+def test_mercado_no_critico_sin_contrato_mapeado_mensaje_claro():
+    """Mercado no mapeado a contrato (BME) + INVALID -> WARN con mensaje
+    claro, sin None literal (P7-CONTRACT-UNKNOWN-NONE)."""
+    m = _manifest({
+        "US_EQUITY": _mkt(),
+        "BME": _mkt(status="INVALID"),
+    })
+    r = validate_artifact_contracts(m)
+    assert r.status == STATUS_WARN
+    joined = " ".join(str(x) for x in r.reasons)
+    assert "None" not in joined, "Mensaje contiene None literal: " + joined
+    assert "(sin mapeo)" in joined, "No se identifica el caso sin mapeo: " + joined
