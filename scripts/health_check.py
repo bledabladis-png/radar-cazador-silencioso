@@ -935,6 +935,107 @@ def check_receipt_audit() -> list:
                    f"{len(missing)} anomalias en {len(recent)} sesiones: {detail}")]
 
 
+def check_temporal_contracts_result() -> list:
+    """Verifica outputs/state/temporal_contracts_result.json (S35-bis).
+
+    Persistido por src.temporal_contracts.persist tras
+    build_temporal_meta. Dimension: coherencia del writer + estado de
+    los contratos temporales en el ultimo run.
+
+    Niveles:
+    - FAIL: JSON invalido, schema roto, by_contract vacio, algun BLOCKED.
+    - WARN: JSON ausente (writer no ejecutado o fallo silencioso), drift
+      contracts_total vs registro, staleness > TCR_STALE_HOURS,
+      PENDING/INSUFFICIENT, status desconocido.
+    - OK: todos OK/STALE (STALE es esperado por lag contractual).
+    """
+    p = PROJECT_ROOT / "outputs" / "state" / "temporal_contracts_result.json"
+    if not p.exists():
+        return [Result("temporal_contracts_result", WARN,
+            "JSON ausente (writer no ejecutado en el ultimo run)")]
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:
+        return [Result("temporal_contracts_result", FAIL,
+            f"JSON invalido: {e}")]
+    if not isinstance(data, dict):
+        return [Result("temporal_contracts_result", FAIL,
+            "JSON no es dict")]
+
+    if data.get("schema_version") != 1:
+        return [Result("temporal_contracts_result", FAIL,
+            f"schema_version inesperado: {data.get('schema_version')}")]
+
+    by_contract = data.get("by_contract") or {}
+    if not isinstance(by_contract, dict) or not by_contract:
+        return [Result("temporal_contracts_result", FAIL,
+            "by_contract vacio o no dict")]
+
+    try:
+        from src.temporal_contracts import list_contracts
+        expected_total = len(list_contracts())
+    except Exception:
+        expected_total = None
+
+    try:
+        from src.temporal_contracts.persist import TCR_STALE_HOURS
+    except Exception:
+        TCR_STALE_HOURS = 48
+
+    total = data.get("contracts_total")
+    results = []
+
+    if expected_total is not None and total != expected_total:
+        results.append(Result("temporal_contracts_result", WARN,
+            f"contracts_total={total} != registro={expected_total} (drift)"))
+
+    gen = data.get("generated_at_utc")
+    if isinstance(gen, str):
+        try:
+            gen_dt = datetime.fromisoformat(gen.replace("Z", "+00:00"))
+            if gen_dt.tzinfo is None:
+                gen_dt = gen_dt.replace(tzinfo=timezone.utc)
+            age_h = (datetime.now(timezone.utc) - gen_dt).total_seconds() / 3600
+            if age_h > TCR_STALE_HOURS:
+                results.append(Result("temporal_contracts_result", WARN,
+                    f"JSON sin refrescar ({age_h:.1f}h, "
+                    f"umbral {TCR_STALE_HOURS}h)"))
+        except (ValueError, TypeError):
+            pass
+
+    known = {"OK", "STALE", "PENDING", "INSUFFICIENT", "BLOCKED"}
+    buckets = {k: [] for k in known}
+    unknown = []
+    for name, entry in by_contract.items():
+        if not isinstance(entry, dict):
+            unknown.append(name)
+            continue
+        s = entry.get("status")
+        if s in known:
+            buckets[s].append(name)
+        else:
+            unknown.append(name)
+
+    if buckets["BLOCKED"]:
+        results.append(Result("temporal_contracts_result", FAIL,
+            f"BLOCKED: {sorted(buckets['BLOCKED'])}"))
+    if unknown:
+        results.append(Result("temporal_contracts_result", WARN,
+            f"status desconocido: {sorted(unknown)}"))
+    if buckets["PENDING"]:
+        results.append(Result("temporal_contracts_result", WARN,
+            f"PENDING: {sorted(buckets['PENDING'])}"))
+    if buckets["INSUFFICIENT"]:
+        results.append(Result("temporal_contracts_result", WARN,
+            f"INSUFFICIENT: {sorted(buckets['INSUFFICIENT'])}"))
+
+    if not results:
+        results.append(Result("temporal_contracts_result", OK,
+            f"{total} contratos: {len(buckets['OK'])} OK, "
+            f"{len(buckets['STALE'])} STALE"))
+    return results
+
+
 def run_all_checks() -> list:
     results = []
     # A
@@ -949,6 +1050,8 @@ def run_all_checks() -> list:
     results.extend(check_expected_session_alignment())
     # REP-AUDIT-20261018: receipts vs filas persistidas
     results.extend(check_receipt_audit())
+    # S35-bis: persistencia de contratos temporales
+    results.extend(check_temporal_contracts_result())
     # C-ter: holdings CSVs (Fix D, 2026-10-08)
     results.extend(check_holdings_csvs())
     # C-bis: revision Yahoo (K-LSE-YAHOO-REVISION-01)
