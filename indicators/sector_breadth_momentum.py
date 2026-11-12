@@ -42,7 +42,13 @@ def _delta(series, dates, days):
 
     # Tolerancia de días naturales: sesiones + fines de semana + festivos
 
-    max_calendar_days = max(days + 5, int(days * 1.6) + 3)  # C1 fix 2026-09-24: days+5 absorbe finde+festivo
+    # C1 fix (2026-09-24): days+5 absorbia finde+festivo simple.
+    # P1-DELTA-GAP-CONSECUTIVO (2026-11-12): insuficiente para 5
+    # sesiones + 2 findes + 2 festivos consecutivos (gap real de
+    # 12 dias naturales). Ejemplo: 2026-10-30 (vie) -> 2026-11-11
+    # (mie), 8 sesiones en 12 dias. Formula days*2+5 cubre:
+    # 5->15 (12<15 OK), 1->7 (5<7 OK), 20->45 (30<45 OK).
+    max_calendar_days = max(days + 5, days * 2 + 5)
 
     if diff_days > max_calendar_days:
 
