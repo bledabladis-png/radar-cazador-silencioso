@@ -148,7 +148,7 @@ class TestFxDailyCut:
         assert c.family == "FX"
         assert c.session_calendar == "FX_24h"
         assert c.min_coverage == 0.5
-        assert c.per_pair_max_lag["EURUSD=X"] == 0
+        assert c.per_pair_max_lag["EURUSD=X"] == 1
         assert c.per_pair_max_lag["USDCNY=X"] == 1
 
     def test_resolve(self, df_real):
@@ -229,8 +229,15 @@ class TestFxDailyCutPerPair:
         for pair, info in r.per_member.items():
             assert info["status"] == STATUS_OK, f"{pair}: {info['status']}"
 
-    def test_eurusd_lag1_insufficient(self):
-        """T1: EURUSD (max 0) con lag 1 -> INSUFFICIENT, no STALE."""
+    def test_eurusd_lag1_stale_por_cutoff_fx(self):
+        """T1 (rev): EURUSD con lag 1 -> STALE, no INSUFFICIENT.
+
+        FX-CUTOFF-LAG-1 (2026-11-12): el close FX se publica a 17:00 ET.
+        Runs scheduled corren antes (02:47-18:43 UTC = 21:47 ET del dia
+        anterior a 13:43 ET del dia). A lag 1 (close de ayer) es lo
+        esperado por cutoff, no una desviacion. Antes max=0 forzaba
+        INSUFFICIENT en cada slot pre-cutoff.
+        """
         df = self._make_df({
             "EURUSD=X": "2026-10-29",
             "USDJPY=X": "2026-10-30",
@@ -238,14 +245,11 @@ class TestFxDailyCutPerPair:
         })
         ref = pd.Timestamp("2026-10-30").to_pydatetime()
         r = FxDailyCut().resolve(df, ref)
-        # EURUSD con lag 1 y max 0 -> INSUFFICIENT
-        assert r.per_member["EURUSD=X"]["status"] == STATUS_INSUFFICIENT
-        assert r.per_member["EURUSD=X"]["max_lag_days"] == 0
-        # Los otros OK
+        assert r.per_member["EURUSD=X"]["status"] == STATUS_STALE
+        assert r.per_member["EURUSD=X"]["max_lag_days"] == 1
         assert r.per_member["USDJPY=X"]["status"] == STATUS_OK
         assert r.per_member["USDCNY=X"]["status"] == STATUS_OK
-        # Agregado: peor = INSUFFICIENT
-        assert r.status == STATUS_INSUFFICIENT
+        assert r.status == STATUS_STALE
 
     def test_usdcny_lag1_stale(self):
         """T2: USDCNY (max 1) con lag 1 -> STALE, correcto."""
@@ -290,3 +294,23 @@ class TestFxDailyCutPerPair:
             for k in ("effective_date", "lag_days", "coverage",
                       "max_lag_days", "status"):
                 assert k in info, f"{pair} sin clave {k}"
+
+    def test_fx_cutoff_lag1_stale_no_insufficient(self):
+        """FX-CUTOFF-LAG-1: los 3 pares con lag 1 -> STALE.
+
+        Escenario real: run a 10:23 ET del dia D (15:23 UTC). Close FX
+        de D aun no disponible (cutoff 17:00 ET). El ultimo close es D-1.
+        Lag=1 -> STALE, no INSUFFICIENT. Max_lag=1 refleja la realidad
+        del cutoff; max=0 era irrealizable pre-17:00 ET.
+        """
+        df = self._make_df({
+            "EURUSD=X": "2026-10-29",
+            "USDJPY=X": "2026-10-29",
+            "USDCNY=X": "2026-10-29",
+        })
+        ref = pd.Timestamp("2026-10-30").to_pydatetime()
+        r = FxDailyCut().resolve(df, ref)
+        assert r.status == STATUS_STALE, f"Esperado STALE, obtenido {r.status}"
+        for pair in ("EURUSD=X", "USDJPY=X", "USDCNY=X"):
+            assert r.per_member[pair]["status"] == STATUS_STALE, pair
+            assert r.per_member[pair]["max_lag_days"] == 1, pair

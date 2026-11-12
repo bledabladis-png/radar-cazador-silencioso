@@ -27,11 +27,17 @@ class FxDailyCut(TemporalContract):
     name = "FX_DAILY_CUT"
     family = "FX"
     session_calendar = "FX_24h"
-    max_lag_days = {"EURUSD=X": 0, "USDJPY=X": 0, "USDCNY=X": 1}
+    # FX-CUTOFF-LAG-1 (2026-11-12): max_lag=1 para EURUSD/JPY (era 0).
+    # Motivo: el close FX se publica ~17:00 ET. Los runs scheduled
+    # corren mayoritariamente ANTES del cutoff del dia. A esa hora el
+    # ultimo close disponible es D-1. Lag=1 es lo esperado por cutoff,
+    # no INSUFFICIENT. Con max=0 todos los slots pre-cutoff marcaban
+    # INSUFFICIENT, propagando WARN en check_temporal_contracts_result.
+    max_lag_days = {"EURUSD=X": 1, "USDJPY=X": 1, "USDCNY=X": 1}
     min_coverage = 0.5
     eligible_universe = ["EURUSD=X", "USDCNY=X", "USDJPY=X"]
     per_ticker_lag = None
-    per_pair_max_lag = {"EURUSD=X": 0, "USDJPY=X": 0, "USDCNY=X": 1}
+    per_pair_max_lag = {"EURUSD=X": 1, "USDJPY=X": 1, "USDCNY=X": 1}
     activation_req = None
 
     def resolve(
@@ -44,6 +50,10 @@ class FxDailyCut(TemporalContract):
         se clasificaba STALE en el agregado. Ahora cada par tiene su
         propio status, y el agregado es el peor (BLOCKED > INSUFFICIENT
         > STALE > OK). per_member devuelve el detalle por par.
+
+        FX-CUTOFF-LAG-1 (2026-11-12): max_lag=1 para EURUSD/JPY. Ver
+        comentario en la clase. Lag 1 = STALE (esperado pre-cutoff),
+        no INSUFFICIENT.
         """
         expected = fx_expected(reference_date)
         per_member = {}
