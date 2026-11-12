@@ -8,15 +8,15 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 ---
 
 
-## 1. ESTADO AL CIERRE (2026-11-10, sesion 35)
+## 1. ESTADO AL CIERRE (2026-11-12, sesion 36)
 
-HEAD: `b3a23bc7` (consultar `git log --oneline -1` para el actual).
+HEAD: `6d42be6d` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4665 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4700 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 313 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 318 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 15 (_IMPLEMENTED_CONTRACTS).
@@ -26,31 +26,22 @@ Fase 2 (auditoria por bloques): COMPLETA. B1-B8 auditados.
 Fase 0 + Fase 1: COMPLETAS.
 Transversales: cerrados.
 
-Sesion 35 (2026-11-10): cierre de los 2 hallazgos del auditor externo
-2026-11-03 (10.1 TEMPORAL-EFFECTIVE-DATE-POR-MODULO, 10.3 FRESHNESS-POR-
-BLOQUE) con codigo real + 2 contratos temporales nuevos. 15 contratos en
-total. 9/9 modulos del reporte anotan su fecha efectiva con "*Datos al
-YYYY-MM-DD (lag Nd).*". Ver §3.12.
+Sesion 36 (2026-11-12): 7 commits de codigo. Bug del step commit
+detectado y corregido (0b16c363), writer persistido + health check
+(e06804b0 + 2151a5b5), 3 bugs reales expuestos por check (P1.a Delta5d,
+P7 mensaje None, PSKY mal clasificado, FX cutoff lag), y REGISTRO
+reabierto DAILY-RUN-FAIL + 5 nuevos FIXED (6d42be6d). Ver §3.13.
 
-**Validacion en produccion pendiente.** El run scheduled 18:42 UTC del
-2026-11-10 (head 3f0ce3e9) hizo SKIP de run-system (gate CURRENT).
-Los runs scheduled con run-system success son anteriores a S35. El
-primer run-system success con los 15 contratos sera el scheduled del
-2026-11-10 23:17 UTC o posterior. Verificar entonces: 12 "*Datos al*"
-en el reporte, gate 11/11, sin regresiones.
-
-Sesion 34 (2026-11-08 / 2026-11-10): 3 hermanos de normalizacion
-(IAE, rs_internal, wyckoff) + receipt_audit last-wins + TEST-FRESHNESS
-WONT_FIX. Cierre formal en commits 81257dd1..762ad6cf.
-
-Sesion 33 (2026-11-07): coherencia de universo. Cierre de 5
-verificaciones tempranas (N-PORT, ISSUES-WRITE-CI-RUNTIME, gate
-local, SSGA, CIRCUIT-BREAKER WONT_FIX) + 3 frentes de codigo nuevos
-(universo completo de sectores, Wyckoff universo completo, idempotencia
-del catalogo). Sistema pasa de universos distintos por capa
-(220 descarga, 504 analisis, 90 Wyckoff, 347 catalogo) a universo
-unico de 713 tickers operado por todas las capas.
-
+**Validacion en produccion pendiente.** Los 3 fixes de codigo
+(e88e9fd3 P1.a, 985526c1 P7, 73f7e26b FX cutoff) requieren scheduled
+post-fix para VERIFIED_IN_PRODUCTION. Dispatch 43278363914 (12-11
+18:17 UTC) hizo SKIP (gate CURRENT). Verificar en scheduled 23:17 UTC
+del 12-11 (cae 13-11 madrugada UTC):
+  - Reporte: tabla Momentum de amplitud con Delta5d poblado (no N/D).
+  - Log: "[CONTRACT] ... (sin mapeo)" en vez de None.
+  - health_check: temporal_contracts_result sin FX_DAILY_CUT.
+Cuando se confirme: mover los 3 items a verificacion=
+VERIFIED_IN_PRODUCTION en REGISTRO.
 ## 2. SESION 2026-11-07 (sesion 32): detalle
 
 **Objetivo.** (a) Cerrar bloque auditoria 2026-11-07 (12 hallazgos
@@ -431,6 +422,74 @@ MTE-DEGRADED-STATE (decision producto, mi lectura WONT_FIX razonado).
 (scheduled 23:17 UTC del 2026-11-10 o posterior). Verificar 12 "*Datos
 al*" en el reporte, gate 11/11, sin regresiones.
 
+### 3.13. Cierres S36 (2026-11-12)
+
+7 commits. 1 bug de infra, 1 writer + check, 4 bugs de codigo, 1 docs/
+gobernanza.
+
+- **`0b16c363` fix(ci): step commit -u -> -A en outputs/state
+  (BUG-DAILY-RUN-STATE-UNTRACKED)**. Raiz de 3 fallos consecutivos del
+  12-11 (43150695168, 43206141826, 43230238319). El step "Commit and
+  push hist/state" usaba `git add -u outputs/state` (solo tracked
+  modificados). El writer nuevo (e06804b0) creaba
+  `temporal_contracts_result.json` untracked. Guard UNTRACKED -> exit 1
+  antes del push -> sin receipt -> slot siguiente re-ejecutaba -> volvia
+  a fallar. Fix: `-A` (coherencia con history, ya tratado en 7f6d229d).
+  Test contrato prohibe regresion. Run 43247217253 valida (step 37 + 38
+  success, receipt subido, JSON en repo via cc28adce). Ver item
+  DAILY-RUN-FAIL-40992758129 en REGISTRO (reabierto WONT_FIX -> FIXED).
+
+- **`e06804b0` feat(temporal): persistir resolucion de contratos**.
+  `src/temporal_contracts/persist.py` (schema v1, atomic write, sin
+  datetime.now: `now` viene del caller o de `reference_date`). Hook en
+  `run.py` fail-open. 17 tests. Complementa al gate 11/11 (que ataja
+  sintoma sin identificar contrato culpable). Item
+  TEMPORAL-CONTRACTS-RESULT-PERSIST.
+
+- **`2151a5b5` feat(health): check de persistencia de contratos**.
+  `check_temporal_contracts_result` en `scripts/health_check.py`. FAIL
+  en schema roto / BLOCKED. WARN en JSON ausente / staleness / drift /
+  PENDING / INSUFFICIENT / unknown. OK en todos OK/STALE. Reutiliza
+  `TCR_STALE_HOURS=48` de persist.py. 12 tests. Verificado end-to-end
+  sobre JSON real (WARN INSUFFICIENT FX_DAILY_CUT, correcto en ese
+  momento). Item TEMPORAL-CONTRACTS-RESULT-PERSIST VERIFIED_IN_PROD.
+
+- **`e88e9fd3` fix(indicators): gap consecutivo en _delta**. Tabla
+  Momentum amplitud con Delta5d=N/D en 11/11 pese a existir datos.
+  `max_calendar_days=11` insuficiente para 5 sesiones + 2 findes + 2
+  festivos (gap real 2026-10-30 -> 2026-11-11 = 12 dias). Fix:
+  `max(days+5, days*2+5)`. Guard de gap absurdo intacto. Pendiente
+  validacion en scheduled. Item P1-DELTA-GAP-CONSECUTIVO.
+
+- **`985526c1` fix(temporal): mensaje claro sin None**. Log con
+  "[CONTRACT] ... no critico None" (mercados sin mapeo: BME, EURONEXT,
+  LSE, XETRA). Fix: `contract_label = contract if contract else
+  "(sin mapeo)"`. Cero tests dependian del string. Pendiente
+  validacion en scheduled. Item P7-CONTRACT-UNKNOWN-NONE.
+
+- **`9a37c527` fix(health): PSKY TRUNCATED_IPO**. check_ticker_health
+  WARN por PSKY ACTIVE stale (15 barras, 2026-07-29..2026-10-16).
+  PSKY = Paramount Skydance (fusion WBD). Anadido a
+  ticker_health.yaml como TRUNCATED_IPO con evidencia + reabrir_si.
+  health_check real post-fix: ticker_health [OK]. Item
+  TICKER-HEALTH-PSKY VERIFIED_IN_PROD.
+
+- **`73f7e26b` fix(temporal): max_lag=1 EURUSD/JPY (FX cutoff)**.
+  `fx_expected(reference_date)` devuelve reference_date sin ajustar por
+  cutoff 17:00 ET. Los scheduled corren casi todos antes de 22:00 UTC,
+  close FX del dia aun no existe. Con max_lag=0, lag=1 -> INSUFFICIENT
+  en cada slot pre-cutoff. Fix: max_lag 0 -> 1 en EURUSD/JPY (USDCNY ya
+  1). Lag 1 -> STALE, no INSUFFICIENT. Cero consumidores produccion
+  dependian del INSUFFICIENT. Pendiente validacion en scheduled. Item
+  FX-CUTOFF-LAG-1.
+
+- **`6d42be6d` chore(gobernanza)**: REGISTRO 313 -> 318 items. FIXED
+  252 -> 258, WONT_FIX 38 -> 37. Reabre DAILY-RUN-FAIL-40992758129.
+
+**Pendiente post-scheduled (13-11 madrugada UTC):** los 3 items sin
+`verificacion` (P1-DELTA-GAP-CONSECUTIVO, P7-CONTRACT-UNKNOWN-NONE,
+FX-CUTOFF-LAG-1) pasan a `VERIFIED_IN_PRODUCTION` cuando el scheduled
+lo confirme.
 ## 4. COMO ARRANCAR
 
     Set-Location D:\Macro_Sectorial
@@ -448,7 +507,7 @@ Esperado:
 - HEAD = git log --oneline -1.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests: fuente autoritativa ESTADO_SISTEMA.md (4665 passed, 0 failed).
+- Tests: fuente autoritativa ESTADO_SISTEMA.md (4700 passed, 0 failed).
 - Gobernanza [OK]. Indice H1-H18 [OK]. Bitacora [OK].
 - pyflakes silencio, compileall OK.
 

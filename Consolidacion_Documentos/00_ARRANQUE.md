@@ -90,19 +90,39 @@ Lo que NUNCA haces:
 
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
-Snapshot al cierre del ultimo commit (2026-11-10, sesion 35):
-- HEAD: `b3a23bc7` (consultar `git log --oneline -1` para el actual)
-- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S35: 4665 passed, 0 failed, 2 skipped. pyflakes LIMPIO, compileall OK.
+Snapshot al cierre del ultimo commit (2026-11-12, sesion 36):
+- HEAD: `6d42be6d` (consultar `git log --oneline -1` para el actual)
+- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S36: 4700 passed, 0 failed, 2 skipped. pyflakes LIMPIO, compileall OK.
 - Validation Gate: 11/11
 - Working tree: limpio
-- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 313 items. Validador reforzado.
+- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 318 items. Validador reforzado.
 - Corpus documental: v3 (Consolidacion_Documentos/00-08)
 - Contratos temporales: 15 (`_IMPLEMENTED_CONTRACTS`). 9 originales + 4 S28 (SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO) + 2 S35 (CFTC_POSITION_FLOW, SEC_NPORT).
-- Scheduled: ultimo run 42877830553 (10-11 18:42 UTC, success, head 3f0ce3e9, gate success). run-system SKIPPED (gate CURRENT). Primer run-system success con los 15 contratos: pendiente del scheduled 10-11 23:17 UTC o posterior. Ver `gh run list`.
+- Writers: 25 (`output_registry.py`).
+- Scheduled: ultimo run 43253421481 (12-11 15:57 UTC, success, head cc28adce, gate success). run-system SKIPPED (gate CURRENT). Dispatch 43278363914 (18:17 UTC) tambien SKIP (CURRENT). Proximo scheduled 23:17 UTC del 12-11. Ver `gh run list`.
 - Fase 2 (auditoria por bloques): COMPLETA (B1-B8). Ver HANDOFF seccion 1.
 - Universo operado: 713 tickers unicos. Coherencia entre descarga,
   analisis, Wyckoff y catalogo (S33).
 - IAE crosswalk completo (S33-bis): cobertura observable 98.68%.
+
+**Sesion 36 (2026-11-12, 7 commits):**
+- Bug del step commit (`0b16c363`): `git add -u outputs/state` no stagea
+  untracked. Writer nuevo expuso el bug, 3 fallos consecutivos del
+  12-11. Fix `-A`. DAILY-RUN-FAIL-40992758129 reabierto WONT_FIX -> FIXED.
+- Writer persistido (`e06804b0`) + check de health (`2151a5b5`):
+  `temporal_contracts_result.json` (schema v1, 15 contratos) en artifact
+  + repo. TEMPORAL-CONTRACTS-RESULT-PERSIST VERIFIED_IN_PROD.
+- P1.a Delta5d gap consecutivo (`e88e9fd3`): `max(days+5, days*2+5)`.
+- P7 mensaje sin None (`985526c1`): `contract_label`.
+- PSKY TRUNCATED_IPO (`9a37c527`): health_check [OK]. VERIFIED_IN_PROD.
+- FX cutoff lag=1 (`73f7e26b`): max_lag 0->1 EURUSD/JPY. Lag 1 -> STALE.
+
+**Validacion en produccion pendiente** de 3 fixes (P1.a, P7, FX):
+requieren scheduled post-fix. Verificar en run 23:17 UTC del 12-11
+(cae 13-11 madrugada UTC):
+  - Reporte: Momentum amplitud con Delta5d poblado (no N/D).
+  - Log: "[CONTRACT] ... (sin mapeo)" en vez de None.
+  - health_check: temporal_contracts_result sin FX_DAILY_CUT.
 
 **Contratos vigentes y decisiones estructurales** (los detalles viven en `04_HISTORICO.md`; aqui solo lo que no se puede olvidar):
 
@@ -136,6 +156,7 @@ Snapshot al cierre del ultimo commit (2026-11-10, sesion 35):
 - **`data_quality.csv` con `date` = sesion bursatil (2026-10-18).** `compute_data_quality` escribe `date = last_expected_market_date(reference_date)`. Migracion historica: 155 filas en 9 fechas, 593->464 filas. Commits `4ade7384` + `5ef44486`.
 
 - **Audit post-receipt no bloqueante (2026-10-18).** `scripts/post_receipt_audit.py` compara `writer_receipts.json` vs `outputs/history/*.csv`. Detecta `MISSING` (receipt con `written=True`, CSV sin fila). No bloquea receipts. `health_check::check_receipt_audit()` lee los lunes y WARN si hay anomalias en 7 sesiones.
+
 ## 4. PENDIENTE (DESGLOSE)
 
 **Indice de frentes.** El detalle vive en `05_BITACORA.md` (cronologia reciente) y `04_HISTORICO.md` (tematica). Este documento solo lista estado.
