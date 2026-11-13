@@ -128,3 +128,15 @@ def test_psky_clasificado_como_truncated_ipo():
     assert is_eligible("PSKY") is True
     assert exclusion_reason("PSKY") is None
     assert "PSKY" in filter_eligible(["PSKY", "AAPL"])
+
+
+def test_kvue_clasificado_como_truncated_ipo():
+    """F2.a (2026-11-13): KVUE es Kenvue (spin-off de J&J). Historia
+    corta en stock_prices (1 barra, 2026-10-30). Estado TRUNCATED_IPO."""
+    from src.ticker_health import (
+        get_estado, is_eligible, exclusion_reason, filter_eligible,
+    )
+    assert get_estado("KVUE") == "TRUNCATED_IPO"
+    assert is_eligible("KVUE") is True
+    assert exclusion_reason("KVUE") is None
+    assert "KVUE" in filter_eligible(["KVUE", "AAPL"])

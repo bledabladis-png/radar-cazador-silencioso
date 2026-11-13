@@ -144,3 +144,17 @@ def test_get_instrument_class_dxy_sin_cambios():
     """F3-19 no toca la clase economica de DX-Y.NYB (sigue INDEX)."""
     from src.instrument_registry import get_instrument_class
     assert get_instrument_class("DX-Y.NYB") == "INDEX"
+
+
+def test_get_market_br_he_euronext_feature():
+    """F2.b (2026-11-13): .BR (Euronext Bruselas) y .HE (Nasdaq Helsinki)
+    son componentes legitimos de FEZ. Antes caian a UNKNOWN -> status
+    INVALID en _compute_by_market, bloqueando la exencion condicional
+    del guard C-2 si la cobertura global bajaba del threshold."""
+    from src.instrument_registry import get_market
+    assert get_market("ABI.BR") == "EURONEXT"
+    assert get_market("ARGX.BR") == "EURONEXT"
+    assert get_market("NOKIA.HE") == "EURONEXT"
+    # Sanity: fallback UNKNOWN sigue activo para sufijos no soportados
+    assert get_market("RTY.XX") == "UNKNOWN"
+    assert get_market("FAKE.NYSE") == "UNKNOWN"

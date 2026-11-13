@@ -855,6 +855,7 @@ def get_market(ticker: str) -> str:
     .DE         -> 'XETRA'
     .MC         -> 'BME'
     .PA .AS .MI -> 'EURONEXT'
+    .BR .HE      -> 'EURONEXT' (F2.b 2026-11-13: FEZ)
     Otro        -> 'UNKNOWN' (nunca adivinar)
 
     Nota: mapping valido para el universo de tickers soportado
@@ -888,7 +889,7 @@ def get_market(ticker: str) -> str:
         return "XETRA"
     if ticker.endswith(".MC"):
         return "BME"
-    if any(ticker.endswith(s) for s in (".PA", ".AS", ".MI")):
+    if any(ticker.endswith(s) for s in (".PA", ".AS", ".MI", ".BR", ".HE")):
         return "EURONEXT"
     # F3-19 / A2.3-parcial (2026-09-28): DX-Y.NYB (ICE US Dollar Index)
     # opera con calendario NYSE. Sin este override caia a UNKNOWN por

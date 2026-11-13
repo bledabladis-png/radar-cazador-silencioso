@@ -34,3 +34,16 @@ tickers:
     reabrir_si: 'Yahoo sirve barras post-2026-10-16 bajo PSKY; o el
       proveedor confirma cambio de ticker; o el catalogo reasigna
       PSKY a otra entidad.'
+
+  KVUE:
+    estado: TRUNCATED_IPO
+    detectado: '2026-11-13'
+    evento: 'Kenvue (spin-off de J&J, IPO 2023). Historia corta en
+      stock_prices: 1 barra no-NaN el 2026-10-30. Componente de XLP
+      (weight 2.222379) y SPY (weight 0.051555).'
+    evidencia: 'stock_prices.parquet: 1 barra no-NaN (2026-10-30,
+      close 19.31). Presente en etf_holdings (XLP) e index_holdings
+      (SPY). Mismo patron que PSKY: ticker ACTIVE con historia corta.
+      WARN manifest stock_prices close_nan_last=2 (KVUE + PSKY).'
+    reabrir_si: 'Yahoo sirve barras post-2026-10-30 bajo KVUE; o
+      Kenvue es readquirida; o el catalogo reasigna KVUE.'
