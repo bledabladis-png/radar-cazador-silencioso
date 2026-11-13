@@ -130,6 +130,9 @@ def render_cross_module(cross_module_conflict):
                 state = mod_info.get('state', 'N/A')
                 if state is None or str(state) == 'None':
                     state = 'N/A'
+                # MTE-UNCONFIRMED-EN-CROSS-MODULE (2026-11-13): sufijo explicito.
+                if mod_info.get('confirmed') is False:
+                    state = f"{state} UNCONFIRMED"
                 bias_fin = mod_info.get('bias_financial', 0)
                 bias_inf = mod_info.get('bias_inflation', 0)
                 bias_str = ''

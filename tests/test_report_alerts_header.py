@@ -294,3 +294,34 @@ def test_render_alerts_no_high_stress_no_alerta():
     )
     lineas = "".join(out)
     assert "Financial Stress vs Credit" not in lineas
+
+
+def test_render_cross_module_mte_unconfirmed_suffix():
+    """MTE-UNCONFIRMED-EN-CROSS-MODULE (2026-11-13): render añade
+    sufijo UNCONFIRMED cuando details[mte].confirmed is False. Otros
+    modulos (sin confirmed) no sufijan."""
+    out = render_cross_module({
+        "conflict_level": "MIXED",
+        "message": "mixto",
+        "details": {
+            "macro": {"state": "RECESSION", "bias_financial": 0, "bias_inflation": 0},
+            "mte": {"state": "CRISIS", "bias_financial": -1, "bias_inflation": 0, "confirmed": False},
+        },
+    })
+    lineas = "".join(out)
+    assert "macro: RECESSION (Neutral)" in lineas
+    assert "mte: CRISIS UNCONFIRMED (Estres Financiero" in lineas
+
+
+def test_render_cross_module_mte_confirmed_sin_sufijo():
+    """Con confirmed=True, el sufijo NO se añade."""
+    out = render_cross_module({
+        "conflict_level": "CONSENSUS",
+        "message": "ok",
+        "details": {
+            "mte": {"state": "EXPANSION", "bias_financial": 1, "bias_inflation": 0, "confirmed": True},
+        },
+    })
+    lineas = "".join(out)
+    assert "mte: EXPANSION (" in lineas
+    assert "UNCONFIRMED" not in lineas

@@ -100,3 +100,55 @@ def test_barrido_estados_completos():
         assert actual == esperado, (
             "estado={!r}: esperado={}, obtenido={}".format(state, esperado, actual)
         )
+
+
+def test_mte_confidence_alta_confirmed_true():
+    """MTE-UNCONFIRMED-EN-CROSS-MODULE (2026-11-13): con mte_confidence
+    >= 0.50, details[mte] incluye confirmed=True."""
+    out = detect_cross_module_conflict(
+        macro_regime="EXPANSION",
+        financial_regime="ABUNDANTE",
+        volatility_regime="LOW",
+        liquidity_regime="ABUNDANTE",
+        mte_scenario="EXPANSION",
+        mte_confidence=0.75,
+    )
+    assert out["details"]["mte"]["confirmed"] is True
+
+
+def test_mte_confidence_baja_confirmed_false():
+    """Con mte_confidence < 0.50, confirmed=False."""
+    out = detect_cross_module_conflict(
+        macro_regime="RECESSION",
+        financial_regime="HIGH_STRESS",
+        volatility_regime="STRESS",
+        liquidity_regime="NEUTRAL",
+        mte_scenario="CRISIS",
+        mte_confidence=0.41,
+    )
+    assert out["details"]["mte"]["confirmed"] is False
+
+
+def test_mte_confidence_none_sin_campo():
+    """Compat: sin mte_confidence, details[mte] no incluye confirmed."""
+    out = detect_cross_module_conflict(
+        macro_regime="EXPANSION",
+        financial_regime="LOW",
+        volatility_regime="LOW",
+        liquidity_regime="NEUTRAL",
+        mte_scenario="EXPANSION",
+    )
+    assert "confirmed" not in out["details"]["mte"]
+
+
+def test_mte_confidence_nan_confirmed_false():
+    """confidence NaN -> confirmed=False. Coherente con render_mte."""
+    out = detect_cross_module_conflict(
+        macro_regime="EXPANSION",
+        financial_regime="LOW",
+        volatility_regime="LOW",
+        liquidity_regime="NEUTRAL",
+        mte_scenario="EXPANSION",
+        mte_confidence=float("nan"),
+    )
+    assert out["details"]["mte"]["confirmed"] is False

@@ -102,3 +102,15 @@ class TestUmbralUnconfirmed:
             f"Texto declara umbral {umbral_texto} pero logica no marca "
             f"CONFIRMED en {justo_en}."
         )
+
+
+def test_mte_confirmed_min_coherente():
+    """MTE-UNCONFIRMED-EN-CROSS-MODULE (2026-11-13): el umbral
+    MTE_CONFIRMED_MIN de src/utils.py debe ser 0.50, mismo valor que
+    el render y el centinela original."""
+    from src.utils import MTE_CONFIRMED_MIN
+    assert MTE_CONFIRMED_MIN == 0.50, (
+        f"MTE_CONFIRMED_MIN = {MTE_CONFIRMED_MIN}; debe ser 0.50. "
+        "Cambio de umbral requiere revisar render_mte, helpers.py:194, "
+        "generate_docs.py:356 y este centinela."
+    )

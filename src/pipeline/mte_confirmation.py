@@ -64,7 +64,8 @@ def _compute_cross_module(macro_regime, financial_regime, vol_regime, real_liq_r
         financial_regime=financial_regime,
         volatility_regime=vol_regime,
         liquidity_regime=real_liq_regime if real_liq_regime != 'N/A' else None,
-        mte_scenario=mte_result.get('scenario') if mte_result else None
+        mte_scenario=mte_result.get('scenario') if mte_result else None,
+        mte_confidence=mte_result.get('confidence') if mte_result else None
     )
     if cross_module_conflict['conflict_level'] in ('CONFLICT', 'DIVERGENCE'):
         print(f"    CROSS-MODULE {cross_module_conflict['conflict_level']}: {cross_module_conflict['message']}")

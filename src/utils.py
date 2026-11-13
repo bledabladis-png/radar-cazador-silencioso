@@ -1,4 +1,9 @@
 import numpy as np
+
+# MTE_CONFIRMED_MIN (2026-11-13): umbral UNCONFIRMED del MTE.
+# Coherente con src/report/volatility_mte.py, src/report/helpers.py:194,
+# scripts/generate_docs.py:356, y tests/test_mte_unconfirmed_threshold.py.
+MTE_CONFIRMED_MIN = 0.50
 import pandas as pd
 
 def resolve_reference_date(reference_date):
@@ -294,7 +299,29 @@ def clean_oil_prices(df):
 # ----------------------------------------------------------------------
 # Cross-Module Conflict Detector (Fase 3)
 # ----------------------------------------------------------------------
-def detect_cross_module_conflict(macro_regime, financial_regime, volatility_regime, liquidity_regime, mte_scenario=None):
+def _mte_confirmed_state(mte_confidence):
+    """Estado UNCONFIRMED del MTE (2026-11-13).
+
+    Regla: confidence >= MTE_CONFIRMED_MIN -> True (confirmed).
+           confidence <  MTE_CONFIRMED_MIN -> False (UNCONFIRMED).
+           confidence NaN, no numerico, o None -> False (UNCONFIRMED).
+           mte_confidence is None -> None (no publicar campo; compat).
+
+    Coherente con src/report/volatility_mte.py y test_mte_unconfirmed_threshold.py.
+    """
+    if mte_confidence is None:
+        return None
+    import math
+    try:
+        f = float(mte_confidence)
+    except (TypeError, ValueError):
+        return False
+    if math.isnan(f):
+        return False
+    return f >= MTE_CONFIRMED_MIN
+
+
+def detect_cross_module_conflict(macro_regime, financial_regime, volatility_regime, liquidity_regime, mte_scenario=None, mte_confidence=None):
     """
     Detecta contradicciones entre los modulos de diagnostico.
     Clasifica en: CONSENSUS, MIXED, CONFLICT, DIVERGENCE.
@@ -396,11 +423,27 @@ def detect_cross_module_conflict(macro_regime, financial_regime, volatility_regi
         blocks.append(f'Expansion: {fin_exp_count}/{total}')
     blocks.append(f'Inflation Pressure: {inf_stress_count}/{total}')
     
+# MTE-UNCONFIRMED-EN-CROSS-MODULE (2026-11-13): details[mte] incluye
+    # 'confirmed' cuando mte_confidence esta presente. Compat: sin
+    # mte_confidence, no se publica el campo (clientes previos no rompen).
+    details = {}
+    for name in modules:
+        entry = {
+            'state': modules[name],
+            'bias_financial': biases_fin[name],
+            'bias_inflation': biases_inf[name],
+        }
+        if name == 'mte':
+            _conf = _mte_confirmed_state(mte_confidence)
+            if _conf is not None:
+                entry['confirmed'] = _conf
+        details[name] = entry
+
     return {
         'conflict_level': level,
         'message': msg,
         'blocks': ' | '.join(blocks),
-        'details': {name: {'state': modules[name], 'bias_financial': biases_fin[name], 'bias_inflation': biases_inf[name]} for name in modules}
+        'details': details,
     }
 
 
