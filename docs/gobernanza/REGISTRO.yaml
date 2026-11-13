@@ -7840,6 +7840,7 @@ items:
     test_delta_5d_gap_12_dias_finde_mas_festivo reproduce el gap real
     2026-10-30 -> 2026-11-11. Validacion final en proximo scheduled
     (reporte debe mostrar Delta5d poblado en los 11 sectores).
+  verificacion: VERIFIED_IN_PRODUCTION
 
 - id: P7-CONTRACT-UNKNOWN-NONE
   tipo: bug
@@ -7862,6 +7863,7 @@ items:
     "None". Test nuevo test_mercado_no_critico_sin_contrato_mapeado_
     mensaje_claro. Validacion final: proximo scheduled debe emitir
     "[CONTRACT] UNKNOWN: ... (sin mapeo)" en el log.
+  verificacion: VERIFIED_IN_PRODUCTION
 
 - id: TICKER-HEALTH-PSKY
   tipo: bug
@@ -7908,3 +7910,4 @@ items:
     test_fx_cutoff_lag1_stale_no_insufficient. Validacion final:
     proximo scheduled debe mostrar temporal_contracts_result [OK] o
     [WARN] sin FX_DAILY_CUT.
+  verificacion: VERIFIED_IN_PRODUCTION
