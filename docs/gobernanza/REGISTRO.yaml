@@ -7970,3 +7970,42 @@ items:
     close_nan_last=2 en health_check local persiste hasta que el
     manifest del bot se regenere con el get_market nuevo (post-
     scheduled).
+
+- id: MTE-UNCONFIRMED-EN-CROSS-MODULE
+  tipo: bug
+  ciclo: '2026-11-13'
+  estado: FIXED
+  descripcion: >
+    Hallazgo de la auditoria del reporte 43413093004 (2026-11-13).
+    En el bloque Cross-Module, el modulo MTE aparecia como
+    "mte: CRISIS (Estres Financiero)" sin la marca UNCONFIRMED,
+    aunque el escenario CRISIS tenia Confidence 0.41 (< 0.50) y
+    tanto el Resumen de Regimenes como el bloque MTE ya lo
+    publicaban como UNCONFIRMED. Inconsistencia de presentacion
+    entre modulos: el mismo escenario se describe con la marca
+    en un sitio y sin ella en otro. detect_cross_module_conflict
+    solo recibia mte_scenario (str), no mte_confidence, por lo
+    que no podia determinar la confirmacion.
+  commit: '625faeeb'
+  test: tests/test_cross_module_regimes.py
+  evidencia: >
+    MTE_CONFIRMED_MIN = 0.50 en src/utils.py como constante modulo,
+    coherente con src/report/volatility_mte.py, src/report/helpers.py:194,
+    scripts/generate_docs.py:356 y el centinela tests/test_mte_
+    unconfirmed_threshold.py (nuevo test de coherencia).
+    _mte_confirmed_state(conf) devuelve None si conf es None
+    (compat, no publicar campo), False si NaN/no numerico/< 0.50,
+    True si >= 0.50. detect_cross_module_conflict recibe
+    mte_confidence (default None) y publica
+    details["mte"]["confirmed"] solo cuando esta presente.
+    src/pipeline/mte_confirmation.py propaga
+    mte_confidence=mte_result.get("confidence").
+    src/report/alerts.py:render_cross_module sufija " UNCONFIRMED"
+    al state cuando mod_info.get("confirmed") is False.
+    Tests nuevos: 4 producer en test_cross_module_regimes.py
+    (alta, baja, None, NaN), 2 render en test_report_alerts_header.py
+    (sufijo con False, sin sufijo con True), 1 coherencia en
+    test_mte_unconfirmed_threshold.py. Suite 4709 passed, 2 skipped.
+    Sin mte_confidence, details[mte] no incluye confirmed y el
+    render no sufija: 3 tests existentes de cross_module verdes
+    sin cambios.
