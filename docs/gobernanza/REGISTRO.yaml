@@ -7176,29 +7176,34 @@ items:
 - id: MTE-DEGRADED-STATE
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
-  estado: OPEN
-  descripcion: |
-    Hallazgo 10.2 de auditoria externa (2026-11-03). El MTE
-    publica un escenario (RECESSION, Confidence 0.48, estado
-    UNCONFIRMED) con `Futures Status: STALE` (inputs de futuros
-    ausentes o desactualizados), sin degradar la confianza por ese
-    estado. El auditor propone tres estados: VALID (inputs
-    criticos disponibles), DEGRADED (secundarios ausentes),
-    INVALID (criticos insuficientes).
-  siguiente_accion: |
-    Decision de producto. Diseno de contrato, no bug. Coste: 1
-    sesion diseno + 1-2 implementacion. Afecta a SCENARIO_RULES,
-    confianza publicada, y todos los consumidores del MTE. Sin
-    urgencia: `futures_status=STALE` visible en el run 41575090209
-    una sola vez (no cronico). El escenario no se publica como
-    VALID hoy (es UNCONFIRMED), pero el auditor tiene razon en que
-    falta un estado explicito DEGRADED que penalice la confianza.
-  evidencia: |
-    Reporte 41575090209, bloque MTE. `Futures Status: STALE`
-    visible junto a Confidence 0.48 sin penalizacion. Auditor:
-    'no presentar un escenario como validado cuando el estado de
-    sus fuentes criticas sea degradado'.
-
+  estado: WONT_FIX
+  descripcion: >
+    Hallazgo 10.2 de auditoria externa (2026-11-03). El auditor
+    propuso penalizar la confidence del MTE cuando futures_status
+    != OK (degradar confianza por estado de inputs).
+  razon: >
+    Decision de producto (S36, 2026-11-13). La regla derive_mte_state
+    ya publica un estado explicito DEGRADED cuando futures_status
+    != OK o coverage < 0.90 o confidence no finito (ver
+    indicators/mte/status.py). El render (src/report/volatility_mte.py
+    lineas 124-140) publica MTE Status: DEGRADED + Futures Status:
+    STALE con nota explicita: la confidence del escenario NO se
+    degrada por este estado. El escenario se publica como
+    UNCONFIRMED cuando confidence < 0.50, señalizando no-confirmacion.
+    Penalizar ademas la confidence numerica confundiria dos
+    dimensiones independientes: distancia a umbrales + consenso
+    entre motores (lo que mide la confidence) vs disponibilidad
+    de inputs (lo que mide el estado). La separacion ya es correcta;
+    el auditor pedia fundirlas. Documentado en 00_ARRANQUE seccion 3
+    (bloque MTE degraded state, sesion 28) y HANDOFF.
+  evidencia: >
+    Reporte run 43413093004 (2026-11-13 10:57 UTC): escenario
+    CRISIS (UNCONFIRMED) con Confidence 0.41 + MTE Status: DEGRADED
+    + Futures Status: STALE + nota explicita. Comportamiento
+    esperado y coherente. El item original decia STALE una sola
+    vez (no cronico); es cronico como FX_DAILY_CUT (FUTURE_
+    SETTLEMENT max_lag=1, runs pre-cutoff 17:00 ET -> lag=1 ->
+    STALE), y eso es informativo, no sintoma.
 - id: FRESHNESS-POR-BLOQUE
   tipo: deuda_tecnica
   ciclo: '2026-11-03'
@@ -7911,3 +7916,57 @@ items:
     proximo scheduled debe mostrar temporal_contracts_result [OK] o
     [WARN] sin FX_DAILY_CUT.
   verificacion: VERIFIED_IN_PRODUCTION
+
+- id: F2-BR-HE-EURONEXT
+  tipo: bug
+  ciclo: '2026-11-13'
+  estado: FIXED
+  descripcion: >
+    ABI.BR, ARGX.BR (Euronext Bruselas) y NOKIA.HE (Nasdaq Helsinki)
+    son componentes legitimos de FEZ (SPDR Euro Stoxx 50) en
+    index_holdings (47 holdings: 16 .PA, 14 .DE, 5 .AS, 5 .MI, 4 .MC,
+    2 .BR, 1 .HE). get_market solo reconocia .PA/.AS/.MI como
+    EURONEXT; los .BR/.HE caian a UNKNOWN -> status INVALID en
+    _compute_by_market (Punto 5 FU-002-bymarket). La exencion
+    condicional del guard C-2 (guard_coverage.py::_all_markets_
+    valid) no se aplicaba porque UNKNOWN INVALID hace return False.
+    Bug latente: si la cobertura global bajaba del threshold, el
+    guard bloqueaba el run sin causa real.
+  commit: '7a2b016a'
+  test: tests/test_a2_3_instrument_class.py
+  evidencia: >
+    instrument_registry.py: sufijos (.PA, .AS, .MI, .BR, .HE) ->
+    EURONEXT. .BR es Euronext Bruselas literalmente. .HE es Nasdaq
+    Nordic (Helsinki) pero comparte regla provisional L-V con las
+    europeas modeladas (market_hours.is_trading_session). No se
+    añade mercado HELSINKI nuevo: market_hours no modela festivos
+    locales de ninguna europea; romperia el contrato sin ganancia
+    observable. Test test_get_market_br_he_euronext_feature verifica
+    .BR/.HE -> EURONEXT + sanity del fallback UNKNOWN. La mejora
+    del manifest (UNKNOWN n=3 desaparece) se vera en el proximo
+    scheduled post-push (7a2b016a); hasta entonces el manifest del
+    bot sigue con UNKNOWN n=3 del run previo.
+
+- id: KVUE-TRUNCATED-IPO
+  tipo: bug
+  ciclo: '2026-11-13'
+  estado: FIXED
+  descripcion: >
+    KVUE (Kenvue, spin-off de J&J) tiene n_bars=1 en stock_prices
+    (2026-10-30, close 19.31). Componente de XLP (weight 2.22) y
+    SPY (weight 0.05). check_ticker_health lo marcaba WARN como
+    ACTIVE stale por tener historia corta. Mismo patron que PSKY:
+    ticker ACTIVE con datos truncados que requiere clasificacion
+    explicita.
+  commit: '7a2b016a'
+  test: tests/test_ticker_health.py
+  evidencia: >
+    KVUE: TRUNCATED_IPO en data/mappings/ticker_health.yaml (mismo
+    esquema que PSKY: detectado, evento, evidencia, reabrir_si).
+    Test test_kvue_clasificado_como_truncated_ipo verifica estado,
+    elegibilidad, reason y filter_eligible. health_check post-fix:
+    ticker_health [OK] 3 clasificados (WBD DELISTED, PSKY TRUNCADO,
+    KVUE TRUNCADO), 0 ACTIVE stale. El WARN manifest:stock_prices
+    close_nan_last=2 en health_check local persiste hasta que el
+    manifest del bot se regenere con el get_market nuevo (post-
+    scheduled).
