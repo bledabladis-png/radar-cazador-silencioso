@@ -10,13 +10,13 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-12, sesion 36)
 
-HEAD: `6d42be6d` (consultar `git log --oneline -1` para el actual).
+HEAD: `14577f54` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4700 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
+       4702 passed, 0 failed, 2 skipped. pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 318 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 320 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 15 (_IMPLEMENTED_CONTRACTS).
@@ -490,6 +490,70 @@ gobernanza.
 `verificacion` (P1-DELTA-GAP-CONSECUTIVO, P7-CONTRACT-UNKNOWN-NONE,
 FX-CUTOFF-LAG-1) pasan a `VERIFIED_IN_PRODUCTION` cuando el scheduled
 lo confirme.
+### 3.14. Cierres S36-bis (2026-11-13)
+
+2 commits de codigo + 1 docs/ gobernanza. Cierre de los 2 frentes del
+bloque F2 (diagnostico post-S36) y de MTE-DEGRADED-STATE.
+
+- **`7a2b016a` fix(eu): .BR/.HE como EURONEXT + KVUE TRUNCATED_IPO**.
+  Dos bugs de cobertura EU expuestos por diagnostico F2 del cierre S36.
+  (a) `instrument_registry.get_market` solo reconocia `.PA/.AS/.MI` como
+  EURONEXT. ABI.BR, ARGX.BR (Euronext Bruselas) y NOKIA.HE (Nasdaq
+  Helsinki) son componentes legitimos de FEZ (SPDR Euro Stoxx 50) en
+  index_holdings (47 holdings: 16 .PA, 14 .DE, 5 .AS, 5 .MI, 4 .MC,
+  2 .BR, 1 .HE). Caian a UNKNOWN -> status INVALID en _compute_by_
+  market (Punto 5 FU-002-bymarket). La exencion condicional del guard
+  C-2 (`guard_coverage.py::_all_markets_valid`) no se aplicaba porque
+  UNKNOWN INVALID hace `return False`. Bug latente: si la cobertura
+  global bajaba del threshold, el guard bloqueaba el run sin causa
+  real. Fix: sufijos `.BR/.HE` -> EURONEXT. Documentado en el docstring:
+  .BR es Euronext literalmente; .HE es Nasdaq Nordic pero comparte
+  regla provisional L-V con las europeas modeladas. No se añade
+  mercado HELSINKI nuevo. Test `test_get_market_br_he_euronext_feature`.
+  (b) KVUE (Kenvue, spin-off J&J) tiene n_bars=1 (2026-10-30),
+  componente de XLP (weight 2.22) y SPY (weight 0.05). Estado correcto
+  TRUNCATED_IPO, mismo patron que PSKY. health_check post-fix:
+  `ticker_health [OK]` 3 clasificados, 0 ACTIVE stale. Test
+  `test_kvue_clasificado_como_truncated_ipo`.
+
+- **`14577f54` chore(gobernanza): MTE WONT_FIX + F2-BR-HE / KVUE FIXED**.
+  REGISTRO 318 -> 320 items.
+  - **MTE-DEGRADED-STATE** OPEN -> WONT_FIX razonado. Decision de
+    producto (S36): la regla `derive_mte_state` ya publica un estado
+    explicito DEGRADED cuando `futures_status != OK` o coverage < 0.90
+    o confidence no finito. `render_mte` publica `MTE Status: DEGRADED`
+    + `Futures Status: STALE` con nota explicita de que la confidence
+    NO se degrada por ese estado. El escenario se publica como
+    UNCONFIRMED cuando confidence < 0.50. Penalizar ademas la
+    confidence numerica confundiria dos dimensiones independientes
+    (distancia a umbrales+consenso vs disponibilidad de inputs).
+    Evidencia: run 43413093004 (2026-11-13 10:57 UTC) muestra
+    CRISIS UNCONFIRMED 0.41 + DEGRADED + STALE + nota. Comportamiento
+    coherente, no bug. El item original decia "STALE una sola vez (no
+    cronico)"; es cronico como FX_DAILY_CUT (FUTURE_SETTLEMENT
+    max_lag=1, runs pre-cutoff 17:00 ET -> lag=1 -> STALE), informativo.
+  - **F2-BR-HE-EURONEXT** FIXED (7a2b016a).
+  - **KVUE-TRUNCATED-IPO** FIXED (7a2b016a).
+
+**Estado REGISTRO:** 320 items. FIXED 260, WONT_FIX 38, OPEN 3,
+BLOCKED_EXTERNAL 2, FALSE_POSITIVE 13, SUPERSEDED 4. 37 items con
+`verificacion: VERIFIED_IN_PRODUCTION`.
+
+**Pendiente operativo:** scheduled post-push (14-11 o posterior)
+regenerara el manifest del bot con el `get_market` nuevo -> los 3
+UNKNOWN n=3 desaparecen del `by_market` del manifest. Verificar en
+`manifest:stock_prices` del run:
+  - `UNKNOWN` ausente del `by_market` (o n=0 SKIP).
+  - ABI.BR / ARGX.BR / NOKIA.HE en `EURONEXT` con cobertura correcta.
+  - `close_nan_last` = 2 (KVUE + PSKY) o 0.
+Cuando se confirme: mover F2-BR-HE-EURONEXT y KVUE-TRUNCATED-IPO a
+`verificacion=VERIFIED_IN_PRODUCTION` en REGISTRO.
+
+**3 OPEN restantes:** H5.3 (cron 13F 20-nov), DICT3-H04-INTERVALS
+(registro historico del rechazo del IC95, no accionable), SEMANTICA-
+SIN-CONTRATO-INVENTARIO (ROI bajo).
+
+
 ## 4. COMO ARRANCAR
 
     Set-Location D:\Macro_Sectorial
@@ -507,7 +571,7 @@ Esperado:
 - HEAD = git log --oneline -1.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests: fuente autoritativa ESTADO_SISTEMA.md (4700 passed, 0 failed).
+- Tests: fuente autoritativa ESTADO_SISTEMA.md (4702 passed, 0 failed).
 - Gobernanza [OK]. Indice H1-H18 [OK]. Bitacora [OK].
 - pyflakes silencio, compileall OK.
 
