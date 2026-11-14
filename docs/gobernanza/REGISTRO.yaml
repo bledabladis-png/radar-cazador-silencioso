@@ -7921,6 +7921,7 @@ items:
   tipo: bug
   ciclo: '2026-11-13'
   estado: FIXED
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: >
     ABI.BR, ARGX.BR (Euronext Bruselas) y NOKIA.HE (Nasdaq Helsinki)
     son componentes legitimos de FEZ (SPDR Euro Stoxx 50) en
@@ -7951,6 +7952,7 @@ items:
   tipo: bug
   ciclo: '2026-11-13'
   estado: FIXED
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: >
     KVUE (Kenvue, spin-off de J&J) tiene n_bars=1 en stock_prices
     (2026-10-30, close 19.31). Componente de XLP (weight 2.22) y
@@ -7975,6 +7977,7 @@ items:
   tipo: bug
   ciclo: '2026-11-13'
   estado: FIXED
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: >
     Hallazgo de la auditoria del reporte 43413093004 (2026-11-13).
     En el bloque Cross-Module, el modulo MTE aparecia como
