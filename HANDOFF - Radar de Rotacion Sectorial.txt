@@ -630,7 +630,10 @@ SIN-CONTRATO-INVENTARIO (ROI bajo).
     py scripts\genera_indice_auditorias.py
     py scripts\poda_bitacora.py --check
     py -m pytest tests\ -q --tb=line -m "not integration_real_data" -n auto --dist loadfile
+    # ^ suite autoritativa (4698, paridad CI).
     py -m pytest tests\ -q --tb=line -n auto
+    # ^ opcional: incluye integration_real_data. Solo verde si los
+    # parquets locales (gitignored) estan frescos (age <= 4).
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:

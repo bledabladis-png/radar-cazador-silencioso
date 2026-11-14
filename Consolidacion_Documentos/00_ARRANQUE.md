@@ -237,9 +237,14 @@ Pega este bloque al inicio de cada sesion:
     py scripts\genera_indice_auditorias.py
     py scripts\poda_bitacora.py --check
     py -m pytest tests/ -q --tb=line -m "not integration_real_data" -n auto --dist loadfile
-    # ^ smoke check rapido (~2 min, sin integracion real)
+    # ^ suite autoritativa (conteo vigente en ESTADO_SISTEMA.md seccion 2).
+    # Paridad con CI (.github/workflows/ci_tests.yml) y con
+    # scripts/generate_estado_sistema.py. Excluye integration_real_data
+    # (11 tests sobre parquets locales gitignored, generados por run.py).
     py -m pytest tests/ -q --tb=line -n auto
-    # ^ suite completa autoritativa (conteo vigente en ESTADO_SISTEMA.md seccion 2)
+    # ^ opcional: incluye integration_real_data. Solo verde si
+    # data/*.parquet locales estan frescos (age <= 4). Los parquets
+    # son gitignored; el bot los regenera en cada run scheduled.
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
