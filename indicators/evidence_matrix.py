@@ -38,10 +38,28 @@ def _wyckoff_sign(row):
     # binarizacion laxa. Introducir banda neutral (abs(diff) < umbral ->
     # 0) requeriria justificacion estadistica (PROMPT Seccion 1.3: no
     # tocar parametros sin evidencia).
-    if pd.isna(row.get('pct_accumulation')) or pd.isna(row.get('pct_markup')) or pd.isna(row.get('pct_distribution')) or pd.isna(row.get('pct_markdown')):
-        return np.nan
-    favorable = row['pct_accumulation'] + row['pct_markup']
-    unfavorable = row['pct_distribution'] + row['pct_markdown']
+    #
+    # FIX-WYCKOFF-SIGN-ROUNDING (2026-11-14): la regla se aplica sobre
+    # counts enteros, no sobre pct_* redondeados. Un empate real en
+    # counts (XLY 2026-11-12: 1 acc + 1 markup = 2, 0 dist + 2 markdown
+    # = 2) puede flipar a -1 por artefacto de redondeo del CSV
+    # (4.25531914 vs 4.25531915, diff 1e-8). Con counts el empate se
+    # respeta exactamente. NO introduce banda neutral (F6-33 intacto):
+    # solo elimina el ruido de coma flotante. Fallback a pct_* si los
+    # counts no estan disponibles (compat con CSVs pre-refactor).
+    _count_keys = ('count_accumulation', 'count_markup',
+                   'count_distribution', 'count_markdown')
+    if all(pd.notna(row.get(k)) for k in _count_keys):
+        favorable = row['count_accumulation'] + row['count_markup']
+        unfavorable = row['count_distribution'] + row['count_markdown']
+    else:
+        if (pd.isna(row.get('pct_accumulation'))
+                or pd.isna(row.get('pct_markup'))
+                or pd.isna(row.get('pct_distribution'))
+                or pd.isna(row.get('pct_markdown'))):
+            return np.nan
+        favorable = row['pct_accumulation'] + row['pct_markup']
+        unfavorable = row['pct_distribution'] + row['pct_markdown']
     if favorable > unfavorable:
         return 1
     elif favorable < unfavorable:
