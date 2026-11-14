@@ -22,7 +22,7 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 4665 passed, 2 skipped (sin filtro; suite completa)
+- **Resumen:** 4698 passed, 2 skipped (excluye integration_real_data; paridad CI)
 - **Exit code:** 0
 
 **Tests skip:**

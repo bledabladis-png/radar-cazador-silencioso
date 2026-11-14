@@ -54,6 +54,13 @@ MAPPINGS_IAE = [
 EVIDENCE_ROOT = ROOT / 'docs' / 'auditoria' / 'iae' / 'evidence'
 
 def run(cmd, timeout=None):
+    # 2026-11-14: pytest con -m 'not integration_real_data' (paridad CI).
+    # Sin filtro, los 11 tests integration_real_data dependen de parquets
+    # locales (gitignored, generados por run.py) y el script se vuelve
+    # no determinista: falla cuando el snapshot local es stale
+    # (age > MAX_DAILY_AGE). Los integration_real_data se validan en CI
+    # paso 'Validate freshness post-run' tras run.py.
+    #
     # 2026-11-04: timeout opcional. Sin timeout, pytest serial de la
     # suite completa (>4400 tests) cuelga el proceso. TimeoutExpired
     # se reporta como (mensaje, -1) para no bloquear el script; el
@@ -93,6 +100,7 @@ def section_tests():
     lines = ['## 2. Tests (pytest real)', '']
     out, rc = run([
         'py', '-m', 'pytest', 'tests/', '-q', '--tb=no', '--no-header',
+        '-m', 'not integration_real_data',
         '-n', 'auto', '--dist', 'loadfile',
     ], timeout=600)
     # Resumen
@@ -104,7 +112,7 @@ def section_tests():
         # El wall-clock de pytest no es reproducible entre runs.
         # Nos quedamos solo con los conteos (passed/failed/skipped).
         summary_counts = summary.split(' in ')[0]
-        lines.append(f'- **Resumen:** {summary_counts} (sin filtro; suite completa)')
+        lines.append(f'- **Resumen:** {summary_counts} (excluye integration_real_data; paridad CI)')
     lines.append(f'- **Exit code:** {rc}')
     # Tests fallidos con nombre completo
     failed = [l.strip() for l in out.splitlines() if l.strip().startswith('FAILED ')]
