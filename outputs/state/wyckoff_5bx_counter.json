@@ -1,12 +1,12 @@
 {
   "n_confirmed_h20_complete": 50,
-  "n_confirmed_total": 151,
+  "n_confirmed_total": 152,
   "min_sessions": 20,
   "by_phase": {
     "ACCUMULATION": 12,
     "DISTRIBUTION": 38
   },
-  "reference_date": "2026-11-12",
+  "reference_date": "2026-11-13",
   "threshold_5bx": 550,
   "threshold_reached": false
 }
