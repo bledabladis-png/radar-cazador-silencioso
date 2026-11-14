@@ -85,6 +85,16 @@ def main():
     etf_h = pd.read_csv(DATA / "etf_holdings.csv")
     usa_idx, eu_idx = _split_indices(_load_index_holdings())
     pub = _published_by_group()
+    # FIX-P1H02-MOTIVO (2026-11-14): clasificar sin_datos por motivo
+    # derivado del universo operado (get_stock_list) en runtime. Sin
+    # hardcodear. Deferred import: el script corre en post-run y ya
+    # tiene todo en sys.path.
+    try:
+        from src.stock_data_loader import get_stock_list
+        operated = set(get_stock_list())
+    except Exception as _e:
+        print(f"  [WARN] get_stock_list fallo: {_e}. motivo=desconocido.")
+        operated = set()
 
     print("Calculando snapshot (~35s, 527 filas)...")
     snap = compute_wyckoff_snapshot(
@@ -118,10 +128,17 @@ def main():
                     cd_n += 1
                     cd_peso += float(r["weight"])
                 else:
+                    if not operated:
+                        motivo = "desconocido"
+                    elif tn in operated:
+                        motivo = "fallo_descarga" if nb == 0 else "historia_insuficiente"
+                    else:
+                        motivo = "fuera_universo_descarga"
                     sin_datos.append({
                         "group": g, "gt": gt,
                         "ticker": r["ticker"], "ticker_norm": tn,
                         "weight": float(r["weight"]), "n_bars": nb,
+                        "motivo": motivo,
                     })
             sub_snap = snap[
                 (snap["group"] == g) & (snap["group_type"] == gt)
