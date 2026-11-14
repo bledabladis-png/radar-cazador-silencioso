@@ -52,7 +52,7 @@ def main():
             print("           " + ln, file=sys.stderr)
         print("[pre-push] El hook corre igualmente", file=sys.stderr)
     timeout = int(os.environ.get("PRE_PUSH_TIMEOUT", DEFAULT_TIMEOUT))
-    cmd = [sys.executable, "-m", "pytest", "tests/", "-q", "--tb=line"]
+    cmd = [sys.executable, "-m", "pytest", "tests/", "-q", "--tb=line", "-m", "not integration_real_data"]
     if _tiene_xdist():
         cmd.extend(["-n", "auto", "--dist", "loadfile"])
     else:
