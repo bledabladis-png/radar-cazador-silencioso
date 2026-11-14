@@ -91,4 +91,18 @@ def render_momentum_otros(otros_price_rank, otros_flow_rank):
         out.append("*No hay datos disponibles para Flow Proxy.*\n")
     for i, (ticker, flow) in enumerate(otros_flow_rank[:15], 1):
         out.append(f"| {i} | {ticker} | {_fmt_num(flow, '{:.2f}')} |\n")
+    # FIX-FLOW-OTROS-N/D (2026-11-14): declarar causa del N/D.
+    # compute_flow_proxy devuelve NaN para instrumentos sin volumen
+    # real en la fuente (FX, ICE Dollar, ^SPGSCI; REP-AUDIT-20261017-H4).
+    # Sin nota, el operador no distingue "sin volumen" de "no descargado".
+    # Auto-generada: solo si hay NaN; lista los tickers afectados en runtime.
+    # NaN-check via "v != v": numpy.float64 y float, sin importar pandas.
+    _nan_tickers = [t for t, v in otros_flow_rank[:15] if v != v]
+    if _nan_tickers:
+        out.append(
+            "\n*N/D = z-score no computable (sin volumen real en la "
+            "fuente): " + ", ".join(_nan_tickers) + ". Correcto por "
+            "dise\u00f1o: el Flow Proxy requiere volumen para su "
+            "c\u00e1lculo (REP-AUDIT-20261017-H4).*\n"
+        )
     return out
