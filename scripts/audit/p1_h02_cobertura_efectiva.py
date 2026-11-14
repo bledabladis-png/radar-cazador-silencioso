@@ -64,6 +64,14 @@ def _has_data(df_stocks, ticker):
 
 
 def _published_by_group():
+    """Filas publicadas por grupo EN LA SESION ACTUAL (no acumulado).
+
+    FIX-P1H02-PUB-SESION (2026-11-14): antes acumulaba todas las
+    fechas del CSV, dando pub_n > sel_n (QQQ: 302 vs 98) y
+    pub_peso > 100% del grupo. Ahora filtra por la fecha maxima de
+    cada CSV (ultima sesion publicada). Si el CSV no tiene columna
+    "date" (fixture antigua), se acumula por compatibilidad.
+    """
     pub = {}
     for name, gt in CSVS:
         p = HIST / (name + ".csv")
@@ -72,6 +80,14 @@ def _published_by_group():
         df = pd.read_csv(p)
         if "group" not in df.columns or "weight" not in df.columns:
             continue
+        if "date" in df.columns and not df.empty:
+            try:
+                _dates = pd.to_datetime(df["date"], errors="coerce")
+                _max = _dates.max()
+                if pd.notna(_max):
+                    df = df[_dates == _max]
+            except (ValueError, TypeError):
+                pass
         for g, sub in df.groupby("group"):
             key = (gt, g)
             rec = pub.setdefault(key, {"n": 0, "peso": 0.0})
