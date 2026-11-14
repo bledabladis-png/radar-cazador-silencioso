@@ -11,12 +11,22 @@ from src.report.helpers import _fmt_num, _fmt_ad_net, _shared_vars_note
 
 
 def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None,
-                          stale_context=None, n_universo_confirmation=None):
+                          stale_context=None, n_universo_confirmation=None,
+                          walk_back_applied=False):
     """Renderiza la tabla Sector Breadth & Health.
 
     C2-followup (2026-09-12): is_stale=True indica que la observacion
     mostrada es la ultima valida del historico, no una actualizacion del
     dia. Se anade un aviso entre el titulo y la tabla.
+
+    FIX-BREADTH-WALKBACK (2026-11-14): walk_back_applied=True
+    reemplaza el mensaje generico "[WARN] sesion NYSE pendiente
+    ... verificar cobertura" por un texto informativo sin alarma
+    cuando el stale es por walk-back documentado (target aun sin
+    publicar). Mantiene el mensaje de cobertura especifica si
+    stale_context identifica un mercado concreto, y el generico
+    solo cuando walk_back_applied es False (condicion realmente
+    anomala).
 
     F6-01 (2026-09-28): stale_reason distingue las causas del stale.
     Valores: None (legacy, texto generico 'mercado cerrado'),
@@ -45,6 +55,12 @@ def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None
                         f"**[WARN]** Sin actualizacion - cobertura insuficiente "
                         f"en {_wm} ({_wc_str}). Ultima observacion: {_latest_str}. "
                         f"Verificar cobertura de stock_prices.parquet.*\n\n"
+                    )
+                elif walk_back_applied:
+                    out.append(
+                        f"*Sin actualizacion - walk-back aplicado. "
+                        f"Ultima observacion: {_latest_str}. La sesion "
+                        f"pendiente se recogera en el proximo slot.*\n\n"
                     )
                 else:
                     out.append(

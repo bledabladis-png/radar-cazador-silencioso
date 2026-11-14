@@ -144,7 +144,9 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         is_stale=sector_breadth_is_stale,
         stale_reason=sector_breadth_stale_reason,
         stale_context=sector_breadth_stale_context,
-        n_universo_confirmation=_n_universo_conf))
+        n_universo_confirmation=_n_universo_conf,
+        walk_back_applied=((provenance or {}).get("temporal_coherence")
+                           == "WALK_BACK")))
     lines.extend(render_sector_concentration(sector_concentration_data))
     lines.extend(render_sector_dispersion(sector_concentration_data))
     lines.extend(render_ranking_sectorial_unificado(
