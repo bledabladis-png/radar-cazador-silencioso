@@ -26,7 +26,7 @@ ALL_NAMES = [
 OUTPUT_COLUMNS = [
     "date", "group", "group_type", "ticker", "name", "weight",
     "phase", "event_phase", "phase_since", "close", "basis",
-    "coverage_weight_pct",
+    "coverage_weight_pct", "coverage_data_pct",
 ]
 
 
@@ -70,7 +70,7 @@ def _make_tables(empty_keys=()):
                 "ticker": "AAPL", "name": "AAPL", "weight": 50.0,
                 "phase": "ACCUMULATION", "event_phase": "ACCUMULATION",
                 "phase_since": "", "close": 100.0, "basis": "",
-                "coverage_weight_pct": 100.0,
+                "coverage_weight_pct": 100.0, "coverage_data_pct": 100.0,
             }])
     return out
 

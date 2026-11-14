@@ -9,7 +9,7 @@ def test_snapshot_amplia_contrato_columnas():
     expected = {
         "date", "group", "group_type", "ticker", "name", "weight",
         "phase", "event_phase", "phase_since", "close", "basis",
-        "coverage_weight_pct", "n_bars", "evaluable",
+        "coverage_weight_pct", "coverage_data_pct", "n_bars", "evaluable",
     }
     assert set(OUTPUT_COLUMNS) == expected
 

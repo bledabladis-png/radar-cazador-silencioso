@@ -125,7 +125,12 @@ def test_resto_outputs_schema_1():
     """Los demas outputs temporal mantienen schema_version=1 por defecto."""
     from src.pipeline.output_registry import REGISTRY
     # Outputs con schema_version > 1 (bumpeados por cambios estructurales)
-    EXCLUIDOS = {"sector_wyckoff_distribution", "sector_regime_matrix"}
+    EXCLUIDOS = {
+        "sector_wyckoff_distribution", "sector_regime_matrix",
+        "wyckoff_usa_sector_accumulation", "wyckoff_usa_sector_distribution",
+        "wyckoff_usa_index_accumulation", "wyckoff_usa_index_distribution",
+        "wyckoff_eu_index_accumulation", "wyckoff_eu_index_distribution",
+    }
     for spec in REGISTRY:
         if spec.name in EXCLUIDOS:
             continue

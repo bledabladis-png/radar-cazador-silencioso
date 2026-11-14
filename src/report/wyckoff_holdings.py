@@ -124,22 +124,32 @@ def _render_subsection(out, subtitle, df, group_label):
             "Tabla completa en outputs/history/wyckoff_*.csv.*\n\n"
             .format(n=n_filt, t=n_total, w=_fmt_num(MIN_WEIGHT_PCT, 2))
         )
-    out.append("| {} | Ticker | Fase | Desde | Peso % | Cob % | Close |\n"
+    out.append("| {} | Ticker | Fase | Desde | Peso % | Cob sel % | Cob datos % | Close |\n"
                .format(group_label))
-    out.append("|---|---|---|---|---|---|---|\n")
+    out.append("|---|---|---|---|---|---|---|---|\n")
     for _, row in df.iterrows():
         out.append(
-            "| {} | {} | {} | {} | {} | {} | {} |\n".format(
+            "| {} | {} | {} | {} | {} | {} | {} | {} |\n".format(
                 row.get("group", "-"),
                 row.get("ticker", "-"),
                 row.get("phase", "-"),
                 _fmt_since(row.get("phase_since")),
                 _fmt_num(row.get("weight"), 2),
                 _fmt_num(row.get("coverage_weight_pct"), 1),
+                _fmt_num(row.get("coverage_data_pct"), 1),
                 _fmt_num(row.get("close"), 2),
             )
         )
     out.append("\n")
+    out.append(
+        "*Cob sel % = peso de tickers seleccionados / peso total del "
+        "grupo (sin NaN). Cob datos % = peso de tickers con n_bars >= "
+        "MIN_BARS_THEORETICAL / peso total del grupo. Si Cob datos < "
+        "Cob sel, hay tickers seleccionados sin datos suficientes. "
+        "Motivos en p1_h02_tickers_sin_datos.csv "
+        "(fuera_universo_descarga, historia_insuficiente, "
+        "fallo_descarga).*\n\n"
+    )
 
 
 def _apply_weight_filter(df):

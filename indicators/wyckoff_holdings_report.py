@@ -54,7 +54,7 @@ EU_INDEX_GROUP_TYPE = "index_eu"
 OUTPUT_COLUMNS = [
     "date", "group", "group_type", "ticker", "name", "weight",
     "phase", "event_phase", "phase_since", "close", "basis",
-    "coverage_weight_pct", "n_bars", "evaluable",
+    "coverage_weight_pct", "coverage_data_pct", "n_bars", "evaluable",
 ]
 
 
@@ -255,13 +255,31 @@ def compute_wyckoff_snapshot(
                     "Valores validos: 'nlargest', 'target_weight'.".format(
                         selection_mode)
                 )
+            # FIX-COB-WYCKOFF (2026-11-14): coverage_data_pct = peso
+            # de los tickers que sobreviven a _evaluate_holding
+            # (n_bars >= MIN_BARS_THEORETICAL) / peso total del grupo
+            # (sin NaN). coverage_weight_pct mide SELECCION; este mide
+            # DATOS reales. Ambos se asignan por grupo a todas las filas.
+            group_weight_total = float(
+                group.dropna(subset=["weight"])["weight"].sum()
+            )
+            group_rows = []
+            group_weight_evaluated = 0.0
             for _, hrow in top.iterrows():
                 row = _evaluate_holding(
                     df_stocks, group_key, hrow, group_type, has_name,
                     obs_date, coverage_pct,
                 )
                 if row is not None:
-                    rows.append(row)
+                    group_rows.append(row)
+                    group_weight_evaluated += float(hrow["weight"])
+            coverage_data_pct = (
+                group_weight_evaluated / group_weight_total * 100.0
+                if group_weight_total > 0 else 0.0
+            )
+            for row in group_rows:
+                row["coverage_data_pct"] = coverage_data_pct
+                rows.append(row)
     if not rows:
         return pd.DataFrame(columns=OUTPUT_COLUMNS)
     return pd.DataFrame(rows, columns=OUTPUT_COLUMNS)

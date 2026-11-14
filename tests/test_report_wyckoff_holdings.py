@@ -7,7 +7,7 @@ from src.report import wyckoff_holdings as rh
 COLS = [
     "date", "group", "group_type", "ticker", "name", "weight",
     "phase", "event_phase", "phase_since", "close", "basis",
-    "coverage_weight_pct",
+    "coverage_weight_pct", "coverage_data_pct",
 ]
 
 
@@ -24,7 +24,7 @@ def _row(group, ticker, phase, weight=50.0, close=100.0,
         "weight": weight, "phase": phase,
         "event_phase": phase, "phase_since": since,
         "close": close, "basis": "",
-        "coverage_weight_pct": cov,
+        "coverage_weight_pct": cov, "coverage_data_pct": cov,
     }
 
 
