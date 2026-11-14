@@ -10,13 +10,13 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-12, sesion 36)
 
-HEAD: `23eb5caf` (consultar `git log --oneline -1` para el actual).
+HEAD: `87bac78e` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4698 passed, 0 failed, 2 skipped (filtro CI, excluye integration_real_data). pyflakes LIMPIO. compileall OK.
+       4729 passed, 0 failed, 2 skipped (filtro CI, excluye integration_real_data). pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 321 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 330 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 15 (_IMPLEMENTED_CONTRACTS).
@@ -617,6 +617,88 @@ En ese run verificar:
 
 **3 OPEN restantes:** H5.3 (cron 13F 20-nov), DICT3-H04-INTERVALS
 (registro historico del rechazo del IC95, no accionable), SEMANTICA-
+SIN-CONTRATO-INVENTARIO (ROI bajo).
+
+
+### 3.16. Cierre Sesion 37 (2026-11-14): auditoria integral del run 43550858224
+
+Auditoria completa del reporte scheduled 43550858224 (03:17 UTC,
+head 99d33fa1, walk-back a 12-11, gate 11/11). Seccion por seccion.
+7 fixes de codigo + 3 fixes de S36-bis verificados en produccion
++ 2 observacionales documentados. 15 commits propios pusheados.
+
+**Fixes de codigo del audit (7, todos VERIFIED_IN_CI):**
+
+- **`bce09232`** WYCKOFF-COVERAGE-DATA-PCT. Columna "Cob %" en
+  Tickers acumulacion/distribucion publicaba peso seleccionado /
+  peso grupo, no peso con datos. QQQ mostraba 100.0 con 13 de 98
+  sin n_bars>=200 (94.6% real). Anadida coverage_data_pct;
+  coverage_weight_pct se conserva (mide seleccion). Schema v2.
+
+- **`550a4bfe`** P1-H02-MOTIVO. p1_h02_tickers_sin_datos.csv anade
+  columna motivo: fuera_universo_descarga / historia_insuficiente /
+  fallo_descarga. Derivado de get_stock_list() en runtime.
+
+- **`ab50b0b9`** BREADTH-WALKBACK-SIN-ALARMA. render_sector_breadth
+  acepta walk_back_applied. En walk-back documentado sin worst_market
+  publica texto informativo sin [WARN]; con worst_market, prevalece
+  la cobertura especifica.
+
+- **`3fa4404f`** FLUJO-OTROS-ND-NOTA. render_momentum_otros anade
+  nota auto-generada con tickers NaN (sin volumen real en fuente,
+  REP-AUDIT-20261017-H4). Lista en runtime, no hardcoded.
+
+- **`360f9633`** WYCKOFF-SIGN-COUNT-ROUNDING. _wyckoff_sign usa
+  count_* enteros, no pct_* redondeados. Empate real XLY 2/2
+  flipaba a -1 por diff 1e-8. Fallback a pct_* si counts no
+  disponibles.
+
+- **`a21da055`** CFTC-FLOW-SIGN-ULTIMA-FECHA. cftc_flow_sign filtra
+  por date.max() antes del mean(). Media de 7 semanas enmascarada
+  de lectura actual. Caso run 43550858224: +0.01 (84 filas) vs
+  -0.04 (12 filas ultima fecha).
+
+- **`87bac78e`** QQQ-UNIVERSE-GAP-CERRADO. 10 componentes QQQ
+  (MELI, ALAB, NBIS, MSTR, CCEP, RKLB, CRWV, FER, TRI, ALNY) fuera
+  de get_stock_list por todas las vias. universe_expansions.yaml
+  qqq_extra 1 -> 11 tickers. cobertura_top20_mas_extra 68.70 ->
+  70.81. Efecto: proximo scheduled descarga 723 tickers (vs 713);
+  QQQ Wyckoff 95/98 (~97% peso) vs 85/98.
+
+**Fixes de S36-bis verificados en produccion (3, en run 43550858224):**
+
+- F2-BR-HE-EURONEXT: manifest sin UNKNOWN; EURONEXT n=30 coverage=1.0.
+- KVUE-TRUNCATED-IPO: close_nan_last=2; 3 clasificados en yaml;
+  health [OK].
+- MTE-UNCONFIRMED: reporte linea 81 "- mte: CRISIS UNCONFIRMED".
+
+Los 3 items F2-BR-HE, KVUE, MTE-UNCONFIRMED pasan a
+VERIFIED_IN_PRODUCTION en commit `f46ceca6`.
+
+**Observacionales documentados (WONT_FIX razonado):**
+
+- IWM-COBERTURA-ESTRUCTURAL: 23/1977 (1.2%). Small caps fuera de
+  las 5 fuentes. Cambio de scope, no fix.
+- MATRIZ-REGIMEN-POSITIVAS-NOMENCLATURA: "Positivas" = condiciones
+  positivas 0-3, no conteo de tickers. Fix documental preferible.
+
+**Pendiente operativo proximo scheduled (lunes 17-11):**
+
+Cuando el scheduled 17-11 ejecute (target 14-11, gate no SKIP):
+- Confirmar 723 tickers descargados (713 + 10 del QQQ gap).
+- Reporte: QQQ `Cob datos` ~97% (95/98) vs 85/98 anterior.
+- p1_h02 sin_datos: los 10 desaparecen. Quedan HONA (106),
+  SPCX (107), KVUE (1) como historia_insuficiente.
+- CFTC sintesis: valor = mean de la ultima fecha, no historico.
+- `_wyckoff_sign` XLY: 0 no -1 (si empate real).
+- Breadth: si hay walk-back, sin [WARN] "verificar cobertura".
+
+**Estado REGISTRO al cierre:** 330 items (FIXED 268, WONT_FIX 40,
+OPEN 3, BLOCKED_EXTERNAL 2, FALSE_POSITIVE 13, SUPERSEDED 4).
+43 items con verificacion VERIFIED_IN_PRODUCTION.
+
+**3 OPEN restantes (heredados, sin cambios):** H5.3 (cron 13F
+20-nov), DICT3-H04-INTERVALS (registro historico), SEMANTICA-
 SIN-CONTRATO-INVENTARIO (ROI bajo).
 
 

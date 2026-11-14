@@ -8012,3 +8012,214 @@ items:
     Sin mte_confidence, details[mte] no incluye confirmed y el
     render no sufija: 3 tests existentes de cross_module verdes
     sin cambios.
+
+# ============================================================
+# SESION 37 (2026-11-14): auditoria integral del run 43550858224
+# 7 fixes de codigo + 2 observacionales documentados.
+# ============================================================
+
+- id: WYCKOFF-COVERAGE-DATA-PCT
+  tipo: bug
+  ciclo: '2026-11-14'
+  estado: FIXED
+  verificacion: VERIFIED_IN_CI
+  descripcion: >
+    La columna "Cob %" en Tickers acumulacion/distribucion publicaba
+    el peso seleccionado / peso del grupo (coverage_weight_pct),
+    no el peso con datos reales. Para QQQ aparecia 100.0 con 13 de
+    98 sin n_bars >= 200 (86.7% real). Mismo patron DICT-CONTRACT:
+    consumidor lee X, producer emite Y con nombre X.
+  commit: 'bce09232'
+  test: tests/test_wyckoff_coverage_semantics.py
+  evidencia: >
+    indicators/wyckoff_holdings_report.py: nueva columna
+    coverage_data_pct calculada por grupo tras _evaluate_holding
+    (peso supervivientes / peso grupo sin NaN * 100).
+    coverage_weight_pct se conserva sin cambios (mide seleccion).
+    src/pipeline/output_registry.py: 6 wyckoff pasan a
+    schema_version=2 (columna nueva; migracion aditiva).
+    src/report/wyckoff_holdings.py: header Cob sel % | Cob datos %
+    + nota al pie con semantica. Tests: coherencia, pipeline y
+    report actualizados; +2 tests de semantica con fixture
+    (5/10 con datos -> weight=100, data=50). Suite filtro CI
+    4707 passed.
+
+- id: P1-H02-MOTIVO
+  tipo: bug
+  ciclo: '2026-11-14'
+  estado: FIXED
+  verificacion: VERIFIED_IN_CI
+  descripcion: >
+    p1_h02_tickers_sin_datos.csv mezclaba 3 causas bajo n_bars sin
+    distinguirlas: fuera del universo de descarga (10 QQQ con
+    n_bars=0), historia insuficiente (2 QQQ), fallo Yahoo real (0
+    en el run auditado). Diagnostico imposible sin abrir el parquet.
+  commit: '550a4bfe'
+  test: tests/test_p1_h02_motivo.py
+  evidencia: >
+    scripts/audit/p1_h02_cobertura_efectiva.py: nueva columna
+    motivo por fila. Valores: fuera_universo_descarga (no en
+    get_stock_list), fallo_descarga (esta y n_bars=0),
+    historia_insuficiente (esta y 0<n_bars<MIN_BARS_THEORETICAL).
+    get_stock_list importado deferred dentro de main; sin hardcode.
+    AST guard (test_p1_h02_motivo.py) valida los 3 motivos +
+    import deferred + columna motivo en dict. Suite 4707 passed.
+
+- id: BREADTH-WALKBACK-SIN-ALARMA
+  tipo: bug
+  ciclo: '2026-11-14'
+  estado: FIXED
+  verificacion: VERIFIED_IN_CI
+  descripcion: >
+    En runs con walk-back documentado (target aun sin publicar,
+    p.ej. 03:17 UTC pre-cierre USA), Sector Breadth & Health
+    publicaba "[WARN] sesion NYSE pendiente ... verificar cobertura
+    de stock_prices.parquet" aunque manifest y gate indicaban
+    cobertura 99.7% con walk-back. Falso positivo que ensena al
+    operador a ignorar WARN legitimos.
+  commit: 'ab50b0b9'
+  test: tests/test_report_sectorial_breadth_walkback.py
+  evidencia: >
+    src/report/sectorial.py: firma acepta walk_back_applied=False.
+    En DATA_PENDING sin worst_market y walk_back_applied=True,
+    render publica texto informativo sin [WARN]. Si worst_market
+    esta presente, cobertura especifica prevalece (no se silencia).
+    src/report_generator.py: pasa walk_back_applied desde
+    provenance["temporal_coherence"] == "WALK_BACK" (mismo patron
+    que render_data_freshness). 5 tests: sin walk_back, walk_back
+    sin worst_market, walk_back con worst_market, MARKET_CLOSED,
+    no-stale. Suite 4715 passed.
+
+- id: FLUJO-OTROS-ND-NOTA
+  tipo: bug
+  ciclo: '2026-11-14'
+  estado: FIXED
+  verificacion: VERIFIED_IN_CI
+  descripcion: >
+    "Flujo de Mercado - Otros Activos" publicaba N/D para ^SPGSCI,
+    DX-Y.NYB, EURUSD=X, USDJPY=X, USDCNY=X sin declarar causa.
+    Operador no podia distinguir "sin volumen real en la fuente"
+    (correcto por diseno, REP-AUDIT-20261017-H4) de "no descargado"
+    o "calculo roto".
+  commit: '3fa4404f'
+  test: tests/test_report_leaders_flujo_otros_nd.py
+  evidencia: >
+    src/report/leaders.py: render_momentum_otros anade nota al pie
+    auto-generada cuando otros_flow_rank contiene NaN. Lista los
+    tickers afectados en runtime (sin hardcodear). Si Yahoo empieza
+    a servir volumen real para un ticker, la nota desaparece en la
+    siguiente ejecucion. NaN-check via "v != v" (sin importar
+    pandas). 4 tests: sin NaN (no nota), 1 NaN (nota con ticker),
+    varios NaN (lista todos), otros_flow vacio (mantiene "No hay
+    datos"). Suite 4719 passed.
+
+- id: WYCKOFF-SIGN-COUNT-ROUNDING
+  tipo: bug
+  ciclo: '2026-11-14'
+  estado: FIXED
+  verificacion: VERIFIED_IN_CI
+  descripcion: >
+    _wyckoff_sign aplicaba la regla (Acc+Markup) vs (Dist+Markdown)
+    sobre pct_* (redondeados a 8 decimales en el CSV). Un empate
+    real en counts puede flipar el signo por artefacto de redondeo
+    con diff ~1e-8. Caso XLY 2026-11-12: counts 2/2 (empate real),
+    pct_* 4.25531914 vs 4.25531915 -> -1 reportado.
+  commit: '360f9633'
+  test: tests/test_evidence_matrix_wyckoff_sign.py
+  evidencia: >
+    indicators/evidence_matrix.py: _wyckoff_sign aplica la regla
+    sobre count_* enteros. Fallback a pct_* si counts no
+    disponibles (compat con CSVs pre-refactor). NO introduce banda
+    neutral (F6-33 intacto: sin umbral, solo fidelidad exacta).
+    6 tests: empate exacto XLY -> 0, favorables -> +1,
+    desfavorables -> -1, fallback pct, NaN cuando no hay ninguno,
+    fallback cuando algun count es NaN. Suite 4725 passed.
+
+- id: CFTC-FLOW-SIGN-ULTIMA-FECHA
+  tipo: bug
+  ciclo: '2026-11-14'
+  estado: FIXED
+  verificacion: VERIFIED_IN_CI
+  descripcion: >
+    compute_flows_secondary calculaba cftc_flow_sign como mean()
+    de TODO el historico del CSV CFTC (7 fechas x 12 contratos = 84
+    filas). El CSV crece cada semana. Resultado: valor publicado en
+    Flujo - Sintesis Descriptiva no era la lectura CFTC actual sino
+    una media arbitraria de 7 semanas. Otras 3 capas de la sintesis
+    (flow_proxy, etf_primary, european) ya eran intra-sesion.
+    Mismo patron que FIX-P1H02-PUB-SESION (2b75b76e).
+  commit: 'a21da055'
+  test: tests/test_pipeline_market_data_flows_cftc_ultima.py
+  evidencia: >
+    src/pipeline/flows_secondary.py: cftc_flow_sign filtra por
+    date.max() antes del mean(). Fallback a mean() directo cuando
+    el DataFrame no trae 'date' (compat fixtures). Caso concreto
+    run 43550858224: mean(total 84) = +0.01477 -> publicado +0.01;
+    mean(ultima fecha, 12) = -0.04005 -> real de la sesion CFTC.
+    4 tests: con date -> ultima fecha; sin date -> fallback mean;
+    NaN en ultima fecha -> mean ignora; DataFrame vacio -> NaN.
+    Suite 4729 passed.
+
+- id: QQQ-UNIVERSE-GAP-CERRADO
+  tipo: bug
+  ciclo: '2026-11-14'
+  estado: FIXED
+  verificacion: VERIFIED_IN_CI
+  descripcion: >
+    10 componentes de QQQ quedaban fuera de get_stock_list por todas
+    las vias: no en etf_holdings (holdings de indice, no de sector),
+    no en top-20 de index_holdings, no en radar_target_catalog,
+    no en providers EU, no en universe_expansions. Snapshot Wyckoff
+    de QQQ operaba sobre 85/98 tickers (94.6% peso) pese a que
+    _select_target_holdings seleccionaba los 98. Gap estructural
+    detectado en la auditoria del run 43550858224.
+  commit: '87bac78e'
+  test: tests/test_cierre_holdout_2026_10_29.py
+  evidencia: >
+    data/universe_expansions.yaml: qqq_extra actualizado.
+    n_tickers 1 -> 11 (SHOP + MELI, ALAB, NBIS, MSTR, CCEP, RKLB,
+    CRWV, FER, TRI, ALNY). Peso combinado 2.076% de QQQ.
+    cobertura_top20_mas_extra 68.70 -> 70.81 (recalculado, validado
+    por test_generico_cobertura_top20_mas_extra_coincide).
+    cobertura_top20_actual sin cambio (67.93, no depende de extras).
+    Todos vivos en Yahoo (5/5 barras al 2026-11-13), sin colision
+    con spy_extra. test_cierre_holdout_2026_10_29.py::QQQ_NUEVOS
+    pasa de 1 a 11 tickers. Suite 4729 passed.
+
+- id: IWM-COBERTURA-ESTRUCTURAL
+  tipo: deuda
+  ciclo: '2026-11-14'
+  estado: WONT_FIX
+  descripcion: >
+    IWM (Russell 2000) tiene 1977 holdings nominales, de los cuales
+    solo 23 estan en get_stock_list (1.2%). Causa estructural: los
+    23 entran por overlap con radar_target_catalog (S&P 500 overlap
+    o sector). Los 1954 restantes son small caps fuera de las 5
+    fuentes de get_stock_list. Documentado en el audit del run
+    43550858224.
+  razon: >
+    No es bug: el sistema no modela Russell 2000 completo por
+    diseno. Cerrar el gap requiere decision de producto sobre
+    universo (2500+ tickers adicionales, +60% llamadas Yahoo,
+    impacto no medido en duracion del run y tasa de fallos). El
+    reporte ya declara IWM como caso de cobertura baja via
+    coverage_data_pct (post bce09232). Reabrir solo si se decide
+    cambiar el scope del universo.
+
+- id: MATRIZ-REGIMEN-POSITIVAS-NOMENCLATURA
+  tipo: deuda
+  ciclo: '2026-11-14'
+  estado: WONT_FIX
+  descripcion: >
+    La columna "Positivas" de Matriz de Regimen Sectorial sugiere
+    "tickers positivos" pero mide "condiciones positivas cumplidas
+    (0-3)" (price_20d>0, pct_above_ema50>50, flow_20d>0). Confusion
+    posible para el operador. Detectado en el audit del run
+    43550858224 (XLK con Struct=0.41, N=44 y Positivas=1).
+  razon: >
+    No es bug funcional: el codigo hace lo que la logica pide. Fix
+    completo requiere renombrar columna (schema bump v3->v4) y
+    tocar multiples consumidores. ROI bajo. Fix documental
+    preferible: nota al pie "Positivas = numero de condiciones
+    positivas cumplidas (0-3), no conteo de tickers", 2 lineas de
+    texto, 0 schema bump. Reabrir si se decide tocar schema.
