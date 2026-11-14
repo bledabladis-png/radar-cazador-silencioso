@@ -49,10 +49,33 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
             primary_sign = float(etf_primary_flow_data['primary_flow_z'].mean())
         flow_synthesis['etf_primary_flow_sign'] = primary_sign
 
-        # Direccion de CFTC Position Flow (promedio de flow_z)
+        # Direccion de CFTC Position Flow (promedio de flow_z de la
+        # ULTIMA fecha, no historico acumulado).
+        #
+        # FIX-CFTC-FLOW-SIGN-ULTIMA-FECHA (2026-11-14): el CSV crece
+        # cada semana (7 fechas hoy, 8 la proxima...). mean() sobre
+        # todo el CSV mezclaba 7 semanas en un valor que el render
+        # publica como "lectura actual". Mismo patron que
+        # FIX-P1H02-PUB-SESION: acumulado historico disfrazado de
+        # sesion. Ademas cada flow_z es relativo a su ventana 60,
+        # asi que la media agregada no tiene interpretacion clara.
+        # Coherencia: flow_proxy_sign, etf_primary_flow_sign y
+        # european_flow_sign ya son lecturas intra-sesion. CFTC es
+        # la unica capa con mezcla temporal.
+        #
+        # Fallback: si el DataFrame no trae columna 'date' (fixtures
+        # de test sin contexto temporal), mantener mean() directo
+        # (comportamiento anterior). En produccion el CSV siempre
+        # trae 'date' (data_quality.py declara date_cols=['date']).
         cftc_sign = np.nan
-        if cftc_position_flow_data is not None and not cftc_position_flow_data.empty and 'flow_z' in cftc_position_flow_data.columns:
-            cftc_sign = float(cftc_position_flow_data['flow_z'].mean())
+        if (cftc_position_flow_data is not None
+                and not cftc_position_flow_data.empty
+                and 'flow_z' in cftc_position_flow_data.columns):
+            _cf = cftc_position_flow_data
+            if 'date' in _cf.columns:
+                _last_date = _cf['date'].max()
+                _cf = _cf[_cf['date'] == _last_date]
+            cftc_sign = float(_cf['flow_z'].mean())
         flow_synthesis['cftc_flow_sign'] = cftc_sign
 
         # Direccion de Europa Primary Flow (promedio de flow_zscore de DAXEX, ISF.L, LYXI)
