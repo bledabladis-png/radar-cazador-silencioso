@@ -22,7 +22,13 @@ SPY_NUEVOS = [
     'ADBE', 'CDNS', 'LITE', 'ICE', 'HPE', 'SNPS', 'MRSH', 'INTU', 'MSI', 'CI',
     'DDOG', 'MRNA',
 ]
-QQQ_NUEVOS = ['SHOP']
+# FIX-QQQ-GAP (2026-11-14): anadidos los 10 componentes de QQQ que
+# estaban fuera de get_stock_list (audit run 43550858224).
+QQQ_NUEVOS = [
+    'SHOP',
+    'MELI', 'ALAB', 'NBIS', 'MSTR', 'CCEP',
+    'RKLB', 'CRWV', 'FER', 'TRI', 'ALNY',
+]
 
 
 def test_spy_extra_en_get_stock_list():

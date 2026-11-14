@@ -41,13 +41,28 @@ spy_extra:
 
 qqq_extra:
   etf: QQQ
-  fecha: '2026-10-29'
-  motivo: 'Cierre SOW-HOLDOUT-IMMUTABLE: SHOP es holding QQQ actual. No es holdout,
-    es universo productivo.'
-  n_tickers: 1
+  fecha: '2026-11-14'
+  motivo: 'Cierre del gap QQQ (audit run 43550858224, 2026-11-14). 10 componentes
+    del indice quedaban fuera de todas las fuentes de get_stock_list: no estan
+    en etf_holdings (son holdings de indice, no de sector), no estan en top-20
+    de index_holdings, no estan en radar_target_catalog, no estan en providers
+    EU, no estan en universe_expansions. Sin ellos el snapshot Wyckoff de QQQ
+    opera sobre 85/98 tickers (94.6% peso). Este bloque cierra el gap. SHOP
+    sigue aqui desde el cierre SOW-HOLDOUT-IMMUTABLE 2026-10-29.'
+  n_tickers: 11
   tickers:
   - SHOP
+  - MELI
+  - ALAB
+  - NBIS
+  - MSTR
+  - CCEP
+  - RKLB
+  - CRWV
+  - FER
+  - TRI
+  - ALNY
   cobertura_top20_actual: 67.93
-  cobertura_top20_mas_extra: 68.7
+  cobertura_top20_mas_extra: 70.81
   cobertura_tras_expansion: 85.43
   cobertura_objetivo: 85.0
