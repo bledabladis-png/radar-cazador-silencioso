@@ -553,6 +553,28 @@ def check_holdings_csvs() -> list:
             results.append(Result(tag, FAIL,
                 f"ETFs con <{min_t} tickers: {low}"))
             continue
+        # F2-BR-HE-EURONEXT + sufijos (S36-bis fase 3): todo ticker debe
+        # tener mercado conocido en get_market. Un sufijo no mapeado cae
+        # a UNKNOWN -> _compute_by_market lo marca INVALID -> guard C-2
+        # bloquea la exencion condicional. Se verifica ANTES del mtime
+        # para no enmascarar un INVALID sistematico bajo "CSV stale".
+        # Import diferido: una vez por run, sin riesgo de ciclo si
+        # src.instrument_registry llegara a importar health_check.
+        if "ticker" in df.columns:
+            from src.instrument_registry import get_market as _get_market
+            _sufijos_unknown: dict = {}
+            for _t in df["ticker"].dropna().astype(str).unique():
+                if _get_market(_t) == "UNKNOWN":
+                    _suf = _t.rsplit(".", 1)[-1].upper() if "." in _t else "(sin sufijo)"
+                    _sufijos_unknown.setdefault(_suf, []).append(_t)
+            if _sufijos_unknown:
+                _resumen = {s: len(ts) for s, ts in _sufijos_unknown.items()}
+                _ejemplos = [t for ts in _sufijos_unknown.values() for t in ts][:5]
+                results.append(Result(tag, FAIL,
+                    f"sufijos no mapeados en get_market: {_resumen}. "
+                    f"Ejemplos: {_ejemplos}. "
+                    f"Anadir a get_market() y a test_a2_3_instrument_class.py."))
+                continue
         age_days = (datetime.now() - datetime.fromtimestamp(path.stat().st_mtime)).days
         n_etfs = len(present)
         n_rows = len(df)

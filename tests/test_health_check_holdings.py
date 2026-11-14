@@ -104,3 +104,58 @@ def test_edad_excesiva_es_fail(tmp_path, monkeypatch):
     etf_res = [r for r in res if "etf_holdings" in r.name][0]
     assert etf_res.status == "FAIL"
     assert "edad" in etf_res.message
+
+
+# ---------------------------------------------------------------------------
+# F2-BR-HE-EURONEXT + sufijos (S36-bis fase 3): todo ticker debe tener
+# mercado conocido en get_market. Un sufijo no mapeado cae a UNKNOWN ->
+# _compute_by_market lo marca INVALID -> guard C-2 bloquea la exencion
+# condicional. Tests sinteticos (tmp_path): cero violacion de 01_METODO 3.
+# ---------------------------------------------------------------------------
+
+
+def _rows_with_tickers(etfs, tickers):
+    rows = []
+    for e in etfs:
+        for t in tickers:
+            rows.append({"etf": e, "ticker": t, "name": "X", "weight": 1.0})
+    return rows
+
+
+def test_ticker_con_sufijo_desconocido_es_fail(tmp_path, monkeypatch):
+    # 19 tickers validos + 1 con sufijo no mapeado (.TO Toronto).
+    base = [f"T{i}" for i in range(19)] + ["RY.TO"]
+    _make_csv(tmp_path, monkeypatch, "etf_holdings.csv",
+              _rows_with_tickers(SECTORIALES, base))
+    _make_csv(tmp_path, monkeypatch, "index_holdings.csv",
+              _rows_for(INDICES, 20))
+    res = check_holdings_csvs()
+    etf_res = [r for r in res if "etf_holdings" in r.name][0]
+    assert etf_res.status == "FAIL"
+    assert "TO" in etf_res.message
+    assert "sufijos no mapeados" in etf_res.message
+
+
+def test_ticker_sufijos_europeos_validos_no_disparan(tmp_path, monkeypatch):
+    # .BR/.HE anadidos en F2 (7a2b016a); .PA/.AS/.MI/.DE/.MC/.L ya existian.
+    valid = ["ABI.BR", "NOKIA.HE", "AIR.PA", "ASML.AS", "UCG.MI",
+             "SAP.DE", "SAN.MC", "HSBA.L"] + [f"T{i}" for i in range(12)]
+    _make_csv(tmp_path, monkeypatch, "etf_holdings.csv",
+              _rows_with_tickers(SECTORIALES, valid))
+    _make_csv(tmp_path, monkeypatch, "index_holdings.csv",
+              _rows_for(INDICES, 20))
+    res = check_holdings_csvs()
+    etf_res = [r for r in res if "etf_holdings" in r.name][0]
+    assert etf_res.status == "OK", etf_res.message
+
+
+def test_ticker_con_punto_clase_accionaria_no_dispara(tmp_path, monkeypatch):
+    # BRK.B y BF.B se normalizan a BRK-B/BF-B en get_market (US_EQUITY).
+    base = ["BRK.B", "BF.B"] + [f"T{i}" for i in range(18)]
+    _make_csv(tmp_path, monkeypatch, "etf_holdings.csv",
+              _rows_with_tickers(SECTORIALES, base))
+    _make_csv(tmp_path, monkeypatch, "index_holdings.csv",
+              _rows_for(INDICES, 20))
+    res = check_holdings_csvs()
+    etf_res = [r for r in res if "etf_holdings" in r.name][0]
+    assert etf_res.status == "OK", etf_res.message
