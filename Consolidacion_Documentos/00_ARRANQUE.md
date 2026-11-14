@@ -90,39 +90,38 @@ Lo que NUNCA haces:
 
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
-Snapshot al cierre del ultimo commit (2026-11-12, sesion 36):
-- HEAD: `6d42be6d` (consultar `git log --oneline -1` para el actual)
-- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S36: 4700 passed, 0 failed, 2 skipped. pyflakes LIMPIO, compileall OK.
+Snapshot al cierre del ultimo commit (2026-11-14, sesion 36-bis fase 2):
+- HEAD: `23eb5caf` (consultar `git log --oneline -1` para el actual)
+- Tests: fuente autoritativa en `ESTADO_SISTEMA.md` seccion 2. Al cierre S36-bis fase 2: 4698 passed, 0 failed, 2 skipped (filtro `-m "not integration_real_data"`, paridad CI). pyflakes LIMPIO, compileall OK.
 - Validation Gate: 11/11
 - Working tree: limpio
-- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 318 items. Validador reforzado.
+- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 321 items. Validador reforzado.
 - Corpus documental: v3 (Consolidacion_Documentos/00-08)
 - Contratos temporales: 15 (`_IMPLEMENTED_CONTRACTS`). 9 originales + 4 S28 (SEC_13F, FINRA_DARKPOOL, SSGA_PRIMARY_FLOW, FRED_MACRO) + 2 S35 (CFTC_POSITION_FLOW, SEC_NPORT).
 - Writers: 25 (`output_registry.py`).
-- Scheduled: ultimo run 43253421481 (12-11 15:57 UTC, success, head cc28adce, gate success). run-system SKIPPED (gate CURRENT). Dispatch 43278363914 (18:17 UTC) tambien SKIP (CURRENT). Proximo scheduled 23:17 UTC del 12-11. Ver `gh run list`.
+- Scheduled: ultimo scheduled 43483818261 (13-11 18:33 UTC, head `9f830dd0`, success, run-system SKIPPED gate CURRENT). Proximo scheduled 23:17 UTC del 13-11 o posterior con head >= `23eb5caf` validara los 3 fixes pendientes. Ver `gh run list`.
 - Fase 2 (auditoria por bloques): COMPLETA (B1-B8). Ver HANDOFF seccion 1.
 - Universo operado: 713 tickers unicos. Coherencia entre descarga,
   analisis, Wyckoff y catalogo (S33).
 - IAE crosswalk completo (S33-bis): cobertura observable 98.68%.
 
-**Sesion 36 (2026-11-12, 7 commits):**
-- Bug del step commit (`0b16c363`): `git add -u outputs/state` no stagea
-  untracked. Writer nuevo expuso el bug, 3 fallos consecutivos del
-  12-11. Fix `-A`. DAILY-RUN-FAIL-40992758129 reabierto WONT_FIX -> FIXED.
-- Writer persistido (`e06804b0`) + check de health (`2151a5b5`):
-  `temporal_contracts_result.json` (schema v1, 15 contratos) en artifact
-  + repo. TEMPORAL-CONTRACTS-RESULT-PERSIST VERIFIED_IN_PROD.
-- P1.a Delta5d gap consecutivo (`e88e9fd3`): `max(days+5, days*2+5)`.
-- P7 mensaje sin None (`985526c1`): `contract_label`.
-- PSKY TRUNCATED_IPO (`9a37c527`): health_check [OK]. VERIFIED_IN_PROD.
-- FX cutoff lag=1 (`73f7e26b`): max_lag 0->1 EURUSD/JPY. Lag 1 -> STALE.
+**Sesion 36 + 36-bis (2026-11-12 a 2026-11-14, 21 commits):**
+- Writer persistido (`e06804b0`) + check de health (`2151a5b5`).
+- Step commit `-A` (`0b16c363`). DAILY-RUN-FAIL reabierto a FIXED.
+- P1.a Delta5d gap (`e88e9fd3`). P7 mensaje sin None (`985526c1`).
+- PSKY TRUNCATED_IPO (`9a37c527`).
+- FX cutoff lag=1 (`73f7e26b`). MTE-DEGRADED-STATE WONT_FIX razonado.
+- F2.b (.BR/.HE -> EURONEXT) + F2.a (KVUE TRUNCATED_IPO) (`7a2b016a`).
+- MTE-UNCONFIRMED-EN-CROSS-MODULE (`625faeeb`).
+- generate_estado_sistema filtro CI (`40790754`).
+- pre-push hook filtro CI (`23eb5caf`).
+- ESTADO_SISTEMA.md regenerado: 4665 -> 4698 passed.
 
-**Validacion en produccion pendiente** de 3 fixes (P1.a, P7, FX):
-requieren scheduled post-fix. Verificar en run 23:17 UTC del 12-11
-(cae 13-11 madrugada UTC):
-  - Reporte: Momentum amplitud con Delta5d poblado (no N/D).
-  - Log: "[CONTRACT] ... (sin mapeo)" en vez de None.
-  - health_check: temporal_contracts_result sin FX_DAILY_CUT.
+**Validacion en produccion pendiente** de 3 fixes (F2-BR-HE, KVUE,
+MTE-UNCONFIRMED) en proximo scheduled post-`23eb5caf`:
+  - `manifest:stock_prices` sin `UNKNOWN n=3`; ABI/ARGX/NOKIA en EURONEXT.
+  - `ticker_health [OK]` 3 clasificados, 0 ACTIVE stale.
+  - Bloque Cross-Module con `- mte: <SCENARIO> UNCONFIRMED (...)`.
 
 **Contratos vigentes y decisiones estructurales** (los detalles viven en `04_HISTORICO.md`; aqui solo lo que no se puede olvidar):
 
