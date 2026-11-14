@@ -59,6 +59,46 @@ def test_pending_post_medianoche_cest(monkeypatch):
     )
 
 
+
+# ---------------------------------------------------------------------------
+# F2 (7a2b016a): .BR/.HE son EURONEXT. Path end-to-end via _compute_by_market
+# SIN mockear get_market. Complementa test_a2_3_instrument_class.
+# ---------------------------------------------------------------------------
+
+
+def test_compute_by_market_br_he_euronext_valid(monkeypatch):
+    """F2 (7a2b016a): ABI.BR/ARGX.BR/NOKIA.HE son EURONEXT con status=VALID.
+
+    Regresion detectada: si get_market vuelve a clasificar .BR/.HE como
+    UNKNOWN, o _compute_by_market vuelve a marcar EURONEXT INVALID,
+    aqui falla. A diferencia de test_guard_coverage_postmedianoche_cest
+    (que mockea get_market), este test deja get_market REAL: el objeto
+    es precisamente verificar el mapeo end-to-end.
+    """
+    from src import market_hours as mh
+
+    # Solo se mockea el calendario; get_market se deja real a proposito.
+    monkeypatch.setattr(mh, "is_session_closed",
+                        lambda market, sd, ref: sd.weekday() < 5 and sd < ref.date())
+    monkeypatch.setattr(mh, "is_trading_session",
+                        lambda m, d: d.weekday() < 5)
+
+    df = _make_df({"EURONEXT": ["ABI.BR", "ARGX.BR", "NOKIA.HE"]},
+                  n_rows=5, end_date="2026-10-06")
+    # Miercoles 10:00 CEST -> ultima sesion cerrada = martes 2026-10-06.
+    ref = datetime(2026, 10, 7, 10, 0, tzinfo=MADRID)
+    result = _compute_by_market(df, ref)
+
+    assert "UNKNOWN" not in result, (
+        f"F2 regresion: get_market deberia clasificar .BR/.HE como EURONEXT; "
+        f"hay UNKNOWN en result={result}"
+    )
+    eu = result["EURONEXT"]
+    assert eu["n"] == 3, eu
+    assert eu["coverage_at_session"] is not None and eu["coverage_at_session"] >= 0.95, eu
+    assert eu["status"] == "VALID", eu
+
+
 def test_guard_exime_cuando_europeos_pending(monkeypatch):
     """_all_markets_valid devuelve True si todos son VALID o PENDING."""
     import sys
