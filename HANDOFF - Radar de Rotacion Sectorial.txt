@@ -712,7 +712,7 @@ SIN-CONTRATO-INVENTARIO (ROI bajo).
     py scripts\genera_indice_auditorias.py
     py scripts\poda_bitacora.py --check
     py -m pytest tests\ -q --tb=line -m "not integration_real_data" -n auto --dist loadfile
-    # ^ suite autoritativa (4698, paridad CI).
+    # ^ suite autoritativa (4734, paridad CI).
     py -m pytest tests\ -q --tb=line -n auto
     # ^ opcional: incluye integration_real_data. Solo verde si los
     # parquets locales (gitignored) estan frescos (age <= 4).
@@ -722,7 +722,7 @@ Esperado:
 - HEAD = git log --oneline -1.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests: fuente autoritativa ESTADO_SISTEMA.md (4698 passed, 0 failed; filtro CI).
+- Tests: fuente autoritativa ESTADO_SISTEMA.md (4734 passed, 0 failed; filtro CI).
 - Gobernanza [OK]. Indice H1-H18 [OK]. Bitacora [OK].
 - pyflakes silencio, compileall OK.
 
@@ -776,6 +776,21 @@ Esperado:
 - **Gate walk-back:** receipt incluye effective_session; si
   effective < target y no es ultimo slot -> READY (reintenta).
   Ultimo slot acepta CURRENT. Slots: 23, 3, 5, 7, 11 UTC.
+- **2 runs esperados cuando el primer slot hace walk-back:**
+  patron verificado 2026-11-17 (runs 44021601250 y 44077670080).
+  El slot 23:17 UTC arranca ~5:05 UTC del dia siguiente con Yahoo
+  EU incompleto (BME 55.9%, EURONEXT 43.3%, LSE 18.6%, XETRA
+  55.9%: coverage global 83.5% < umbral 90%). Manifest hace
+  walk-back (effective=dia-3) y emite receipt. El siguiente slot
+  (03:17 UTC con delay GH de ~8h, arranca ~11:50 UTC) lee ese
+  receipt via is_last_slot=false -> READY -> reintenta. A esa hora
+  Yahoo ya publico EU -> effective=target -> reporte final correcto.
+  NO es bug. Es el precio de garantizar cobertura completa cuando
+  el primer slot corre antes de que Yahoo publique los cierres EU
+  (lag real 2-6h). Los delays de GH (2-8h documentados; observados
+  5h48m y 8h33m) pueden amplificar el patron. Si preocupa, la
+  mitigacion es mover el primer slot (23:17 -> mas tarde), no tocar
+  el gate.
 - **Gate panel:** GATE_PANEL_USA son 20 blue chips. Small caps
   pueden no estar completos cuando el gate dice READY. H12-fix
   mitiga via reintentos. Ampliar panel es deuda observacional.
