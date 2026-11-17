@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "run_id": "20261114_112746",
-  "reference_date": "2026-11-14",
-  "global_last_date": "2026-11-13",
-  "generated_at_utc": "2026-11-14T10:27:46.413662+00:00",
+  "run_id": "20261117_060927",
+  "reference_date": "2026-11-17",
+  "global_last_date": "2026-11-16",
+  "generated_at_utc": "2026-11-17T05:09:27.246697+00:00",
   "contracts_total": 15,
   "summary": {
-    "OK": 10,
-    "STALE": 4,
+    "OK": 8,
+    "STALE": 6,
     "PENDING": 0,
     "INSUFFICIENT": 1,
     "BLOCKED": 0
@@ -15,64 +15,64 @@
   "by_contract": {
     "EQUITY_EOD": {
       "status": "OK",
-      "effective_date": "2026-11-13",
-      "expected_date": "2026-11-13",
+      "effective_date": "2026-11-16",
+      "expected_date": "2026-11-16",
       "lag_days": 0,
       "coverage": 0.9944444444444445
     },
     "INDEX_EOD_USA": {
       "status": "OK",
-      "effective_date": "2026-11-13",
-      "expected_date": "2026-11-13",
+      "effective_date": "2026-11-16",
+      "expected_date": "2026-11-16",
       "lag_days": 0,
       "coverage": 1.0
     },
     "INDEX_EOD_EUROPA": {
-      "status": "OK",
-      "effective_date": "2026-11-13",
-      "expected_date": "2026-11-13",
-      "lag_days": 0,
+      "status": "STALE",
+      "effective_date": "2026-11-16",
+      "expected_date": "2026-11-17",
+      "lag_days": 1,
       "coverage": 1.0
     },
     "INDEX_EOD_COMMODITY": {
       "status": "OK",
-      "effective_date": "2026-11-13",
-      "expected_date": "2026-11-13",
+      "effective_date": "2026-11-16",
+      "expected_date": "2026-11-16",
       "lag_days": 0,
       "coverage": 1.0
     },
     "INDEX_EOD_CURRENCY": {
       "status": "OK",
-      "effective_date": "2026-11-13",
-      "expected_date": "2026-11-13",
+      "effective_date": "2026-11-16",
+      "expected_date": "2026-11-16",
       "lag_days": 0,
       "coverage": 1.0
     },
     "VOLATILITY_INDEX": {
       "status": "OK",
-      "effective_date": "2026-11-13",
-      "expected_date": "2026-11-13",
+      "effective_date": "2026-11-16",
+      "expected_date": "2026-11-16",
       "lag_days": 0,
       "coverage": 1.0
     },
     "RATE_YIELD": {
       "status": "OK",
-      "effective_date": "2026-11-13",
-      "expected_date": "2026-11-13",
+      "effective_date": "2026-11-16",
+      "expected_date": "2026-11-16",
       "lag_days": 0,
       "coverage": 1.0
     },
     "FUTURE_SETTLEMENT": {
-      "status": "OK",
-      "effective_date": "2026-11-13",
-      "expected_date": "2026-11-13",
-      "lag_days": 0,
+      "status": "STALE",
+      "effective_date": "2026-11-16",
+      "expected_date": "2026-11-17",
+      "lag_days": 1,
       "coverage": 1.0
     },
     "FX_DAILY_CUT": {
       "status": "STALE",
-      "effective_date": "2026-11-13",
-      "expected_date": "2026-11-14",
+      "effective_date": "2026-11-16",
+      "expected_date": "2026-11-17",
       "lag_days": 1,
       "coverage": 1.0
     },
@@ -86,22 +86,22 @@
     "FINRA_DARKPOOL": {
       "status": "STALE",
       "effective_date": "2026-10-19",
-      "expected_date": "2026-10-26",
-      "lag_days": 7,
+      "expected_date": "2026-11-02",
+      "lag_days": 14,
       "coverage": 1.0
     },
     "SSGA_PRIMARY_FLOW": {
       "status": "STALE",
       "effective_date": "2026-11-12",
-      "expected_date": "2026-11-13",
-      "lag_days": 1,
+      "expected_date": "2026-11-16",
+      "lag_days": 4,
       "coverage": 1.0
     },
     "FRED_MACRO": {
       "status": "STALE",
       "effective_date": "2026-11-12",
-      "expected_date": "2026-11-13",
-      "lag_days": 1,
+      "expected_date": "2026-11-16",
+      "lag_days": 4,
       "coverage": 1.0
     },
     "CFTC_POSITION_FLOW": {
