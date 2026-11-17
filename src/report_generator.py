@@ -183,7 +183,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # C5 - CONTEXTO INTERNACIONAL
     # =========================================================================
     # Flujos primarios ETF (SPDR diario)
-    lines.extend(render_flujo_spdr(etf_primary_flow_data, temporal_meta=temporal_meta))
+    lines.extend(render_flujo_spdr(etf_primary_flow_data, reference_date=reference_date, temporal_meta=temporal_meta))
     lines.extend(render_flujo_caracteristicas(sector_flow_characteristics_data))
     lines.extend(render_divergencia_precio_flujo(sector_flow_characteristics_data))
     # Flujos primarios internacionales (diarios)
@@ -205,7 +205,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     ))
     if dc_summary:
         lines.append(dc_summary)
-    lines.extend(render_iae_section(iae_section, temporal_meta=temporal_meta))
+    lines.extend(render_iae_section(iae_section, reference_date=reference_date, temporal_meta=temporal_meta))
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, 'w', encoding='utf-8') as f:

@@ -31,7 +31,7 @@ def _fmt_int(v):
         return str(v)
 
 
-def render_iae_section(iae_section, temporal_meta=None):
+def render_iae_section(iae_section, reference_date=None, temporal_meta=None):
     """Renderiza la seccion IAE. Devuelve list[str] (markdown).
 
     Si iae_section is None -> no renderiza nada (devuelve []).
@@ -51,7 +51,10 @@ def render_iae_section(iae_section, temporal_meta=None):
     out.append("*Cambio neto de posiciones reportadas institucionales, "
                "segun filings SEC 13F.*\n\n")
     from src.report._temporal_annotation import format_effective_date_line
-    _date_line = format_effective_date_line(temporal_meta, "SEC_13F")
+    _date_line = format_effective_date_line(
+        temporal_meta, "SEC_13F",
+        reference_date=reference_date,
+    )
     if _date_line:
         out.append(_date_line)
 

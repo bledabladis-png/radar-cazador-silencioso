@@ -4,7 +4,7 @@
 Cubre el helper que cierra parcialmente TEMPORAL-EFFECTIVE-DATE-POR-MODULO
 y FRESHNESS-POR-BLOQUE (auditoria 2026-11-03, hallazgos 10.1 y 10.3).
 """
-from datetime import date
+from datetime import date, datetime
 
 
 from src.report._temporal_annotation import format_effective_date_line
@@ -290,3 +290,96 @@ def test_wyckoff_holdings_acc_publica_datos_al():
     tables = {"usa_sector_acc": df, "usa_index_acc": None, "eu_index_acc": None}
     out = "".join(render_wyckoff_holdings_acc(tables))
     assert "*Datos al 2026-11-09.*" in out
+
+
+# --- FIX-LAG-VS-ANTIGUEDAD (2026-11-17): diferenciar lag contractual de edad real ---
+
+def test_reference_date_none_no_anade_antiguedad():
+    """Sin reference_date: formato actual sin cambios (compat)."""
+    tm = _tm({"FINRA_DARKPOOL": {"effective_date": date(2026, 10, 19),
+                                  "lag_days": 7, "status": "STALE"}})
+    out = format_effective_date_line(tm, "FINRA_DARKPOOL")
+    assert out == "*Datos al 2026-10-19 (lag 7d).*\n"
+
+
+def test_reference_date_cercano_a_lag_no_anade_antiguedad():
+    """reference_date tal que age - lag < 3: sin ruido."""
+    tm = _tm({"SSGA_PRIMARY_FLOW": {"effective_date": date(2026, 11, 16),
+                                     "lag_days": 1, "status": "STALE"}})
+    out = format_effective_date_line(
+        tm, "SSGA_PRIMARY_FLOW",
+        reference_date=date(2026, 11, 18),
+    )
+    assert out == "*Datos al 2026-11-16 (lag 1d).*\n"
+
+
+def test_reference_date_con_divergencia_anade_antiguedad():
+    """FINRA: lag 7d, age 22d, diff 15 >= 3 -> anade antiguedad."""
+    tm = _tm({"FINRA_DARKPOOL": {"effective_date": date(2026, 10, 26),
+                                  "lag_days": 7, "status": "STALE"}})
+    out = format_effective_date_line(
+        tm, "FINRA_DARKPOOL",
+        reference_date=date(2026, 11, 17),
+    )
+    assert out == "*Datos al 2026-10-26 (lag 7d, antig\u00fcedad 22d).*\n"
+
+
+def test_reference_date_sec_13f_anade_antiguedad():
+    """SEC_13F: lag 92d, age 140d, diff 48 >= 3 -> anade antiguedad."""
+    tm = _tm({"SEC_13F": {"effective_date": date(2026, 6, 30),
+                          "lag_days": 92, "status": "INSUFFICIENT"}})
+    out = format_effective_date_line(
+        tm, "SEC_13F",
+        reference_date=date(2026, 11, 17),
+    )
+    assert out == "*Datos al 2026-06-30 (lag 92d, antig\u00fcedad 140d).*\n"
+
+
+def test_reference_date_lag_cero_con_edad_anade_antiguedad():
+    """lag=0 pero effective lejos de reference_date: anade antiguedad."""
+    tm = _tm({"EQUITY_EOD": {"effective_date": date(2026, 11, 9),
+                             "lag_days": 0, "status": "OK"}})
+    out = format_effective_date_line(
+        tm, "EQUITY_EOD",
+        reference_date=date(2026, 11, 17),
+    )
+    assert out == "*Datos al 2026-11-09 (antig\u00fcedad 8d).*\n"
+
+
+def test_reference_date_datetime_tz_aware():
+    """reference_date datetime con tz: usa .date()."""
+    from datetime import timezone
+    tm = _tm({"FINRA_DARKPOOL": {"effective_date": date(2026, 10, 26),
+                                  "lag_days": 7, "status": "STALE"}})
+    ref = datetime(2026, 11, 17, 12, 0, 0, tzinfo=timezone.utc)
+    out = format_effective_date_line(
+        tm, "FINRA_DARKPOOL",
+        reference_date=ref,
+    )
+    assert "antig\u00fcedad 22d" in out
+
+
+def test_integracion_darkpool_con_reference_date():
+    """darkpool.py pasa reference_date al helper."""
+    from src.report.darkpool import render_darkpool
+    tm = _tm({"FINRA_DARKPOOL": {"effective_date": date(2026, 10, 26),
+                                  "lag_days": 7, "status": "STALE"}})
+    dp = {"week": "2026-10-26", "n_tickers": 534, "pct_volume": 25.22,
+          "z_score": 0.14, "percentile": 52, "status": "normal", "z_windows": {}}
+    out = "".join(render_darkpool(
+        dp, reference_date=datetime(2026, 11, 17), temporal_meta=tm,
+    ))
+    assert "antig\u00fcedad 22d" in out
+
+
+def test_integracion_iae_section_con_reference_date():
+    """iae.py pasa reference_date al helper."""
+    from src.report.iae import render_iae_section
+    tm = _tm({"SEC_13F": {"effective_date": date(2026, 6, 30),
+                          "lag_days": 92, "status": "INSUFFICIENT"}})
+    out = render_iae_section(
+        {"status": "FOO"},
+        reference_date=datetime(2026, 11, 17),
+        temporal_meta=tm,
+    )
+    assert "antig\u00fcedad 140d" in "".join(out)

@@ -32,7 +32,10 @@ def render_darkpool(darkpool_data, reference_date=None, temporal_meta=None):
 
     out.append("## Actividad en ATS - Dark Pools (FINRA v1.0)\n")
     from src.report._temporal_annotation import format_effective_date_line
-    _date_line = format_effective_date_line(temporal_meta, "FINRA_DARKPOOL")
+    _date_line = format_effective_date_line(
+        temporal_meta, "FINRA_DARKPOOL",
+        reference_date=reference_date,
+    )
     if _date_line:
         out.append(_date_line)
     out.append("*Nota: FINRA publica datos de ATS con retraso regulatorio de 2 a 4 semanas. Los datos pueden estar desfasados por diseno.*\n")

@@ -31,6 +31,7 @@ def format_effective_date_line(
     *,
     prefix="Datos al",
     include_lag=True,
+    reference_date=None,
 ):
     """Devuelve '*<prefix> YYYY-MM-DD (lag Nd).*' o '' si no hay contrato.
 
@@ -41,6 +42,13 @@ def format_effective_date_line(
             (min effective_date, min coverage, peor status).
         prefix: texto antes de la fecha. Default 'Datos al'.
         include_lag: si True y lag_days > 0, anade ' (lag Nd)'.
+        reference_date: datetime|date|None. Si presente y la antiguedad
+            real (reference_date - effective_date) difiere del lag
+            contractual en >= 3 dias, anade ', antiguedad Nd'. Esto
+            distingue lag_days (delta expected-effective del contrato)
+            de la edad real del dato respecto al momento de ejecucion,
+            que en FINRA (lag estructural 14d) y SEC_13F (deadline
+            SEC 45d) son magnitudes distintas.
 
     Returns:
         str listo para out.append(). Incluye '\n' final. '' si no hay
@@ -84,7 +92,34 @@ def format_effective_date_line(
             lag_int = max(lags_all)
         else:
             lag_int = 0
+        _parts = []
         if lag_int > 0:
-            line += " (lag {0}d)".format(lag_int)
+            _parts.append("lag {0}d".format(lag_int))
+        if reference_date is not None:
+            _age = _compute_age_days(reference_date, eff)
+            if _age is not None and _age - lag_int >= 3:
+                _parts.append("antigüedad {0}d".format(_age))
+        if _parts:
+            line += " ({0})".format(", ".join(_parts))
     line += ".*\n"
     return line
+
+
+def _compute_age_days(reference_date, effective_date):
+    """Dias entre reference_date y effective_date. None si no parseables."""
+    try:
+        if hasattr(reference_date, "date"):
+            ref_d = reference_date.date()
+        elif hasattr(reference_date, "year"):
+            ref_d = reference_date
+        else:
+            import pandas as _pd
+            ref_d = _pd.Timestamp(reference_date).date()
+        if hasattr(effective_date, "year"):
+            eff_d = effective_date
+        else:
+            import pandas as _pd
+            eff_d = _pd.Timestamp(effective_date).date()
+        return (ref_d - eff_d).days
+    except (TypeError, ValueError):
+        return None
