@@ -40,7 +40,11 @@ from config.tickers import validate_sector_universe
 from src.pipeline.output_registry import ReceiptCollector
 from src.pipeline.output_verifier import verify
 from src.pipeline.output_writer import set_collector
-from src.temporal_contracts import persist_temporal_contracts_result
+from src.temporal_contracts import (
+    build_temporal_meta,
+    persist_temporal_contracts_result,
+    resolve_all_contracts,
+)
 
 def main():
     # B2 (2026-09-12): reference_date se resuelve UNA vez al inicio del pipeline.
@@ -287,6 +291,32 @@ def main():
     data_quality_df = _compute_data_quality(reference_date=reference_date)
 
     iae_section = compute_iae_section(reference_date, run_id)
+
+    # FIX-TEMPORAL-META-STALE (2026-11-17): re-resolver contratos
+    # temporales tras las descargas del run. Hasta aqui, temporal_meta
+    # viene de load_all_data (linea 69) y refleja el estado de disco
+    # del INICIO del run. Pero compute_flows_primary (linea 107)
+    # descarga SSGA / BlackRock / Amundi / CFTC / SEC_NPORT frescos,
+    # y _compute_darkpool (dentro de compute_market_data) escribe
+    # darkpool_history.csv. El temporal_meta persistido antes (linea
+    # 75) queda obsoleto: verificado 2026-11-17, el JSON decia
+    # effective_date=13-11 mientras el CSV ya tenia 16-11 (lag real
+    # 0, no 3). Re-resolver ahora con resolve_all_contracts +
+    # build_temporal_meta para que el reporte y el JSON reflejen el
+    # estado real post-descarga. Fail-open: si el disco falla, el run
+    # continua con el temporal_meta inicial. Se mantiene el persist
+    # temprano (linea 75) como snapshot pre-descarga para debug.
+    try:
+        _resolutions_refreshed = resolve_all_contracts(df_market, reference_date)
+        temporal_meta = build_temporal_meta(
+            _resolutions_refreshed, reference_date, run_id=run_id
+        )
+        persist_temporal_contracts_result(temporal_meta)
+    except Exception as _e:
+        print(
+            f"[temporal_contracts] WARN: refresh post-descarga fallo: {_e}",
+            file=sys.stderr,
+        )
 
     print("Generando reporte...")
     # H8 (2026-10-16, auditoria externa): bloque de provenance.
