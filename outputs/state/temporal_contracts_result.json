@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "run_id": "20261117_060927",
+  "run_id": "20261117_125514",
   "reference_date": "2026-11-17",
   "global_last_date": "2026-11-16",
-  "generated_at_utc": "2026-11-17T05:09:27.246697+00:00",
+  "generated_at_utc": "2026-11-17T11:55:14.147453+00:00",
   "contracts_total": 15,
   "summary": {
     "OK": 8,
@@ -85,28 +85,28 @@
     },
     "FINRA_DARKPOOL": {
       "status": "STALE",
-      "effective_date": "2026-10-19",
+      "effective_date": "2026-10-26",
       "expected_date": "2026-11-02",
-      "lag_days": 14,
+      "lag_days": 7,
       "coverage": 1.0
     },
     "SSGA_PRIMARY_FLOW": {
       "status": "STALE",
-      "effective_date": "2026-11-12",
+      "effective_date": "2026-11-13",
       "expected_date": "2026-11-16",
-      "lag_days": 4,
+      "lag_days": 3,
       "coverage": 1.0
     },
     "FRED_MACRO": {
       "status": "STALE",
-      "effective_date": "2026-11-12",
+      "effective_date": "2026-11-13",
       "expected_date": "2026-11-16",
-      "lag_days": 4,
+      "lag_days": 3,
       "coverage": 1.0
     },
     "CFTC_POSITION_FLOW": {
       "status": "OK",
-      "effective_date": "2026-11-03",
+      "effective_date": "2026-11-10",
       "expected_date": "2026-11-03",
       "lag_days": 0,
       "coverage": 1.0
