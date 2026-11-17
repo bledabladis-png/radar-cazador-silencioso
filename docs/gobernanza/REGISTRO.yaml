@@ -8022,7 +8022,7 @@ items:
   tipo: bug
   ciclo: '2026-11-14'
   estado: FIXED
-  verificacion: VERIFIED_IN_CI
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: >
     La columna "Cob %" en Tickers acumulacion/distribucion publicaba
     el peso seleccionado / peso del grupo (coverage_weight_pct),
@@ -8048,7 +8048,7 @@ items:
   tipo: bug
   ciclo: '2026-11-14'
   estado: FIXED
-  verificacion: VERIFIED_IN_CI
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: >
     p1_h02_tickers_sin_datos.csv mezclaba 3 causas bajo n_bars sin
     distinguirlas: fuera del universo de descarga (10 QQQ con
@@ -8069,7 +8069,7 @@ items:
   tipo: bug
   ciclo: '2026-11-14'
   estado: FIXED
-  verificacion: VERIFIED_IN_CI
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: >
     En runs con walk-back documentado (target aun sin publicar,
     p.ej. 03:17 UTC pre-cierre USA), Sector Breadth & Health
@@ -8094,7 +8094,7 @@ items:
   tipo: bug
   ciclo: '2026-11-14'
   estado: FIXED
-  verificacion: VERIFIED_IN_CI
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: >
     "Flujo de Mercado - Otros Activos" publicaba N/D para ^SPGSCI,
     DX-Y.NYB, EURUSD=X, USDJPY=X, USDCNY=X sin declarar causa.
@@ -8117,7 +8117,7 @@ items:
   tipo: bug
   ciclo: '2026-11-14'
   estado: FIXED
-  verificacion: VERIFIED_IN_CI
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: >
     _wyckoff_sign aplicaba la regla (Acc+Markup) vs (Dist+Markdown)
     sobre pct_* (redondeados a 8 decimales en el CSV). Un empate
@@ -8139,7 +8139,7 @@ items:
   tipo: bug
   ciclo: '2026-11-14'
   estado: FIXED
-  verificacion: VERIFIED_IN_CI
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: >
     compute_flows_secondary calculaba cftc_flow_sign como mean()
     de TODO el historico del CSV CFTC (7 fechas x 12 contratos = 84
@@ -8164,7 +8164,7 @@ items:
   tipo: bug
   ciclo: '2026-11-14'
   estado: FIXED
-  verificacion: VERIFIED_IN_CI
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: >
     10 componentes de QQQ quedaban fuera de get_stock_list por todas
     las vias: no en etf_holdings (holdings de indice, no de sector),

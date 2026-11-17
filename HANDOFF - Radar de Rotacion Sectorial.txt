@@ -695,7 +695,7 @@ Cuando el scheduled 17-11 ejecute (target 14-11, gate no SKIP):
 
 **Estado REGISTRO al cierre:** 330 items (FIXED 268, WONT_FIX 40,
 OPEN 3, BLOCKED_EXTERNAL 2, FALSE_POSITIVE 13, SUPERSEDED 4).
-43 items con verificacion VERIFIED_IN_PRODUCTION.
+47 items con verificacion VERIFIED_IN_PRODUCTION.
 
 **3 OPEN restantes (heredados, sin cambios):** H5.3 (cron 13F
 20-nov), DICT3-H04-INTERVALS (registro historico), SEMANTICA-
