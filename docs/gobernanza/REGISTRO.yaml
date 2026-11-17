@@ -8223,3 +8223,40 @@ items:
     preferible: nota al pie "Positivas = numero de condiciones
     positivas cumplidas (0-3), no conteo de tickers", 2 lineas de
     texto, 0 schema bump. Reabrir si se decide tocar schema.
+
+- id: TEMPORAL-META-STALE
+  tipo: bug
+  ciclo: '2026-11-17'
+  estado: FIXED
+  verificacion: VERIFIED_IN_CI
+  descripcion: >
+    run.py persistia temporal_contracts_result.json con el
+    temporal_meta construido por load_all_data al INICIO del run
+    (linea 75). Pero despues, compute_flows_primary descarga SSGA,
+    BlackRock, Amundi, CFTC y SEC_NPORT frescos, y compute_market_data
+    escribe darkpool_history.csv. El JSON persistido quedaba 1 run
+    por detras de los CSVs reales. Evidencia (run 44077670080,
+    2026-11-17 11:50 UTC): etf_primary_flow.csv con Date.max() =
+    2026-11-16, pero SSGA_PRIMARY_FLOW.effective_date = 2026-11-13
+    (lag reportado 3, lag real 0). Mismo patron en CFTC, SEC_NPORT,
+    FINRA_DARKPOOL.
+  commit: 'fd2063fd'
+  test: tests/test_run_refresh_temporal_meta.py
+  evidencia: >
+    run.py: imports de resolve_all_contracts + build_temporal_meta
+    (ambos ya en src.temporal_contracts). Bloque de refresh
+    post-descarga, justo antes de generate_daily_report, que
+    re-resuelve con resolve_all_contracts(df_market, reference_date)
+    y reconstruye temporal_meta con build_temporal_meta. Persiste el
+    refrescado. Fail-open: si el disco falla, se mantiene el inicial.
+    El persist early (linea 75) se conserva como snapshot
+    pre-descarga para debug (observabilidad de dos etapas).
+    tests/test_run_refresh_temporal_meta.py: AST guard con 5 tests:
+    imports de las 3 funciones, persist >= 2 veces (early + refresh),
+    refresh ocurre despues de compute_flows_primary, build_temporal_meta
+    se invoca, resolve_all_contracts se invoca. Suite filtro CI
+    4734 passed / 2 skipped.
+    Verificacion en produccion pendiente del proximo scheduled:
+    temporal_contracts_result.json con effective_date del CSV real
+    (no del inicio del run). Promover a VERIFIED_IN_PRODUCTION
+    cuando el scheduled post-fd2063fd lo confirme.

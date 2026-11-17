@@ -16,7 +16,7 @@ Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        4729 passed, 0 failed, 2 skipped (filtro CI, excluye integration_real_data). pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 330 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 331 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 15 (_IMPLEMENTED_CONTRACTS).
