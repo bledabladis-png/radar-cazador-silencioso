@@ -10,7 +10,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-11-19, sesion 38)
 
-HEAD: `7108b027` (consultar `git log --oneline -1` para el actual).
+HEAD: `19b08b9c` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        4745 passed, 0 failed, 2 skipped (filtro CI, excluye integration_real_data). pyflakes LIMPIO. compileall OK.
