@@ -325,3 +325,65 @@ def test_render_cross_module_mte_confirmed_sin_sufijo():
     lineas = "".join(out)
     assert "mte: EXPANSION (" in lineas
     assert "UNCONFIRMED" not in lineas
+
+
+# --- FIX-LIQUIDITY-DELTA-SIN-DATO-NUEVO (2026-11-19) ---
+# Cuando la fecha del liquidity_state coincide con el score efectivo
+# (segundo run del dia, mismo dato FRED), el mensaje "sin dato nuevo
+# desde {date}" sustituye a "0.000 (ESTABLE)".
+
+
+def test_header_real_liq_delta_sin_dato_nuevo():
+    """State.date == score.date -> 'sin dato nuevo desde {date}', sin ESTABLE."""
+    from src.report.header import render_regimenes
+    score = pd.Series([-0.1667], index=[pd.Timestamp("2026-11-16")])
+    state = {"date": "2026-11-16", "score": -0.1667, "regime": "ESTRECHA"}
+    out = render_regimenes(
+        macro_score=pd.Series([-0.69]), macro_regime="RECESSION", macro_conf=0.38,
+        liquidity_score=pd.Series([0.0]), financial_regime="HIGH_STRESS", liq_conf=0.21,
+        volatility_score=pd.Series([0.0]), vol_regime="STRESS", vol_conf=1.0,
+        real_liquidity_regime="ESTRECHA", real_liquidity_conf=0.9,
+        real_liq_score=score, real_liq_prev=-0.1667,
+        sector_regime="MIXED",
+        liquidity_state=state,
+    )
+    lineas = "".join(out)
+    assert "sin dato nuevo desde 2026-11-16" in lineas
+    assert "ESTABLE" not in lineas
+    assert "Liquidity Delta" in lineas
+
+
+def test_header_real_liq_delta_con_fechas_distintas_muestra_delta():
+    """State.date != score.date -> comportamiento previo (EMPEORA)."""
+    from src.report.header import render_regimenes
+    score = pd.Series([-0.1667], index=[pd.Timestamp("2026-11-16")])
+    state = {"date": "2026-11-13", "score": -0.0667, "regime": "NEUTRAL"}
+    out = render_regimenes(
+        macro_score=pd.Series([-0.69]), macro_regime="RECESSION", macro_conf=0.38,
+        liquidity_score=pd.Series([0.0]), financial_regime="HIGH_STRESS", liq_conf=0.21,
+        volatility_score=pd.Series([0.0]), vol_regime="STRESS", vol_conf=1.0,
+        real_liquidity_regime="ESTRECHA", real_liquidity_conf=0.9,
+        real_liq_score=score, real_liq_prev=-0.0667,
+        sector_regime="MIXED",
+        liquidity_state=state,
+    )
+    lineas = "".join(out)
+    assert "EMPEORA" in lineas
+    assert "sin dato nuevo" not in lineas
+
+
+def test_header_real_liq_delta_sin_state_mantiene_comportamiento():
+    """Sin liquidity_state (tests antiguos) -> fallback a MEJORA/EMPEORA/ESTABLE."""
+    from src.report.header import render_regimenes
+    score = pd.Series([0.60])
+    out = render_regimenes(
+        macro_score=pd.Series([-0.69]), macro_regime="RECESSION", macro_conf=0.38,
+        liquidity_score=pd.Series([0.0]), financial_regime="HIGH_STRESS", liq_conf=0.21,
+        volatility_score=pd.Series([0.0]), vol_regime="STRESS", vol_conf=1.0,
+        real_liquidity_regime="NEUTRAL", real_liquidity_conf=0.9,
+        real_liq_score=score, real_liq_prev=0.50,
+        sector_regime="MIXED",
+    )
+    lineas = "".join(out)
+    assert "MEJORA" in lineas
+    assert "sin dato nuevo" not in lineas

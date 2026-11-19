@@ -113,13 +113,35 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     if real_liq_prev is not None:
         try:
             delta = float(real_liq_score.iloc[-1]) - float(real_liq_prev)
-            if delta > 0.05:
-                delta_str = "MEJORA"
-            elif delta < -0.05:
-                delta_str = "EMPEORA"
+            # FIX-LIQUIDITY-DELTA-SIN-DATO-NUEVO (2026-11-19): cuando la
+            # fecha del liquidity_state (state del run anterior) coincide
+            # con la fecha efectiva del score actual, el FRED no ha
+            # publicado datos nuevos entre runs. delta=0 es matematicamente
+            # correcto pero "ESTABLE" engana al lector (sugiere "sin cambio
+            # de regimen" cuando en realidad es "sin dato nuevo"). Declarar
+            # explicitamente la fecha del ultimo dato. El delta se mantiene
+            # cuando las fechas difieren (run que procesa FRED nuevo, aunque
+            # sea el primero del dia que ve esos datos).
+            _state_date = None
+            if liquidity_state is not None:
+                _raw_date = liquidity_state.get('date')
+                if _raw_date is not None:
+                    _state_date = str(_raw_date)[:10]
+            _score_date = None
+            try:
+                _score_date = str(real_liq_score.index[-1].date())[:10]
+            except (AttributeError, IndexError):
+                _score_date = None
+            if _state_date and _score_date and _state_date == _score_date:
+                out.append(f"  - *Liquidity Delta: sin dato nuevo desde {_state_date}*\n")
             else:
-                delta_str = "ESTABLE"
-            out.append(f"  - *Liquidity Delta (vs ejecución anterior): {_fmt_signed(delta, '{:+.3f}', '{:.3f}')} ({delta_str})*\n")
+                if delta > 0.05:
+                    delta_str = "MEJORA"
+                elif delta < -0.05:
+                    delta_str = "EMPEORA"
+                else:
+                    delta_str = "ESTABLE"
+                out.append(f"  - *Liquidity Delta (vs ejecución anterior): {_fmt_signed(delta, '{:+.3f}', '{:.3f}')} ({delta_str})*\n")
         except (ValueError, TypeError, IndexError, AttributeError):
             pass
     
