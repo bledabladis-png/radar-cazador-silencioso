@@ -8,15 +8,15 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 ---
 
 
-## 1. ESTADO AL CIERRE (2026-11-12, sesion 36)
+## 1. ESTADO AL CIERRE (2026-11-19, sesion 38)
 
-HEAD: `87bac78e` (consultar `git log --oneline -1` para el actual).
+HEAD: `7108b027` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       4729 passed, 0 failed, 2 skipped (filtro CI, excluye integration_real_data). pyflakes LIMPIO. compileall OK.
+       4745 passed, 0 failed, 2 skipped (filtro CI, excluye integration_real_data). pyflakes LIMPIO. compileall OK.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 331 items.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 333 items.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 Contratos temporales: 15 (_IMPLEMENTED_CONTRACTS).
@@ -700,6 +700,83 @@ OPEN 3, BLOCKED_EXTERNAL 2, FALSE_POSITIVE 13, SUPERSEDED 4).
 **3 OPEN restantes (heredados, sin cambios):** H5.3 (cron 13F
 20-nov), DICT3-H04-INTERVALS (registro historico), SEMANTICA-
 SIN-CONTRATO-INVENTARIO (ROI bajo).
+
+
+### 3.17. Cierre Sesion 38 (2026-11-19): auditoria 10.1-10.6 analista + delta liquidez
+
+Auditoria del analista externo sobre el reporte 18-11 (10 hallazgos
+10.1-10.6 priorizados) + revision propia. 3 commits propios hoy.
+2 fixes de codigo nuevos + 1 verificacion de fix previo + 2
+observacionales documentados.
+
+**Hallazgos del analista (10.1-10.6):**
+
+- **10.1 SPDR header desfasado**: FALSO POSITIVO. Ya resuelto por
+  `fd2063fd` (refresh temporal_meta post-descarga). El reporte que
+  audito el analista era pre-push. Verificado en run 44296743332
+  (18-11): SPDR "*Datos al 2026-11-17.*" coincide con CSV real.
+  TEMPORAL-META-STALE movido a VERIFIED_IN_PRODUCTION.
+
+- **10.2 FINRA "lag 7d" con edad real 22d**: FIXED `d0a44f33`.
+  format_effective_date_line acepta reference_date; cuando
+  age - lag >= 3d anade ", antiguedad Nd". Verificado en produccion:
+  "*Datos al 2026-10-26 (lag 7d, antiguedad 23d).*".
+
+- **10.3 SEC_13F "lag 92d" con edad real 140d**: FIXED `d0a44f33`
+  (mismo fix). Verificado: "*Datos al 2026-06-30 (lag 92d,
+  antiguedad 141d).*".
+
+- **10.4 MTE confidence con futuros STALE**: WONT_FIX razonado ya
+  documentado (S36-bis). El estado se publica por canal separado
+  (mte_state=DEGRADED, futures_status=STALE). La confidence no se
+  degrada por diseno (dimensiones independientes).
+
+- **10.5 Absorcion potencial por signo**: fuera de sesion tecnica.
+  Requiere decision de producto sobre materialidad y persistencia.
+  El reporte actual declara "Absorcion potencial (debil)" cuando
+  flujo < AUM. Mejora: contrato estadistico.
+
+- **10.6 XLP +4.15M shares / 2.48% AUM**: observacional. Dentro del
+  umbral 5% del propio sistema. Sin accion.
+
+**Fix extra detectado en revision propia (no del analista):**
+
+- **LIQUIDITY-DELTA-SIN-DATO-NUEVO**: FIXED `7108b027`. En el
+  segundo run del dia, el liquidity_state.json ya tiene la fecha
+  del FRED actualizada por el primer run. previous_score == score
+  -> delta = 0 -> "ESTABLE" enganoso (sugiere "sin cambio de
+  regimen" cuando es "sin dato FRED nuevo"). Fix: si state.date
+  == score.date, publicar "sin dato nuevo desde {date}". Si no,
+  mantener delta numerico. Verificacion pendiente en proximo
+  scheduled.
+
+**Verificacion en produccion (run 44296743332, 18-11):**
+- FINRA: "lag 7d, antiguedad 23d" ✅
+- SEC_13F: "lag 92d, antiguedad 141d" ✅
+- SPDR: "Datos al 2026-11-17" (sin lag, diff < 3d) ✅
+- MTE: RECESSION UNCONFIRMED 0.43 + DEGRADED + Futures STALE
+  (comportamiento esperado por diseno).
+- Liquidez: NEUTRAL -> ESTRECHA (datos FRED del lunes vs viernes,
+  cambio real de la fuente).
+- Nuevo capitulation signal: activado por NH/NL = -12 (pre-existente
+  en mte_confirmation.py y confirmation.py).
+
+**REGISTRO al cierre:** 333 items (FIXED 271, WONT_FIX 40,
+OPEN 3, BLOCKED_EXTERNAL 2, FALSE_POSITIVE 13, SUPERSEDED 4).
+49 items con verificacion VERIFIED_IN_PRODUCTION.
+LIQUIDITY-DELTA-SIN-DATO-NUEVO con VERIFIED_IN_CI (pendiente
+verificar en proximo scheduled).
+
+**3 OPEN restantes (heredados):** H5.3 (cron 13F 20-nov),
+DICT3-H04-INTERVALS (registro historico), SEMANTICA-SIN-CONTRATO-
+INVENTARIO (ROI bajo).
+
+**Deuda observacional:** 05_BITACORA.md desactualizada desde
+2026-11-10 (S35). Faltan S36, S36-bis, S36-bis fase 2, S37 y S38.
+Los tres primeros estan cubiertos en HANDOFF §3.13-3.15 con detalle;
+S37 y S38 en §3.16-3.17. La bitacora es cronologica no normativa;
+su desactualizacion no afecta al contrato de arranque (00_ARRANQUE +
+HANDOFF + ESTADO_SISTEMA). Rellenar cuando se priorice.
 
 
 ## 4. COMO ARRANCAR

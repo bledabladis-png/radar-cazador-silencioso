@@ -8228,7 +8228,7 @@ items:
   tipo: bug
   ciclo: '2026-11-17'
   estado: FIXED
-  verificacion: VERIFIED_IN_CI
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: >
     run.py persistia temporal_contracts_result.json con el
     temporal_meta construido por load_all_data al INICIO del run
@@ -8260,3 +8260,68 @@ items:
     temporal_contracts_result.json con effective_date del CSV real
     (no del inicio del run). Promover a VERIFIED_IN_PRODUCTION
     cuando el scheduled post-fd2063fd lo confirme.
+
+- id: LAG-VS-ANTIGUEDAD
+  tipo: bug
+  ciclo: '2026-11-19'
+  estado: FIXED
+  verificacion: VERIFIED_IN_PRODUCTION
+  descripcion: >
+    Hallazgo 10.2 y 10.3 del analista externo (auditoria 2026-11-17).
+    Las cabeceras de seccion publicaban "lag Nd" como si fuera la
+    edad del dato, pero "lag_days" tiene semantica distinta en cada
+    contrato: en EQUITY_EOD y SSGA_PRIMARY_FLOW es expected-effective
+    (~0-3d, coincide con la edad real); en FINRA_DARKPOOL es
+    expected_week (con -14d regulatorio) - effective_week (7d en
+    el run 17-11 cuando la edad real era 22d); en SEC_13F es
+    expected_quarter_end - effective_quarter_end (92d cuando la
+    edad real era 140d). Todos matematicamente correctos, pero el
+    lector interpreta "lag 92d" como "los datos tienen 92 dias".
+  commit: 'd0a44f33'
+  test: tests/test_report_temporal_annotation.py
+  evidencia: >
+    format_effective_date_line acepta reference_date opcional. Si
+    el age real (reference_date - effective_date) difiere del lag
+    contractual en >= 3 dias, anade ", antiguedad Nd" dentro del
+    mismo parentesis. Si la diferencia es < 3d (SSGA, EQUITY_EOD),
+    formato sin cambios (compat). src/report/etf_flows.py,
+    darkpool.py, iae.py: firma acepta reference_date y lo propaga
+    al helper. src/report_generator.py: pasa reference_date a
+    render_flujo_spdr y render_iae_section. +8 tests en
+    test_report_temporal_annotation.py. Verificado en produccion
+    (run 44296743332, 18-11): FINRA "*Datos al 2026-10-26
+    (lag 7d, antiguedad 23d).*", SEC_13F "*Datos al 2026-06-30
+    (lag 92d, antiguedad 141d).*". SPDR con "*Datos al 2026-11-17.*"
+    (sin lag: lag 0 con diff < 3). Suite 4745 passed.
+
+- id: LIQUIDITY-DELTA-SIN-DATO-NUEVO
+  tipo: bug
+  ciclo: '2026-11-19'
+  estado: FIXED
+  verificacion: VERIFIED_IN_CI
+  descripcion: >
+    Bug detectado en la revision del reporte 18-11 (run 44296743332):
+    "Liquidity Delta (vs ejecucion anterior): 0.000 (ESTABLE)"
+    mientras el regimen cambio NEUTRAL -> ESTRECHA y el score paso
+    de -0.067 a -0.167. Causa: en el segundo run del dia, el
+    liquidity_state.json ya tiene la fecha del FRED actualizada por
+    el primer run. previous_score == score -> delta = 0.
+    Matematicamente correcto, pero "ESTABLE" sugiere "sin cambio de
+    regimen" cuando en realidad significa "sin dato FRED nuevo desde
+    el run anterior". El cambio real se publico en el PRIMER run del
+    dia.
+  commit: '7108b027'
+  test: tests/test_report_alerts_header.py
+  evidencia: >
+    render_regimenes compara liquidity_state["date"] con la fecha
+    efectiva del score. Si coinciden, publica "*Liquidity Delta:
+    sin dato nuevo desde {date}*". Si difieren, mantiene el
+    comportamiento previo (MEJORA / EMPEORA / ESTABLE + delta
+    numerico). Fallback explicito cuando liquidity_state no se pasa
+    (compat con tests y llamadas sin state). +3 tests en
+    test_report_alerts_header.py. Sin tocar compute_liquidity_score_v2
+    ni compute_real_liquidity: la logica del score no cambia, solo
+    la presentacion del delta. Verificacion en produccion pendiente
+    del proximo scheduled (el segundo run del dia debe publicar
+    "sin dato nuevo desde ..." en lugar de "0.000 (ESTABLE)").
+
