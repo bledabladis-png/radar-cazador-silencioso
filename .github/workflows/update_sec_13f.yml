@@ -2,9 +2,14 @@ name: Actualizar SEC 13F (trimestral)
 
 on:
   schedule:
-    # 20 feb/may/ago/nov, 06:17 UTC. 5 dias despues del deadline SEC
-    # (45 dias post-cierre de trimestre). Cubre los 4 trimestres.
-    - cron: '17 6 20 2,5,8,11 *'
+    # Mensual, dia 10 06:17 UTC. El dataset SEC se publica tras el
+    # cierre de la ventana de envio (feb/may/ago/nov), no tras el
+    # deadline de filing. Dia 10 = window-end + 9/10d >= margen 7
+    # (SEC_13F_PUBLICATION_MARGIN_DAYS). SKIP idempotente los meses
+    # sin quarter nuevo; primer intento util = cierre+71 < 90
+    # (contrato SEC_13F). Centinela: test_update_sec_13f.py.
+    # Ver REGISTRO: SEC-13F-PUBLICATION-ANCHOR.
+    - cron: '17 6 10 * *'
   workflow_dispatch:
     inputs:
       quarter:
@@ -75,7 +80,8 @@ jobs:
           Q_INPUT: ${{ inputs.quarter }}
         run: |
           # Si hay input, usarlo. Si no, --latest (inferencia por
-          # lag 50d en settings; unica fuente de verdad).
+          # ventana de envio + margen en settings; unica fuente
+          # de verdad).
           if [ -n "$Q_INPUT" ]; then
             ARGS="--quarter $Q_INPUT"
           else

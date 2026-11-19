@@ -319,8 +319,8 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 | update_european_holdings.yml | 17 5 1 1,4,7,10 * | Holdings europeos |
 | update_index_holdings.yml | 17 4 1 1,4,7,10 * | SPY/DIA/QQQ/IWM |
 | update_qqq_sec_flow.yml | 17 6 15 1,7 * | QQQ SEC flow |
-| update_sec_nport.yml | 17 6 20 1,4,7,10 * | N-PORT |
-| update_sec_13f.yml | 17 6 20 2,5,8,11 * | SEC 13F trimestral + cache IAE |
+| update_sec_nport.yml | 17 6 * * 3 | N-PORT semanal (miercoles) |
+| update_sec_13f.yml | 17 6 10 * * | SEC 13F mensual (ventana+margen 7d) + cache IAE |
 | update_sector_holdings.yml | 47 2 1 1,4,7,10 * | Holdings sectoriales |
 | health_check.yml | 47 6 * * 1 | Vigilancia semanal (7 bloques) |
 

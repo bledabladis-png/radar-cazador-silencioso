@@ -369,7 +369,7 @@ Regeneracion automatica:
 
 **Cobertura del catalogo:** declarada 98.68% sobre 529 tickers (S33-bis; antes 99.17% sobre 242). Cobertura TARGET construido: 100% por construccion (endogeneidad por diseño: el TARGET se construye desde el catalogo, asi que la cobertura TARGET es 100% por definicion). Los 7 tickers no observables (4 sin crosswalk: BF-B, OKE, PSKY, VYLR; 3 con eventos societarios en ambos trimestres) se excluyen del TARGET. coverage_quality=COMPLETE significa que el subconjunto observable alcanza el umbral interno (0.95); no implica cobertura del 100% del catalogo.
 
-**Latencia regulatoria:** N-PORT ~60 dias, 13F trimestral (~45d post cierre trimestre). **Lag efectivo del sistema: 50d** (`SEC_13F_QUARTER_LAG_DAYS`), margen de 5d sobre la latencia regulatoria, alineado con el cron 20-feb/may/ago/nov y con `update_sec_13f.py --latest`.
+**Latencia regulatoria:** N-PORT ~60 dias, 13F trimestral (~45d post cierre trimestre). **Ancla de elegibilidad del sistema: cierre de la ventana de envio SEC + margen 7d** (`SEC_13F_PUBLICATION_MARGIN_DAYS`). SEC publica el dataset tras el cierre de los meses feb/may/ago/nov, no tras el deadline de filing (45d): Q3 cierra 30-sep pero su ventana 01sep-30nov no cierra hasta 30-nov. Cron mensual dia 10 (`17 6 10 * *`), alineado con `update_sec_13f.py --latest`. El ancla vieja (cierre+50d, `SEC_13F_QUARTER_LAG_DAYS`) provocaba 404 estructural en cada cron; corregido 2026-11-19 (SEC-13F-PUBLICATION-ANCHOR).
 
 **Ambiguity de identidad:** el resolver puede en teoria tener dos canonical_security para una misma security (dualidad equity/figi). No observado en E2E. Se reabre si se activa figi_lookup o aparece un caso `figi:*`.
 

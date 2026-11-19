@@ -192,15 +192,23 @@ MANIFEST_DUP_THRESHOLD = 0.5
 TOP_N_CANDIDATES = 15   # pre-filtro por weight antes del WLS
 TOP_N_SECTOR_COMPONENTS = 20  # componentes por sector descargados y considerados en breadth
 
-# SEC 13F trimestral: dias minimos desde el cierre del trimestre
-# antes de intentar descargar el dataset.
-# Politica oficial (2026-09-30): 50d. Latencia regulatoria ~45d
-# (03_IAE.md); los 5d extra son margen. Alinea con cron
-# 20-feb/may/ago/nov (=50d post cierre real) y con
-# scripts/update_sec_13f.py --latest, unico consumidor de este valor.
-# Cambiar 50 obliga a revisar
-# tests/test_update_sec_13f.py::test_latest_published_quarter.
-SEC_13F_QUARTER_LAG_DAYS = 50
+# Margen de publicacion del dataset SEC 13F tras el CIERRE DE LA VENTANA
+# de envio (no tras el cierre del trimestre ni el deadline de filing).
+# SEC: "the quarterly data sets will be run for the prior three months
+# following the end of the months: February, May, August, November"
+# (sec.gov/data-research/sec-markets-data/form-13f-data-sets).
+# Ejemplo Q3: cierre 30-sep, ventana 01sep-30nov; el dataset no existe
+# antes del 30-nov. Bracket observado: jun-ago 2026 publicado entre
+# 31-ago (update de pagina) y 24-sep (descarga real, run 36014804820).
+# Margen 7d dentro del bracket. Coherencia: cron mensual dia 10
+# (window-end + 9/10d) >= margen; centinela en
+# tests/test_update_sec_13f.py lo fija con el calendario real.
+# Cambiar este valor obliga a revisar test_latest_published_quarter
+# y el cron de .github/workflows/update_sec_13f.yml.
+# Sustituye a SEC_13F_QUARTER_LAG_DAYS=50 (ancla incorrecta: deadline
+# 45d + 5d margen). Causa del 404 estructural del run 44585740091.
+# Ver REGISTRO: SEC-13F-PUBLICATION-ANCHOR.
+SEC_13F_PUBLICATION_MARGIN_DAYS = 7
 TOP_N_LEADERS = 5       # cuantos se muestran en el reporte
 
 # 2026-10-30 (O2 coherencia analisis=descarga): compute_all_stock_metrics

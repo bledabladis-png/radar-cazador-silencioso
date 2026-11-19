@@ -7,7 +7,7 @@ Cubre:
   - _parse_quarter (validaciones)
   - quarter_to_iso_end (4 trimestres)
   - quarter_to_source_period (formato SEC, cruce de año, bisiesto)
-  - latest_published_quarter (regla 60 dias)
+  - latest_published_quarter (ancla ventana de envio + margen)
   - _pick_base_url (OLD vs NEW)
 """
 from __future__ import annotations
@@ -16,12 +16,14 @@ from datetime import date
 
 import pytest
 
+from config import settings
 from scripts.update_sec_13f import (
     _is_leap,
     _last_day_of_month,
     _parse_quarter,
     quarter_to_iso_end,
     quarter_to_source_period,
+    quarter_to_window_end,
     latest_published_quarter,
 )
 from src.institutional_accumulation.sec_13f.downloader import (
@@ -101,18 +103,36 @@ def test_quarter_to_source_period(q, expected):
 # --- latest_published_quarter -------------------------------------------
 
 @pytest.mark.parametrize("today,expected", [
-    # Casos genericos (validos con lag 50 o 60).
-    (date(2026, 5, 1), "2025Q4"),   # Q1 2026 aun no pasa lag (31-mar+50=20-may)
-    (date(2026, 6, 30), "2026Q1"),  # 20-may ya paso; Q2 cierra 30-jun no
-    (date(2026, 9, 23), "2026Q2"),  # 19-ago paso; Q3 cierra 30-sep no
-    (date(2027, 2, 15), "2026Q3"),  # 19-nov-26 paso; Q4 31-dic+50=19-feb-27 no
-    (date(2024, 1, 15), "2023Q3"),  # 19-nov-23 paso; 2023Q4 31-dic+50 no
-    # Casos frontera: distinguen lag 50 de lag 60. Si alguien revierte
-    # SEC_13F_QUARTER_LAG_DAYS a 60, estos 4 fallan.
-    (date(2026, 5, 25), "2026Q1"),  # Q1 +50d=20-may (cumple); +60d=30-may (no)
-    (date(2026, 8, 25), "2026Q2"),  # Q2 +50d=19-ago (cumple); +60d=29-ago (no)
-    (date(2026, 11, 25), "2026Q3"), # Q3 +50d=19-nov (cumple); +60d=29-nov (no)
-    (date(2027, 2, 20), "2026Q4"),  # Q4 +50d=19-feb (cumple); +60d=1-mar (no)
+    # Casos genericos: lejos de fronteras, mismo expected con el ancla
+    # nueva (ventana + margen 7) que con la vieja (cierre + 50).
+    (date(2026, 5, 1), "2025Q4"),   # Q1 ventana cierra 31-may; no elegible
+    (date(2026, 6, 30), "2026Q1"),  # Q1 elegible 7-jun; Q2 ventana 31-ago
+    (date(2026, 9, 23), "2026Q2"),  # Q2 elegible 7-sep; Q3 ventana 30-nov
+    (date(2027, 2, 15), "2026Q3"),  # Q3 elegible 7-dic; Q4 ventana 28-feb
+    (date(2024, 1, 15), "2023Q3"),  # Q3-23 elegible 7-dic-23; Q4-23 ventana 29-feb-24
+    # Regresion run 44585740091 (19-nov) y cron viejo (20-nov): Q3
+    # ventana cierra 30-nov -> dataset inexistente -> latest = Q2.
+    (date(2026, 11, 19), "2026Q2"),
+    (date(2026, 11, 20), "2026Q2"),
+    # Fronteras viejas (cierre+50): caen ANTES del cierre de ventana.
+    # Con el ancla correcta devuelven el quarter anterior (flip
+    # semantico deliberado; con lag 50 devolvian el no publicado).
+    (date(2026, 5, 25), "2025Q4"),  # ventana Q1 cierra 31-may
+    (date(2026, 8, 25), "2026Q1"),  # ventana Q2 cierra 31-ago
+    (date(2026, 11, 25), "2026Q2"), # ventana Q3 cierra 30-nov
+    (date(2027, 2, 20), "2026Q3"),  # ventana Q4 cierra 28-feb-27
+    # Fronteras nuevas: window_end + margen - 1 vs + margen (7d).
+    (date(2026, 6, 6), "2025Q4"),   # Q1: 31-may + 6 = 6-jun (no elegible)
+    (date(2026, 6, 7), "2026Q1"),   # Q1: 31-may + 7 = 7-jun (elegible)
+    (date(2026, 9, 6), "2026Q1"),   # Q2: 31-ago + 6
+    (date(2026, 9, 7), "2026Q2"),   # Q2: 31-ago + 7
+    (date(2026, 12, 6), "2026Q2"),  # Q3: 30-nov + 6
+    (date(2026, 12, 7), "2026Q3"),  # Q3: 30-nov + 7
+    (date(2027, 3, 6), "2026Q3"),   # Q4: 28-feb + 6
+    (date(2027, 3, 7), "2026Q4"),   # Q4: 28-feb + 7
+    # Bisiesto: Q4-2023 ventana cierra 29-feb-2024.
+    (date(2024, 3, 6), "2023Q3"),   # 29-feb + 6
+    (date(2024, 3, 7), "2023Q4"),   # 29-feb + 7
 ])
 def test_latest_published_quarter(today, expected):
     assert latest_published_quarter(today) == expected
@@ -302,3 +322,91 @@ def test_quarter_manifest_corrupto(tmp_path):
     mp = dd / "manifests" / "sec_13f_2026Q2.json"
     mp.write_text("{{not valid", encoding="utf-8")
     assert _is_quarter_fully_ingested("2026Q2", dd) is False
+
+
+# --- quarter_to_window_end (ancla de publicacion SEC) ------------------
+
+@pytest.mark.parametrize("q,expected", [
+    ("2026Q1", date(2026, 5, 31)),
+    ("2026Q2", date(2026, 8, 31)),
+    ("2026Q3", date(2026, 11, 30)),
+    ("2026Q4", date(2027, 2, 28)),
+    ("2023Q4", date(2024, 2, 29)),  # bisiesto
+])
+def test_quarter_to_window_end(q, expected):
+    assert quarter_to_window_end(q) == expected
+
+
+def test_latest_published_quarter_none_si_margen_enorme(monkeypatch):
+    """Margen absurdo -> ningun quarter elegible -> None (rama defensiva)."""
+    monkeypatch.setattr(settings, "SEC_13F_PUBLICATION_MARGIN_DAYS", 10000)
+    assert latest_published_quarter(date(2026, 11, 19)) is None
+
+
+def test_constante_vieja_ausente():
+    """Anti-zombie: el ancla vieja (cierre+lag) no debe reintroducirse."""
+    assert not hasattr(settings, "SEC_13F_QUARTER_LAG_DAYS")
+
+
+def test_cron_y_guarda_coherentes():
+    """Centinela de hardcode con garantia: el cron mensual debe caer
+    despues de window_end + margen para las 4 ventanas (incl. bisiesto),
+    y el primer intento util debe quedar dentro del contrato SEC_13F
+    (max_lag 90d desde cierre de trimestre)."""
+    import re
+    from pathlib import Path
+    wf = (Path(__file__).resolve().parent.parent /
+          ".github" / "workflows" / "update_sec_13f.yml")
+    text = wf.read_text(encoding="utf-8-sig")
+    crons = re.findall(r"cron:\s*'([^']+)'", text)
+    assert crons == ["17 6 10 * *"], crons
+    day = int(crons[0].split()[2])
+    margin = settings.SEC_13F_PUBLICATION_MARGIN_DAYS
+    for q in ("2026Q1", "2026Q2", "2026Q3", "2026Q4", "2023Q4"):
+        we = quarter_to_window_end(q)
+        ny, nm = ((we.year + 1, 1) if we.month == 12
+                  else (we.year, we.month + 1))
+        trigger = date(ny, nm, day)
+        assert (trigger - we).days >= margin, (q, we, trigger)
+        close = date.fromisoformat(quarter_to_iso_end(q))
+        assert (trigger - close).days < 90, (q, trigger)
+    assert latest_published_quarter(date(2026, 12, 10)) == "2026Q3"
+
+
+# --- trace de ingesta fallida (addon H5.3) ------------------------------
+
+def test_ingest_fallo_deja_trace_fail(tmp_path, monkeypatch):
+    """Un intento fallido registra outcome=FAIL y propaga la excepcion."""
+    import scripts.update_sec_13f as mod
+    calls = []
+    monkeypatch.setattr(
+        mod, "_write_ingest_trace",
+        lambda q, s, a, o, trace_path=None: calls.append((q, s, a, o)))
+    def _boom(**kwargs):
+        raise RuntimeError("404 simulado")
+    monkeypatch.setattr(mod, "ingest_13f", _boom)
+    monkeypatch.setattr(mod, "download_official_list",
+                        lambda q, force=False: tmp_path / "ol.txt")
+    monkeypatch.setattr(mod, "LATEST_FILE", tmp_path / "latest.txt")
+    with pytest.raises(RuntimeError):
+        mod.ensure_quarter("2026Q3", data_dir=tmp_path / "sec13f",
+                           official_dir=tmp_path / "ol",
+                           source="cron", actor="tester")
+    assert calls == [("2026Q3", "cron", "tester", "FAIL")]
+
+
+def test_ingest_exito_mantiene_trace_ingest(tmp_path, monkeypatch):
+    """El camino de exito sigue registrando outcome=INGEST (sin regresion)."""
+    import scripts.update_sec_13f as mod
+    calls = []
+    monkeypatch.setattr(
+        mod, "_write_ingest_trace",
+        lambda q, s, a, o, trace_path=None: calls.append((q, s, a, o)))
+    monkeypatch.setattr(mod, "ingest_13f", lambda **kw: {})
+    monkeypatch.setattr(mod, "download_official_list",
+                        lambda q, force=False: tmp_path / "ol.txt")
+    monkeypatch.setattr(mod, "LATEST_FILE", tmp_path / "latest.txt")
+    mod.ensure_quarter("2026Q3", data_dir=tmp_path / "sec13f",
+                       official_dir=tmp_path / "ol",
+                       source="cron", actor="tester")
+    assert calls == [("2026Q3", "cron", "tester", "INGEST")]

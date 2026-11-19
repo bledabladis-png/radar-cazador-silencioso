@@ -18,7 +18,7 @@ import getpass
 import json
 import os
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -120,22 +120,51 @@ def quarter_to_source_period(quarter):
     return start + "-" + end
 
 
-def latest_published_quarter(today=None):
-    """Devuelve el ultimo YYYYQn que probablemente este publicado.
+def quarter_to_window_end(quarter):
+    """YYYYQn -> date del cierre de la ventana de envio SEC.
 
-    Regla: SEC publica el dataset ~45-60 dias despues del cierre. Para
-    ser conservador, asumimos 60 dias.
+    La ventana cubre start_month..start_month+2 (Q4 cruza a febrero
+    del anio siguiente). SEC ejecuta el dataset tras el cierre de
+    ventana (feb/may/ago/nov), no tras el cierre del trimestre.
+    Reusa el mismo calendario que quarter_to_source_period: una
+    sola fuente de verdad.
+    """
+    year, qn = _parse_quarter(quarter)
+    start_month = _QUARTER_START_MONTH[qn]
+    end_month = start_month + 2
+    end_year = year
+    if end_month > 12:
+        end_month -= 12
+        end_year += 1
+    return date(end_year, end_month,
+                _last_day_of_month(end_year, end_month))
+
+
+def latest_published_quarter(today=None):
+    """Devuelve el ultimo YYYYQn cuyo dataset SEC probablemente existe.
+
+    Ancla: cierre de la VENTANA DE ENVIO + margen de publicacion
+    (settings.SEC_13F_PUBLICATION_MARGIN_DAYS). SEC publica los
+    datasets tras el cierre de los meses feb/may/ago/nov (nota oficial
+    en sec.gov/data-research/sec-markets-data/form-13f-data-sets).
+    Q3 cierra 30-sep pero su ventana cierra 30-nov: el dataset
+    01sep-30nov no existe antes de esa fecha.
+
+    Historico: hasta 2026-11-19 se usaba cierre_trimestre + 50d
+    (SEC_13F_QUARTER_LAG_DAYS), anclado al deadline de filing.
+    Provocaba 404 estructural en cada cron (run 44585740091, issue
+    #16). El retry 404 del downloader (WAF Akamai, d4c105de) no cubre
+    este caso: el fichero no existe, no es un 404 transitorio.
     """
     today = today or date.today()
-    lag = settings.SEC_13F_QUARTER_LAG_DAYS
-    candidate_year = today.year
+    margin = settings.SEC_13F_PUBLICATION_MARGIN_DAYS
     candidates = []
-    for y in (candidate_year, candidate_year - 1):
+    for y in (today.year, today.year - 1):
         for qn in ("Q4", "Q3", "Q2", "Q1"):
-            iso = quarter_to_iso_end("{:04d}{}".format(y, qn))
-            end = datetime.strptime(iso, "%Y-%m-%d").date()
-            if (today - end).days >= lag:
-                candidates.append(("{:04d}{}".format(y, qn), end))
+            quarter = "{:04d}{}".format(y, qn)
+            window_end = quarter_to_window_end(quarter)
+            if (today - window_end).days >= margin:
+                candidates.append((quarter, window_end))
     candidates.sort(key=lambda x: x[1], reverse=True)
     return candidates[0][0] if candidates else None
 
@@ -271,13 +300,21 @@ def ensure_quarter(quarter, *, force=False,
         print("[INGEST] {} desde {}".format(quarter, base_url))
         outcome = "INGEST"
         # ingest_13f gestiona descarga + extract + parse + write + manifest
-        result = ingest_13f(
-            quarter=quarter,
-            source_period=source_period,
-            base_dir=str(data_dir),
-            force_download=force,
-            project_root=str(ROOT),
-        )
+        try:
+            result = ingest_13f(
+                quarter=quarter,
+                source_period=source_period,
+                base_dir=str(data_dir),
+                force_download=force,
+                project_root=str(ROOT),
+            )
+        except Exception:
+            # Trazabilidad H5.3: el intento fallido tambien deja fila.
+            # Sin esto, ingest_traces.jsonl solo registraba SKIP/INGEST
+            # completados y los fallos eran invisibles en el trace.
+            _write_ingest_trace(quarter, source,
+                                actor or _resolve_actor(), "FAIL")
+            raise
         info["manifest_path"] = str(result.get("manifest_path", ""))
         info["parquet_paths"] = {k: str(v) for k, v in
                                  result.get("parquet_paths", {}).items()}
@@ -346,6 +383,17 @@ def main():
         print("[LATEST] {}".format(quarter))
     else:
         ap.error("--quarter o --latest requerido")
+
+    # Aviso informativo si el quarter explicito aun no es elegible
+    # (ventana no cerrada + margen). No bloquea: --quarter es override
+    # del operador; el fallo sigue siendo feedback genuino.
+    _we = quarter_to_window_end(quarter)
+    _eligible = _we + timedelta(days=settings.SEC_13F_PUBLICATION_MARGIN_DAYS)
+    if date.today() < _eligible:
+        print("[WARN] {} ventana cierra {}; dataset probablemente no "
+              "publicado hasta ~{} (override explicito, se intenta "
+              "igual)".format(quarter, _we.isoformat(),
+                              _eligible.isoformat()))
 
     quarters = _quarters_range(quarter, args.backfill)
     if len(quarters) > 1:

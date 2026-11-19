@@ -63,25 +63,30 @@ Disparan el dia 1 del mes (holdings):
     update_qqq_sec_flow.yml         17 6 15 1,7 *        CEST 08:17
       -> outputs/history/qqq_sec_primary_flow.csv
 
-### 2.4. Cron trimestral (meses 2, 5, 8, 11)
+### 2.4. Cron mensual (dia 10) - SEC 13F
 
-    update_sec_13f.yml              17 6 20 2,5,8,11 *   CEST 08:17
-      -> ingesta SEC 13F (lag 50d, ver D4 2026-09-30)
+    update_sec_13f.yml              17 6 10 * *          CEST 08:17
+      -> ingesta SEC 13F (ventana de envio + margen 7d; mensual dia 10; ver SEC-13F-PUBLICATION-ANCHOR)
 
-#### 2.4.1. Verificacion H5.3 (cron 13F nov 2026)
+#### 2.4.1. Verificacion H5.3 (cron 13F dic 2026)
 
     gh run list --workflow=update_sec_13f.yml --event schedule --limit 5
     Get-Content data\sec_13f\ingest_traces.jsonl -Encoding UTF8 | Select-Object -Last 5
 
-Esperado: entrada con {"source":"cron", "outcome":"INGEST", ...} y
-sin rama SKIP inesperada. Fecha de referencia: 20-nov-2026 06:17 UTC.
+Esperado: entrada con {"source":"cron", "outcome":"INGEST", ...} para
+2026Q3. Fecha de referencia: 10-dic-2026 06:17 UTC (primer trigger del
+cron mensual; el trimestral 20-nov quedo sustituido por el ancla de
+ventana de envio, ver SEC-13F-PUBLICATION-ANCHOR).
 
-Si no hay entrada: revisar seccion 4.1 (cron no disparo). Si el
-outcome es SKIP: determinar causa (quarter ya ingestado, feriado,
-fallo upstream).
+Si no hay entrada: revisar seccion 4.1 (cron no disparo). SKIP es el
+resultado NORMAL en meses sin quarter nuevo elegible (idempotencia);
+investigar solo si se esperaba INGEST o si el outcome es FAIL (el
+trace registra FAIL desde SEC-13F-PUBLICATION-ANCHOR).
 
-Trazabilidad: H5.3 implementada 2026-09-30. Ver 03_IAE.md seccion
-H5 y 04_HISTORICO.md.
+Trazabilidad: H5.3 implementada 2026-09-30. Ancla de publicacion
+corregida 2026-11-19 (SEC-13F-PUBLICATION-ANCHOR): cron mensual dia 10,
+guarda window_end + margen 7d, trace con outcome FAIL. Ver 03_IAE.md
+seccion H5 y 04_HISTORICO.md.
 
 ### 2.5. Deuda estructural detectada 2026-09-30
 
