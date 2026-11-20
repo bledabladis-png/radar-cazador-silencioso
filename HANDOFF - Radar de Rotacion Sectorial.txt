@@ -1,4 +1,4 @@
-# HANDOFF - Radar de Rotacion Sectorial
+﻿# HANDOFF - Radar de Rotacion Sectorial
 
 Documento de traspaso. Autocontenido. Pegar al inicio del nuevo chat
 junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
@@ -99,12 +99,12 @@ Bloque auditoria 2026-11-07:
 **Autonomia 13F verificada (no fix, no commit).**
 
 - `.github/workflows/update_sec_13f.yml` tiene cron
-  `17 6 20 2,5,8,11 *` (20 feb/may/ago/nov 06:17 UTC, 5 dias
+  `17 6 10 * *` (20 feb/may/ago/nov 06:17 UTC, 5 dias
   post-deadline SEC). Introducido el 25-sep-2026 (3c345b24).
 - `gh api` confirma `state: active`.
 - 0 runs scheduled en historial: el cron no ha tenido
   oportunidad de disparar (introducido 25-sep, proximo 20-nov).
-- Primer disparo real: 20-nov-2026 06:17 UTC, ingiere Q3-2026
+- Primer disparo real: 10-dic-2026 06:17 UTC (cron mensual, ingiere Q3-2026 con ventana cerrada 30-nov)
   (cierre 30-sep, deadline SEC 14-nov).
 - Manifests actuales (05-10) son de ejecucion manual local del
   operador, no del bot. Q2-2026 es el ultimo ingerido
@@ -198,7 +198,7 @@ estan cubiertos:
 |---|---|---|
 | TEST-FRESHNESS-UMBRAL-VS-CADENCIA | 2026-11-10 | **CERRADO WONT_FIX** (5/5 filas gap_bus=0, hipotesis umbral refutada) |
 | RECEIPT-AUDIT-LAG | 2026-11-17 | **CERRADO FIXED c3c25782** (last-wins receipt_audit; bug reproducido 10-11 en 04:38 vs 11:10 UTC) |
-| H5.3 | 2026-11-20 | Verificar cron trimestral 13F (primer disparo real) |
+| H5.3 | 2026-12-10 | Verificar cron mensual 13F (10-dic 06:17 UTC, primer trigger real) |
 
 ### 3.6. Deuda detectada sesiones anteriores (no accionada)
 
@@ -871,7 +871,7 @@ Esperado:
 - **Gate panel:** GATE_PANEL_USA son 20 blue chips. Small caps
   pueden no estar completos cuando el gate dice READY. H12-fix
   mitiga via reintentos. Ampliar panel es deuda observacional.
-- **13F autonomo:** cron `17 6 20 2,5,8,11 *` active. Primer
+- **13F autonomo:** cron `17 6 10 * *` active. Primer
   disparo 20-nov-2026 06:17 UTC. Retry 3x + issue si falla.
 
 ### 5.6. PowerShell / Python

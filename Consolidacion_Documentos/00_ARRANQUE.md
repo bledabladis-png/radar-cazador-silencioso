@@ -1,4 +1,4 @@
-# 00 - ARRANQUE
+﻿# 00 - ARRANQUE
 
 **Documento de arranque. Se pega al inicio de cada sesion.**
 **Autosuficiente para empezar a trabajar. Los demas (01-05) son referencia on-demand.**
@@ -212,7 +212,7 @@ S33 (2026-11-07): `TARGET_WEIGHT_COVERAGE` paso de 0.85 a 1.0. Clasifica univers
 - **WYCKOFF-5BX:** BLOCKED_EXTERNAL. `n_confirmed_H20_complete >= 550` (~2027). Instrumentado (54d4a23f). Valores: 27/68 (02-11) -> 31/73 (04-11). Ver `outputs/state/wyckoff_5bx_counter.json`.
 - **SEMANTICA-SIN-CONTRATO-INVENTARIO:** OPEN. Inventariar conceptos con semantica sin contrato. ROI bajo, no urgente.
 - **DAILY-RUN-FAIL-40992758129:** WONT_FIX razonado 2026-11-06. Ultimo fallo 30-10 (`89b6e0a2`), sin reaparicion en 7 dias. `cron_slots` WARN tampoco en ultimos 30 runs.
-- **H5.3:** cron 20-nov-2026 06:17 UTC.
+- **H5.3:** cron mensual dia 10 06:17 UTC. Primer trigger real: 10-dic-2026 (ventana SEC cerrada 30-nov). Ver item en REGISTRO.
 - **RECEIPT-AUDIT-LAG:** CERRADO FIXED (c3c25782, S34). Bug last-wins de receipt_audit reproducido 10-11 (04:38 vs 11:10 UTC); corregido en S34, ver item en REGISTRO.
 - **CRON-SLOTS-OBS:** FIXED 2026-11-06 (revision adelantada). 21/22 dias con >=1 run scheduled en ventana 22 dias, 1 solo dia con 0/5 slots (16-10) < umbral 2. Evidencia en 04_HISTORICO S30. Commit `bbd9e4b4`.
 - **SCHEDULER-DELAYS:** WONT_FIX razonado 2026-11-06 (revision adelantada). p95 <=8h cumple criterio del propio item. Delays no son metrica util con slots nominales que solapan 1-9h. 4 fallos de la ventana son `340bfadc` (cerrado S29). Evidencia en 04_HISTORICO S30. Commit `bbd9e4b4`.

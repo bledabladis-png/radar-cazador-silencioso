@@ -1,4 +1,4 @@
-version: 1
+﻿version: 1
 items:
 - id: C2-920
   tipo: frente
@@ -232,8 +232,8 @@ items:
   tipo: frente
   ciclo: '2026-10-03'
   estado: OPEN
-  descripcion: Trazabilidad cron trimestral 13F
-  siguiente_accion: Verificar cron real del 20-nov-2026 06:17 UTC
+  descripcion: Trazabilidad cron 13F (trimestral -> mensual dia 10, SEC-13F-PUBLICATION-ANCHOR 2026-11-19)
+  siguiente_accion: Verificar cron mensual del 10-dic-2026 06:17 UTC (primer trigger real con ventana de envio cerrada)
 - id: H6
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -8325,3 +8325,53 @@ items:
     del proximo scheduled (el segundo run del dia debe publicar
     "sin dato nuevo desde ..." en lugar de "0.000 (ESTABLE)").
 
+
+- id: SEC-13F-PUBLICATION-ANCHOR
+  tipo: bug
+  ciclo: '2026-11-19'
+  estado: FIXED
+  verificacion: VERIFIED_IN_CI
+  descripcion: >
+    Ancla de publicacion del dataset SEC 13F incorrecta: latest_published_quarter
+    usaba cierre de trimestre + 50d (SEC_13F_QUARTER_LAG_DAYS, anclado al deadline
+    de filing), pero SEC publica el dataset tras el cierre de la ventana de envio
+    (feb/may/ago/nov). Q3-2026: cierre 30-sep, ventana 01sep-30nov, deadline
+    14-nov. El cron del 20-nov (5d post-deadline) disparaba ANTES de la
+    publicacion: 404 estructural (run 44585740091, issue #16). El retry 404 del
+    downloader (WAF Akamai) no cubre este caso: el fichero no existe, no es
+    transitorio. Bracket observado: jun-ago 2026 publicado entre 31-ago (update
+    pagina) y 24-sep (descarga real, run 36014804820).
+  commit: '1058d2b0'
+  test: tests/test_update_sec_13f.py
+  evidencia: >
+    settings: SEC_13F_PUBLICATION_MARGIN_DAYS=7 (ventana+margen) sustituye a
+    SEC_13F_QUARTER_LAG_DAYS=50. script: quarter_to_window_end + guarda
+    re-anclada, aviso en --quarter explicito no elegible, trace outcome=FAIL.
+    workflow: cron mensual 17 6 10 * * (window-end+10 >= margen 7; primer
+    intento util cierre+71 < 90 del contrato SEC_13F). tests: +22 netos
+    (fronteras ventana+margen, regresion 19/20-nov, bisiesto, centinela
+    cron/guarda/contrato, anti-zombie, trace FAIL/INGEST). docs: runbook
+    (centinela runbook-vs-workflows), 03_IAE (ancla), 02_ARQUITECTURA (fila
+    13F mensual; fila nport semanal corregida de paso, drift preexistente
+    desde 2026-10-16). Verificacion: suite 4767 passed 2 skipped 0 failed;
+    centinela runbook 2/2; gobernanza OK. Evidencia externa: nota oficial
+    sec.gov form-13f-data-sets, bracket de publicacion 31-ago/24-sep, log
+    44585740091, pickaxe d4c105de.
+
+- id: SEC-NPORT-ARQ-DRIFT
+  tipo: bug
+  ciclo: '2026-11-19'
+  estado: FIXED
+  verificacion: VERIFIED_IN_CI
+  descripcion: >
+    Fila update_sec_nport.yml en 02_ARQUITECTURA con cron trimestral viejo
+    (17 6 20 1,4,7,10 *) cuando el YAML era semanal (17 6 * * 3) desde
+    2026-10-16. Drift silencioso: la tabla no tenia centinela, solo el
+    runbook si. Runbook corregido 2026-11-03, arquitectura no. Centinela
+    test_arquitectura_vs_workflows.py cierra la clase.
+  commit: '1058d2b0'
+  test: tests/test_arquitectura_vs_workflows.py
+  evidencia: >
+    Fila actualizada a 17 6 * * 3 (semanal miercoles). Centinela con 3 tests
+    (coincidencia, cobertura inversa, anti-zombie cron viejo 13F) protege
+    contra futuros drifts de la misma clase. Verificacion: 3/3 passed.
