@@ -22,7 +22,7 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 4745 passed, 2 skipped (excluye integration_real_data; paridad CI)
+- **Resumen:** 4770 passed, 2 skipped (excluye integration_real_data; paridad CI)
 - **Exit code:** 0
 
 **Tests skip:**
@@ -106,7 +106,7 @@ porque el commit que lo contiene cambia HEAD.
 - `scripts/iae_contractual_nipc_e2e.py`: 142 LOC
 - `scripts/regenerate_radar_catalog.py`: 333 LOC
 - `scripts/regenerate_cusip_crosswalk.py`: 238 LOC
-- `scripts/update_sec_13f.py`: 373 LOC
+- `scripts/update_sec_13f.py`: 421 LOC
 - `scripts/download_official_list_13f.py`: 147 LOC
 
 ## 7. Evidencia empirica (directorios)
