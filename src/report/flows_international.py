@@ -6,6 +6,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d4a).
 """
 
 import pandas as pd
+from config.settings import FLOW_ZSCORE_WINDOW, ETF_PRIMARY_FLOW_ZSCORE_WINDOW
 
 from src.report.helpers import _fmt_num, _fmt_signed
 
@@ -392,6 +393,17 @@ def render_flujo_sintesis(flow_synthesis):
         out.append(f"| ETF Primary Flow | {_fmt_signed(flow_synthesis.get('etf_primary_flow_sign'), '{:+.2f}', '{:.2f}')} |\n")
         out.append(f"| CFTC Position Flow | {_fmt_signed(flow_synthesis.get('cftc_flow_sign'), '{:+.2f}', '{:.2f}')} |\n")
         out.append(f"| Europa Primary Flow | {_fmt_signed(flow_synthesis.get('european_flow_sign', 0), '{:+.2f}', '{:.2f}')} |\n")
+        # 13.4 (auditoria analista 2026-11-21): tabla de metadatos metodologicos.
+        # Responde a: horizonte, universo, unidades, ponderacion de cada capa.
+        # Las ventanas se derivan de config.settings (durable).
+        out.append("\n| Capa | Horizonte | Universo | Unidades | Ponderacion |\n")
+        out.append("|------|-----------|----------|----------|-------------|\n")
+        out.append(f"| Flow Proxy | {FLOW_ZSCORE_WINDOW}d | lideres sectoriales | z-score | media simple |\n")
+        out.append(f"| ETF Primary Flow | {ETF_PRIMARY_FLOW_ZSCORE_WINDOW}d | ETFs SPDR | z-score | media simple |\n")
+        out.append(f"| CFTC Position Flow | {FLOW_ZSCORE_WINDOW}d | contratos TFF (ultima fecha) | z-score | media simple |\n")
+        out.append(f"| Europa Primary Flow | {ETF_PRIMARY_FLOW_ZSCORE_WINDOW}d | DAXEX, ISF.L, LYXI | z-score | media simple |\n")
+        out.append("\n*Nota: las 4 capas son medias simples de z-scores. No hay ponderacion por AUM ni agregacion monetaria. Los valores no son sumables ni comparables entre capas (universos y ventanas distintos).*\n")
+
         out.append(f"\n**FLOW_CONFIDENCE:** {flow_synthesis.get('confidence', 'N/A')}\n")
         # C.2 (2026-11-01): capas derivadas del dict, no literal.
         _cap_keys = [k for k in flow_synthesis.keys() if k.endswith("_sign")]
