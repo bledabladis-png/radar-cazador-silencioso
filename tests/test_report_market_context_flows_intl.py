@@ -350,3 +350,24 @@ def test_flujo_sintesis_european_default_cero():
     out = render_flujo_sintesis({"confidence": "BAJA"})
     lineas = "".join(out)
     assert "Europa Primary Flow | 0.00" in lineas
+
+# ============================================================
+# 13.9 (auditoria analista 2026-11-21): IWM no es internacional
+# ============================================================
+
+def test_flujos_primarios_tabla_titulo_y_nota_iwm():
+    """El titulo de la tabla debe aclarar que IWM es USA, no internacional."""
+    from src.report.flows_international import render_flujos_internacionales_agregados
+    out = render_flujos_internacionales_agregados(
+        blackrock_dax_flow=None,
+        blackrock_isf_flow=None,
+        amundi_lyxi_flow=None,
+        blackrock_iwm_flow=None,
+    )
+    joined = "".join(out)
+    # El titulo no debe decir "internacionales" sin mas
+    assert "Flujos primarios diarios" in joined
+    # La nota debe aclarar que IWM es USA
+    assert "IWM" in joined
+    assert "EE.UU." in joined or "USA" in joined
+    assert "europeos" in joined.lower()

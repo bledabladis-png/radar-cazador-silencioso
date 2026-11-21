@@ -118,10 +118,8 @@ def render_flujos_internacionales_agregados(
             "z": _fmt_signed(r['primary_flow_z'], '{:+.2f}', '{:.2f}'),
         })
 
-    if not rows:
-        return out
 
-    out.append("## Flujos primarios internacionales (diarios)\n")
+    out.append("## Flujos primarios diarios (Europa + IWM USA)\n")
     out.append("| Fondo | Ultima fecha | NAV | \u0394 Shares | Flujo est. | Flujo % AUM | Z-score |\n")
     out.append("|-------|--------------|-----|----------|------------|-------------|---------|\n")
     for r in rows:
@@ -129,6 +127,11 @@ def render_flujos_internacionales_agregados(
     out.append("\n")
     out.append("*Fuente: BlackRock (DAXEX, ISF.L, IWM) y Amundi (LYXI). "
                "ETF Primary Flow = \u0394SharesOutstanding \u00d7 NAV.*\n\n")
+    # 13.9 (auditoria analista 2026-11-21): aclarar que IWM es un ETF USA,
+    # no internacional. Los otros tres fondos son europeos.
+    out.append("*IWM (iShares Russell 2000) es un ETF de small caps de EE.UU., "
+               "incluido aqui por su relevancia como proxy de riesgo de mercado. "
+               "Los otros tres fondos (DAXEX, ISF.L, LYXI) son europeos.*\n\n")
     # B4 (2026-10-13): z-score se clipea a [-5, +5] en el canonico
     # robust_zscore. Un valor exactamente +-5.00 indica saturacion
     # del clip; el z real puede ser mas extremo.
