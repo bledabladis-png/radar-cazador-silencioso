@@ -141,8 +141,10 @@ def render_mte(mte_result):
         if _fut_status and _fut_status != 'OK':
             out.append(
                 f"- **Futures Status:** {_fut_status} "
-                "*(inputs de futuros no frescos o ausentes; "
-                "la confidence del escenario NO se degrada por este estado)*\n")
+                "*(inputs de precios de futuros no frescos o ausentes; "
+                "la confidence del escenario NO se degrada por este estado. "
+                "Nota: esto se refiere a la frescura de los precios diarios de los contratos de futuros, "
+                "no al flujo de posiciones CFTC que es semanal y se reporta por separado)*\n")
         # Fix 2026-10-30 (clase 1fb791ab): pending_out es el escenario
         # al que se esta transitando. Si no es None, el scenario actual
         # es el estado consolidado y pending es la transicion en curso

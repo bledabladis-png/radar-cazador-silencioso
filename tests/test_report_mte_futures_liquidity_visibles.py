@@ -50,7 +50,7 @@ def test_mte_futures_status_stale_pinta_linea():
     """STALE es un WARN real: el reporte debe publicarlo."""
     out = "".join(render_mte(_mte_base(futures_status="STALE")))
     assert "Futures Status:** STALE" in out
-    assert "inputs de futuros no frescos" in out
+    assert "precios de futuros no frescos" in out
 
 
 def test_mte_futures_status_unavailable_pinta_linea():
