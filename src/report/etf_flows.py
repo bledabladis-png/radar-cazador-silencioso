@@ -151,7 +151,7 @@ def render_divergencia_precio_flujo(sector_flow_characteristics_data):
         for _, row in _flow_filtered.iterrows():
             out.append(f"| {row['sector']} | {row['price_ret_5d']:.2%} | {_fmt_signed(row['flow_5d_sum'], '{:+,.0f}', '{:,.0f}')} | {row['price_flow_regime_5d']} | {row['price_ret_20d']:.2%} | {_fmt_signed(row['flow_20d_sum'], '{:+,.0f}', '{:,.0f}')} | {row['price_flow_regime_20d']} |\n")
         out.append("\n")
-        out.append("*«Absorción potencial» describe una configuración de retorno negativo del precio acompañada de flujo primario acumulado positivo. Puede ser compatible con absorción, pero no confirma por sí sola absorción institucional ni establece causalidad.*\n\n")
+        out.append("*«Absorción potencial» describe una configuración de retorno negativo del precio acompañada de flujo primario acumulado positivo. Puede ser compatible con absorción, pero no confirma por sí sola absorción institucional ni establece causalidad. Cualificaciones: (no material) si el flujo es insignificante respecto al AUM; (poco persistente) si el flujo no se mantiene en la mayoría de sesiones; (flujo revirtiendo 5d) si el flujo reciente cambia de signo. No evalúa respaldo de amplitud ni mejora posterior del precio (requerirían análisis forward-looking).*\n\n")
 
         # P2.7 (2026-10-13, auditor): la columna 'date' de la fila es
         # la fecha del FLUJO (SSGA, lag T+1/T+2). Los Ret 5d/20d se

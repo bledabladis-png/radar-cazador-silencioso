@@ -21,7 +21,7 @@ from src.utils import get_col
 
 
 from config.tickers import MARKET_TICKERS
-from config.settings import FLOW_DIVERGENCE_MATERIALITY_THRESHOLD
+from config.settings import FLOW_DIVERGENCE_MATERIALITY_THRESHOLD, ABSORPTION_FLOW_PCT_AUM_THRESHOLD, ABSORPTION_PERSISTENCE_THRESHOLD
 
 SECTORS = MARKET_TICKERS['sectors']
 
@@ -35,7 +35,7 @@ def _persistence(pos, neg):
 
 
 
-def _regime(price_ret, flow_sum):
+def _regime(price_ret, flow_sum, flow_pct_aum=None, persistence=None, flow_short=None):
     """Clasifica el regimen precio-flujo.
 
     REP-AUDIT-20261017-capa2b (H17):
@@ -47,6 +47,19 @@ def _regime(price_ret, flow_sum):
     - Mojibake corregido: las etiquetas estaban codificadas como
       'Confirmaci\u00be n' (U+00BE en lugar de U+00F3). Ahora usan
       UTF-8 correcto con tildes.
+
+    13.5 (auditoria analista 2026-11-21): cualificacion de "Absorcion potencial".
+    Los nuevos parametros son opcionales (defaults None) para preservar
+    compatibilidad con tests existentes. Cuando se proporcionan, la rama
+    price<0 & flow>0 se matiza segun:
+    - flow_pct_aum: si |flow_pct_aum| < ABSORPTION_FLOW_PCT_AUM_THRESHOLD,
+      el flujo es insignificante -> '(no material)'.
+    - persistence: si persistence < ABSORPTION_PERSISTENCE_THRESHOLD,
+      el flujo no es persistente -> '(poco persistente)'.
+    - flow_short: si flow_short < 0 cuando flow_sum > 0, el flujo esta
+      revirtiendo en la ventana corta -> '(flujo revirtiendo 5d)'.
+    Precedencia: (no material) > (poco persistente) > (flujo revirtiendo 5d).
+    Si ninguna cualificacion aplica, se publica 'Absorcion potencial' a secas.
     """
     if pd.isna(price_ret) or pd.isna(flow_sum):
         return 'N/D'
@@ -59,7 +72,23 @@ def _regime(price_ret, flow_sum):
     if price_ret > 0 and flow_sum < 0:
         return 'Divergencia bajista' + suffix
     if price_ret < 0 and flow_sum > 0:
-        return 'Absorción potencial' + suffix
+        # 13.5: cualificacion de absorcion potencial
+        absorption_qualifier = ''
+        # Precedencia 1: flujo no material
+        if flow_pct_aum is not None and not pd.isna(flow_pct_aum):
+            if abs(flow_pct_aum) < ABSORPTION_FLOW_PCT_AUM_THRESHOLD:
+                absorption_qualifier = ' (no material)'
+        
+        # Precedencia 2: flujo poco persistente (solo si no se califico como no material)
+        if not absorption_qualifier and persistence is not None and not pd.isna(persistence):
+            if persistence < ABSORPTION_PERSISTENCE_THRESHOLD:
+                absorption_qualifier = ' (poco persistente)'
+                
+        # Precedencia 3: flujo revirtiendo en ventana corta (solo si no se califico antes)
+        if not absorption_qualifier and flow_short is not None and not pd.isna(flow_short):
+            if flow_short < 0:
+                absorption_qualifier = ' (flujo revirtiendo 5d)'
+        return 'Absorción potencial' + absorption_qualifier + suffix
     if price_ret < 0 and flow_sum < 0:
         return 'Confirmación de debilidad' + suffix
     return 'Neutral / sin confirmación'
@@ -151,9 +180,9 @@ def compute_sector_flow_characteristics(flow_csv_path, price_df):
 
 
 
-        regime_5d = _regime(price_ret_5d, flow_5d_sum)
+        regime_5d = _regime(price_ret_5d, flow_5d_sum, flow_pct_aum=flow_pct_aum, persistence=persistence_5d, flow_short=None)
 
-        regime_20d = _regime(price_ret_20d, flow_20d_sum)
+        regime_20d = _regime(price_ret_20d, flow_20d_sum, flow_pct_aum=flow_pct_aum, persistence=persistence_20d, flow_short=flow_5d_sum)
 
 
 
@@ -206,5 +235,4 @@ def compute_sector_flow_characteristics(flow_csv_path, price_df):
 
 
     return pd.DataFrame(rows)
-
 

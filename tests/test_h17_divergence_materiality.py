@@ -75,3 +75,43 @@ def test_h17_nan_ambos_devuelve_nd():
     assert _regime(float("nan"), 1e8) == "N/D"
     assert _regime(0.05, float("nan")) == "N/D"
     assert _regime(float("nan"), float("nan")) == "N/D"
+
+
+# ============================================================
+# 13.5 (auditoria analista 2026-11-21): cualificaciones de absorcion
+# ============================================================
+
+def test_13_5_absorcion_no_material():
+    """XLI del reporte: ret=-3.52%, flow=4.9M, flow_pct_aum=0.00% -> no material."""
+    out = _regime(-0.0352, 4.9e6, flow_pct_aum=0.00001)
+    assert out == "Absorción potencial (no material)", "XLI: got {!r}".format(out)
+
+
+def test_13_5_absorcion_poco_persistente():
+    """Flujo material pero persistencia baja -> poco persistente."""
+    out = _regime(-0.05, 1e8, flow_pct_aum=0.5, persistence=0.3)
+    assert out == "Absorción potencial (poco persistente)", "got {!r}".format(out)
+
+
+def test_13_5_absorcion_flujo_revirtiendo():
+    """Flujo 20d positivo pero 5d negativo -> revirtiendo."""
+    out = _regime(-0.05, 1e8, flow_pct_aum=0.5, persistence=0.8, flow_short=-1e7)
+    assert out == "Absorción potencial (flujo revirtiendo 5d)", "got {!r}".format(out)
+
+
+def test_13_5_absorcion_completa_pasa_filtros():
+    """Flujo material, persistente y sostenido -> absorcion a secas."""
+    out = _regime(-0.05, 1e8, flow_pct_aum=0.5, persistence=0.8, flow_short=1e7)
+    assert out == "Absorción potencial", "got {!r}".format(out)
+
+
+def test_13_5_absorcion_sin_kwargs_compat():
+    """Sin kwargs nuevos -> comportamiento original (compat)."""
+    out = _regime(-0.02, 1000)
+    assert out == "Absorción potencial", "got {!r}".format(out)
+
+
+def test_13_5_absorcion_no_material_prevalece():
+    """Si flow_pct_aum es bajo, no se evalua persistencia ni reversión."""
+    out = _regime(-0.05, 1e8, flow_pct_aum=0.01, persistence=0.3, flow_short=-1e7)
+    assert out == "Absorción potencial (no material)", "got {!r}".format(out)

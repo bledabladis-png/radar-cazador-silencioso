@@ -283,3 +283,10 @@ FLS_STRESS_THRESHOLD = 70
 # Casos reales del reporte 2026-10-17: XLRE ret=-0.04%,
 # XLC ret=-0.11%. Antes salian como etiquetas categoricas.
 FLOW_DIVERGENCE_MATERIALITY_THRESHOLD = 0.01
+# 13.5 (auditoria analista 2026-11-21): umbrales para cualificar "Absorcion potencial".
+# Se aplican solo cuando price_ret < 0 y flow_sum > 0. Si el flujo es insignificante,
+# poco persistente o revirtiendo a 5d, la etiqueta se matiza. Sin estos umbrales,
+# sectores con flujo de ruido (ej. XLI con 4.9M y 0.00% AUM) recibian la misma
+# etiqueta que sectores con flujo material (ej. XLK con 893M).
+ABSORPTION_FLOW_PCT_AUM_THRESHOLD = 0.05   # 0.05% del AUM: por debajo, flujo no material
+ABSORPTION_PERSISTENCE_THRESHOLD = 0.50    # 50% de dias positivos en ventana 20d
