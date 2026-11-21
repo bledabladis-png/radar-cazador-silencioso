@@ -7,7 +7,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d3c).
 
 import pandas as pd
 from src.report.helpers import _fmt_signed
-from config.settings import WYCKOFF_MIN_COVERAGE_PCT
+from config.settings import WYCKOFF_MIN_COVERAGE_PCT, STRUCTURAL_RATIO_ROBUSTEZ_BAJA_MAX, STRUCTURAL_RATIO_ROBUSTEZ_MEDIA_MAX
 
 
 def render_matriz_regimen(sector_regime_matrix_data):
@@ -66,7 +66,13 @@ def render_matriz_regimen(sector_regime_matrix_data):
                    "El CSV publica ademas wyckoff_phase (moda bruta incluyendo RANGE) "
                    "para auditoria historica.*\n")
         out.append("*NO es senal predictiva de retorno. Describe estado estructural actual.*\n")
-        out.append("*Struct=1.00 con N est=1 es fragil; Struct=0.60 con N est=15 es robusto.*\n")
+        # 13.6 (auditoria analista 2026-11-21): clasificacion de robustez
+        # derivada de settings (no hardcodeada). Si se cambian los umbrales,
+        # el test test_13_6_robustez_deriva_de_settings falla.
+        out.append("*Clasificacion de robustez segun N est (umbrales en config.settings):*\n")
+        out.append(f"*  - N est < {STRUCTURAL_RATIO_ROBUSTEZ_BAJA_MAX}: robustez baja (muestra muy pequena, interpretacion cautelosa).*\n")
+        out.append(f"*  - {STRUCTURAL_RATIO_ROBUSTEZ_BAJA_MAX} <= N est < {STRUCTURAL_RATIO_ROBUSTEZ_MEDIA_MAX}: robustez media (muestra moderada).*\n")
+        out.append(f"*  - N est >= {STRUCTURAL_RATIO_ROBUSTEZ_MEDIA_MAX}: robustez alta (muestra representativa).*\n")
         out.append("*H-01 auditor externo 2026-10-25: periodo del historico Wyckoff*\n")
         out.append("*= 2022-08-11 a hoy (aprox. 4.2 anos, 1086 sesiones), NO 10 anos.*\n\n")
     return out

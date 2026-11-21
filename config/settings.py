@@ -290,3 +290,10 @@ FLOW_DIVERGENCE_MATERIALITY_THRESHOLD = 0.01
 # etiqueta que sectores con flujo material (ej. XLK con 893M).
 ABSORPTION_FLOW_PCT_AUM_THRESHOLD = 0.05   # 0.05% del AUM: por debajo, flujo no material
 ABSORPTION_PERSISTENCE_THRESHOLD = 0.50    # 50% de dias positivos en ventana 20d
+
+# 13.6 (auditoria analista 2026-11-21): robustez del Structural Ratio.
+# N est = numero de holdings con estructura clara. Por debajo de 5,
+# el ratio es estadisticamente fragil (un solo holding cambia el ratio
+# en 0.25 o mas). Entre 5 y 10, moderada. A partir de 10, representativa.
+STRUCTURAL_RATIO_ROBUSTEZ_BAJA_MAX = 5
+STRUCTURAL_RATIO_ROBUSTEZ_MEDIA_MAX = 10

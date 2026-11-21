@@ -112,3 +112,32 @@ def test_strata_summary_separa_estratos():
     cohorts = [r["cohort"] for r in rows]
     assert any("1-4" in c for c in cohorts), cohorts
     assert any("21-" in c for c in cohorts), cohorts
+
+# ============================================================
+# 13.6 (auditoria analista 2026-11-21): robustez del Structural Ratio
+# ============================================================
+
+def test_13_6_umbrales_en_settings():
+    from config.settings import STRUCTURAL_RATIO_ROBUSTEZ_BAJA_MAX, STRUCTURAL_RATIO_ROBUSTEZ_MEDIA_MAX
+    assert STRUCTURAL_RATIO_ROBUSTEZ_BAJA_MAX == 5
+    assert STRUCTURAL_RATIO_ROBUSTEZ_MEDIA_MAX == 10
+    assert STRUCTURAL_RATIO_ROBUSTEZ_BAJA_MAX < STRUCTURAL_RATIO_ROBUSTEZ_MEDIA_MAX
+
+
+def test_13_6_robustez_deriva_de_settings():
+    from src.report.sector_context import render_matriz_regimen
+    import pandas as pd
+    df = pd.DataFrame([{
+        "sector": "XLK", "price_ret_20d": 0.05, "pct_above_ema50": 60.0,
+        "flow_20d_sum": 1e6, "wyckoff_signal_phase": "MARKUP",
+        "wyckoff_signal_share": 50.0, "wyckoff_signal_n": 5,
+        "structure_ratio": 0.5, "n_estructuras": 10,
+        "positive_conditions": 2, "regime_reading": "Favorable",
+    }])
+    out = "".join(render_matriz_regimen(df))
+    assert "5" in out, "La nota no menciona el umbral bajo (5)"
+    assert "10" in out, "La nota no menciona el umbral medio (10)"
+    assert "robustez baja" in out.lower()
+    assert "robustez media" in out.lower()
+    assert "robustez alta" in out.lower()
+    assert "Struct=1.00 con N est=1 es fragil" not in out
