@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "run_id": "20261121_050253",
+  "run_id": "20261121_120304",
   "reference_date": "2026-11-21",
   "global_last_date": "2026-11-20",
-  "generated_at_utc": "2026-11-21T04:02:53.938934+00:00",
+  "generated_at_utc": "2026-11-21T11:03:04.088542+00:00",
   "contracts_total": 15,
   "summary": {
     "OK": 10,
