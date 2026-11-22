@@ -1103,29 +1103,24 @@ def _nan_usa_on_non_market_days(data):
     if not non_market_idx:
         return data, info
 
-    market_cache = {}
+    from src.instrument_registry import get_instrument_class
+    class_cache = {}
 
-    def _market(t):
-        if t not in market_cache:
+    def _is_us_equity(t):
+        if t not in class_cache:
             try:
-                market_cache[t] = get_market(str(t))
-            except Exception as _e:
-                # OBSERVABILIDAD (2026-10-31, Fase 2 B5.2): antes
-                # silencioso. Mismo patron que _compute_by_market. Si
-                # get_market falla, el ticker se clasifica UNKNOWN y no
-                # se marca como US_EQUITY: un cierre sintetico de Yahoo
-                # en festivo NYSE se colaria como dato valido.
-                print(f"  [WARN] _nan_usa_on_non_market_days: "
-                      f"get_market({t!r}) fallo "
-                      f"({type(_e).__name__}: {_e}). Se clasifica como "
-                      f"UNKNOWN (no se aplica NaN-patch de festivos).")
-                market_cache[t] = 'UNKNOWN'
-        return market_cache[t]
+                # Solo renta variable (EQUITY) estadounidense (sin sufijo de bolsa extranjera)
+                cls = get_instrument_class(str(t))
+                mkt = get_market(str(t))
+                class_cache[t] = (cls == 'EQUITY' and mkt == 'US_EQUITY')
+            except Exception:
+                class_cache[t] = False
+        return class_cache[t]
 
     usa_cols = []
     for col in data.columns:
         if isinstance(col, tuple) and len(col) == 2:
-            if _market(col[1]) == 'US_EQUITY':
+            if _is_us_equity(col[1]):
                 usa_cols.append(col)
     if not usa_cols:
         return data, info
