@@ -71,6 +71,10 @@ def test_consolidador_tolera_1_trimestre(tmp_path, monkeypatch):
     # El CSV debe existir aunque solo tenga PREV_BALANCE=NaN
     csv = out_dir / "sec_nport_position_change_quarterly.csv"
     assert csv.exists(), f"consolidado no generado. stdout: {r.stdout}"
+    import pandas as pd
+    df_out = pd.read_csv(csv)
+    assert len(df_out) == 1, f"esperaba 1 fila con 1 trimestre, got {len(df_out)}"
+    assert df_out["POSITION_CHANGE"].isna().all()
 
 
 def test_consolidador_falla_sin_trimestres(tmp_path):
@@ -84,3 +88,31 @@ def test_consolidador_falla_sin_trimestres(tmp_path):
     )
     assert r.returncode == 1
     assert "no contiene ningun trimestre" in r.stdout.lower() or "ERROR" in r.stdout
+
+def test_consolidador_agrega_y_aisla_series_id(tmp_path):
+    """Mismo CIK con dos SERIES_ID y multiples lotes no mezcla ETFs."""
+    import pandas as pd
+    for q, dt, bal_s1, bal_s2 in [("2026q1", "31-DEC-2025", [600, 400], [9999]), ("2026q2", "31-MAR-2026", [1500], [8888])]:
+        qd = tmp_path / "data" / "nport" / q
+        qd.mkdir(parents=True)
+        (qd / "SUBMISSION.tsv").write_text(f"ACCESSION_NUMBER\tREPORT_DATE\nA1\t{dt}\nA2\t{dt}\n", encoding="utf-8")
+        (qd / "REGISTRANT.tsv").write_text("ACCESSION_NUMBER\tCIK\tREGISTRANT_NAME\nA1\t1064641\tTRUST\nA2\t1064641\tTRUST\n", encoding="utf-8")
+        (qd / "FUND_REPORTED_INFO.tsv").write_text("ACCESSION_NUMBER\tSERIES_NAME\tSERIES_ID\nA1\tFund1\tS001\nA2\tFund2\tS002\n", encoding="utf-8")
+        hrows = ["ACCESSION_NUMBER\tHOLDING_ID\tISSUER_NAME\tISSUER_CUSIP\tBALANCE\tCURRENCY_VALUE\tPERCENTAGE\tASSET_CAT\tISSUER_TYPE"]
+        irows = ["HOLDING_ID\tIDENTIFIER_ISIN\tIDENTIFIER_TICKER"]
+        for idx, b in enumerate(bal_s1, 1):
+            hrows.append(f"A1\tH1_{idx}\tIssuer\t123456789\t{b}\t100\t1.0\tEC\tCORP")
+            irows.append(f"H1_{idx}\tUS1234567890\tTST")
+        for idx, b in enumerate(bal_s2, 1):
+            hrows.append(f"A2\tH2_{idx}\tIssuer\t123456789\t{b}\t100\t1.0\tEC\tCORP")
+            irows.append(f"H2_{idx}\tUS1234567890\tTST")
+        (qd / "FUND_REPORTED_HOLDING.tsv").write_text("\n".join(hrows) + "\n", encoding="utf-8")
+        (qd / "IDENTIFIERS.tsv").write_text("\n".join(irows) + "\n", encoding="utf-8")
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    r = subprocess.run([sys.executable, str(ROOT / "data" / "providers" / "sec_nport_quarters_position_change.py")], cwd=str(tmp_path), capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    df = pd.read_csv(tmp_path / "outputs" / "history" / "sec_nport_position_change_quarterly.csv")
+    s1 = df[df["SERIES_ID"] == "S001"]
+    assert len(s1) == 1 and float(s1.iloc[0]["PREV_BALANCE"]) == 1000.0 and float(s1.iloc[0]["POSITION_CHANGE"]) == 500.0
+    s2 = df[df["SERIES_ID"] == "S002"]
+    assert len(s2) == 1 and float(s2.iloc[0]["PREV_BALANCE"]) == 9999.0 and float(s2.iloc[0]["POSITION_CHANGE"]) == -1111.0

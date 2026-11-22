@@ -41,7 +41,7 @@ def download_quarter(quarter):
     out_dir.mkdir(parents=True, exist_ok=True)
     url = f"{BASE_URL}/{quarter}_nport.zip"
     print(f"Descargando {url} ...")
-    r = requests.get(url, headers={"User-Agent": "Macro_Sectorial contacto@example.com"}, timeout=600)
+    r = requests.get(url, headers={"User-Agent": "Radar Sectorial Research <bledabladis@gmail.com>"}, timeout=600)
 
     if r.status_code == 404:
         print("No disponible aun en EDGAR.")
@@ -49,10 +49,16 @@ def download_quarter(quarter):
 
     r.raise_for_status()
     print(f"Descargado: {len(r.content)/(1024*1024):.2f} MB")
-    z = zipfile.ZipFile(BytesIO(r.content))
-    for name in NEEDED_FILES:
-        print(f"  Extrayendo {name} ...")
-        z.extract(name, out_dir)
+    with zipfile.ZipFile(BytesIO(r.content)) as z:
+        corrupt = z.testzip()
+        if corrupt is not None:
+            raise zipfile.BadZipFile(f"CRC invalido en ZIP N-PORT: {corrupt}")
+        for name in NEEDED_FILES:
+            print(f"  Extrayendo {name} ...")
+            tgt = out_dir / name
+            tmp_ext = tgt.with_suffix(tgt.suffix + ".tmp")
+            tmp_ext.write_bytes(z.read(name))
+            tmp_ext.replace(tgt)
 
     return True
 
@@ -111,8 +117,8 @@ def process_quarter(quarter):
 
     # 7. Cambios intra-trimestre
     hold["SECURITY_KEY"] = hold["IDENTIFIER_ISIN"].fillna(hold["ISSUER_CUSIP"])
-    hold = hold.sort_values(["CIK","SECURITY_KEY","REPORT_DATE"])
-    hold["PREV_BALANCE"] = hold.groupby(["CIK","SECURITY_KEY"])["BALANCE"].shift(1)
+    hold = hold.sort_values(["CIK","SERIES_ID","SECURITY_KEY","REPORT_DATE"])
+    hold["PREV_BALANCE"] = hold.groupby(["CIK","SERIES_ID","SECURITY_KEY"])["BALANCE"].shift(1)
     hold["POSITION_CHANGE"] = hold["BALANCE"] - hold["PREV_BALANCE"]
     hold["POSITION_CHANGE_PCT"] = hold["POSITION_CHANGE"] / hold["PREV_BALANCE"].replace(0, pd.NA) * 100
 

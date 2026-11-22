@@ -92,13 +92,15 @@ def main():
     all_data = pd.concat(frames, ignore_index=True)
 
     all_data['SECURITY_KEY'] = all_data['IDENTIFIER_ISIN'].fillna(all_data['ISSUER_CUSIP'])
-    # Granularidad correcta: fondo (CIK+SERIES_ID) + seguridad + fecha
+    # Granularidad correcta: agregar por (CIK, SERIES_ID, SECURITY_KEY, REPORT_DATE) antes de shift
+    agg_dict = {'ACCESSION_NUMBER':'first','FILING_DATE':'first','REGISTRANT_NAME':'first','SERIES_NAME':'first','ISSUER_NAME':'first','ISSUER_CUSIP':'first','IDENTIFIER_ISIN':'first','BALANCE':lambda x: x.sum(min_count=1)}
+    all_data = all_data.groupby(['CIK','SERIES_ID','SECURITY_KEY','REPORT_DATE'], as_index=False, dropna=False).agg(agg_dict)
     all_data = all_data.sort_values(['CIK','SERIES_ID','SECURITY_KEY','REPORT_DATE'])
     all_data['PREV_BALANCE'] = all_data.groupby(['CIK','SERIES_ID','SECURITY_KEY'])['BALANCE'].shift(1)
     all_data['POSITION_CHANGE'] = all_data['BALANCE'] - all_data['PREV_BALANCE']
     all_data['POSITION_CHANGE_PCT'] = all_data['POSITION_CHANGE'] / all_data['PREV_BALANCE'].replace(0, pd.NA) * 100
 
-    change = all_data.dropna(subset=['POSITION_CHANGE']).copy()
+    change = all_data.copy() if len(quarters) == 1 else all_data.dropna(subset=['POSITION_CHANGE']).copy()
     cols = [
         'ACCESSION_NUMBER','REPORT_DATE','FILING_DATE',
         'CIK','REGISTRANT_NAME','SERIES_NAME','SERIES_ID',
@@ -106,8 +108,9 @@ def main():
         'BALANCE','PREV_BALANCE','POSITION_CHANGE','POSITION_CHANGE_PCT'
     ]
     change = change[cols]
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     _tmp_out = OUTPUT.with_suffix(OUTPUT.suffix + '.tmp')
-    change.to_csv(_tmp_out, index=False)
+    change.to_csv(_tmp_out, index=False, lineterminator='\n')
     _tmp_out.replace(OUTPUT)
     print(f'Guardado en {OUTPUT}')
     print(f'Cambios calculados: {len(change)}')
