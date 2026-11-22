@@ -83,8 +83,15 @@ def weekday_expected(reference_date) -> Optional[date]:
 
 
 def fx_expected(reference_date) -> Optional[date]:
-    """Fecha esperada FX: fecha de reference_date (cutoff 17:00 ET)."""
-    return to_date(reference_date)
+    """Fecha esperada FX: fecha de reference_date (cutoff 17:00 ET).
+    Si reference_date cae en fin de semana, retrocede al ultimo dia laborable
+    (viernes), evitando falsos STALE/INSUFFICIENT en ejecuciones sabado/domingo."""
+    d = to_date(reference_date)
+    if d is None:
+        return None
+    while not is_provisional_trading_day(d):
+        d = d - timedelta(days=1)
+    return d
 
 
 def resolve_universe(
