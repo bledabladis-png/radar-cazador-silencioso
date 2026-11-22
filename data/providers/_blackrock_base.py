@@ -188,7 +188,7 @@ def parse_hist_sheet(file_path: Path):
     df = df[required]
     df['date'] = df['date'].apply(parse_fecha_es)
     for col in ['nav','shares_outstanding','total_net_assets']:
-        df[col] = pd.to_numeric(df[col].replace({'--': np.nan, '': np.nan}), errors='coerce')
+        df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '', regex=False).replace({'--': np.nan, '': np.nan, 'None': np.nan, 'nan': np.nan}), errors='coerce')
 
     df = df.dropna(subset=['date'])
     df = df.sort_values('date').reset_index(drop=True)
@@ -204,16 +204,12 @@ def get_blackrock_primary_flow(
     force_download: bool = False,
 ) -> pd.DataFrame:
     """Descarga/procesa el histórico y devuelve la última fila con flujo."""
-    if force_download:
-        download_fund_file(url, cache_file, referer, label)
-    else:
-        _outcome = download_fund_file(url, cache_file, referer, label)
-        # A5-78 (2026-09-28): el return vacio ahora es alcanzable. Antes
-        # era dead code porque el retorno era siempre True con cache.
-        if _outcome is FundFileOutcome.FAIL:
-            print(f'  [WARN] {label}: sin cache y descarga fallida. '
-                  f'Devolviendo DataFrame vacio.')
-            return pd.DataFrame()
+    _ = force_download
+    _outcome = download_fund_file(url, cache_file, referer, label)
+    if _outcome is FundFileOutcome.FAIL:
+        print(f'  [WARN] {label}: sin cache y descarga fallida. '
+              f'Devolviendo DataFrame vacio.')
+        return pd.DataFrame()
         # FRESH_CACHE / FRESH_DOWNLOAD / STALE_CACHE -> seguir.
         # STALE_CACHE ya imprimio su WARN dentro de download_fund_file.
 

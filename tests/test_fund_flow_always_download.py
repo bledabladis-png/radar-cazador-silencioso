@@ -254,3 +254,14 @@ def test_iwm_fallback_a_cache_si_falla(tmp_path, monkeypatch):
 
     result = iwm.download_fund_file(force_download=False)
     assert result == b"<old>valid cache</old>"
+
+
+def test_cftc_fallback_a_cache_si_descarga_falla(tmp_path, monkeypatch):
+    from data.providers import cftc_data as cftc
+    import requests as _r
+    cp = tmp_path / "cftc_tff.csv"
+    cp.write_text("Market_and_Exchange_Names,Report_Date_as_YYYY_MM_DD\nTEST,2026-09-22\n", encoding="utf-8")
+    monkeypatch.setattr(cftc, "CACHE_PATH", cp)
+    monkeypatch.setattr(cftc.requests, "post", lambda *a, **k: (_ for _ in ()).throw(_r.RequestException("down")))
+    out = cftc._download_and_cache()
+    assert len(out) == 1 and out.iloc[0]["Report_Date_as_YYYY_MM_DD"] == "2026-09-22"

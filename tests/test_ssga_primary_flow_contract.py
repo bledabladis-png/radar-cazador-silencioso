@@ -73,3 +73,14 @@ def test_resolve_insufficient_lag_7(tmp_path):
     res = c.resolve(None, date(2026, 11, 4))
     assert res.lag_days == 7
     assert res.status == STATUS_INSUFFICIENT
+
+
+def test_resolve_cobertura_parcial_por_ticker(tmp_path):
+    p = tmp_path / "etf_primary_flow.csv"
+    rows = [{"Date": "2026-11-02", "ticker": f"X{i}"} for i in range(10)]
+    rows.append({"Date": "2026-11-03", "ticker": "X0"})
+    pd.DataFrame(rows).to_csv(p, index=False)
+    res = SsgaPrimaryFlow(history_path=p).resolve(None, date(2026, 11, 4))
+    assert res.effective_date == date(2026, 11, 2)
+    assert res.coverage == 1.0
+    assert res.status == STATUS_STALE

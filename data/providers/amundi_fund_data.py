@@ -3,6 +3,7 @@ Proveedor Amundi para flujo primario de LYXI.
 Descarga series históricas de SHARES_OUT, NAV y AUM desde la API oficial.
 Calcula ETF Primary Flow = ΔSharesOutstanding × NAV.
 """
+import numpy as np
 import requests
 import pandas as pd
 import json
@@ -104,15 +105,17 @@ def download_historical_data(isin: str, start_date: str, end_date: str) -> dict:
     except (requests.RequestException, ValueError, KeyError,
             TypeError, OSError, json.JSONDecodeError) as e:
         print(f'  Error descargando histórico {isin}: {e}')
-        if cache_file.exists():
-            # A5-72 (2026-09-28): WARN explicito con mtime al caer a
-            # cache obsoleta.
-            _mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
+        _fb_file = cache_file if cache_file.exists() else None
+        if _fb_file is None and CACHE_DIR.exists():
+            _cands = sorted(CACHE_DIR.glob(f'{isin}_hist_*.json'))
+            if _cands:
+                _fb_file = _cands[-1]
+        if _fb_file is not None and _fb_file.exists():
+            _mtime = datetime.fromtimestamp(_fb_file.stat().st_mtime)
             _age_h = (datetime.now() - _mtime).total_seconds() / 3600.0
-            print(f'  [WARN] {isin}: usando cache OBSOLETA pese al error '
-                  f'(mtime={_mtime.isoformat(timespec="minutes")}, '
-                  f'{_age_h:.1f}h). El dato puede estar desactualizado.')
-            with open(cache_file, 'r', encoding='utf-8') as f:
+            print(f'  [WARN] {isin}: usando cache OBSOLETA {_fb_file.name} '
+                  f'(mtime={_mtime.isoformat(timespec="minutes")}, {_age_h:.1f}h).')
+            with open(_fb_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         return {}
 
@@ -131,10 +134,9 @@ def parse_historical_series(product: dict) -> pd.DataFrame:
             continue
         df_series = pd.DataFrame(data)
         # La API devuelve 'date' (timestamp ms) y 'data' (valor)
-        df_series['date'] = pd.to_datetime(df_series['date'], unit='ms').dt.date
+        df_series['date'] = pd.to_datetime(df_series['date'], unit='ms', utc=True).dt.tz_convert('Europe/Madrid').dt.date
         df_series = df_series.rename(columns={'data': indicator})
-        # Conservar solo date y el indicador
-        df_series = df_series[['date', indicator]]
+        df_series = df_series[['date', indicator]].drop_duplicates(subset=['date'], keep='last')
         series_dict[indicator] = df_series
 
     required = ['sharesOut', 'officialNav']
@@ -169,6 +171,7 @@ def compute_primary_flow(df: pd.DataFrame) -> pd.DataFrame:
     df['shares_change'] = df['shares_outstanding'].diff()
     df['estimated_flow_eur'] = df['shares_change'] * df['nav']
     df['flow_pct_assets'] = df['estimated_flow_eur'] / df['class_aum']  # decimal
+    df['flow_pct_assets'] = df['flow_pct_assets'].where(np.isfinite(df['flow_pct_assets']), np.nan)
 
     # Normalización robusta (mediana/MAD, clip ±5).
     # Contrato común con DAXEX, ISF e IWM (auditor 2026-09-27).
@@ -208,7 +211,7 @@ def get_amundi_lyxi_primary_flow(force_download: bool = False) -> pd.DataFrame:
     cols = [
         'date', 'shares_outstanding', 'nav', 'fund_aum', 'class_aum',
         'shares_change', 'estimated_flow_eur', 'flow_pct_assets',
-        'flow_zscore', 'flow_zscore_regime', 'flow_5d', 'flow_20d'
+        'flow_zscore', 'flow_zscore_regime', 'flow_zscore_raw', 'flow_5d', 'flow_20d'
     ]
     # Fix D (2026-09-30): preservar historico con append_dedup.
     # Mismo bug que ssga_fund_data: sobrescribia sin comparar con

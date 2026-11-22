@@ -15,6 +15,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.temporal_contracts.base import (
+    STATUS_OK,
     STATUS_PENDING,
     TemporalContract,
     TemporalResolution,
@@ -83,17 +84,32 @@ class SsgaPrimaryFlow(TemporalContract):
         if not self.history_path.exists():
             return self._pending(expected)
         try:
-            df = pd.read_csv(self.history_path, usecols=["Date"])
+            df = pd.read_csv(self.history_path, usecols=lambda c: c in ("Date", "ticker"))
         except (OSError, ValueError, KeyError, TypeError):
             return self._pending(expected)
-        if df is None or df.empty:
+        if df is None or df.empty or "Date" not in df.columns:
             return self._pending(expected)
-        effective = _to_date(df["Date"].max())
-        if effective is not None and expected is not None:
-            lag = (expected - effective).days
+        df = df.copy()
+        df["_dt"] = pd.to_datetime(df["Date"], errors="coerce").dt.date
+        df = df.dropna(subset=["_dt"])
+        if df.empty:
+            return self._pending(expected)
+        if "ticker" in df.columns and df["ticker"].dropna().nunique() > 0:
+            n_univ = int(df["ticker"].dropna().nunique())
+            counts = df.groupby("_dt")["ticker"].nunique().sort_index()
+            cov_s = counts / n_univ
+            ok_dates = cov_s[cov_s >= self.min_coverage]
+            effective = ok_dates.index[-1] if not ok_dates.empty else counts.index[-1]
+            coverage = float(cov_s.loc[effective])
         else:
-            lag = None
-        coverage = 1.0
+            effective = df["_dt"].max()
+            coverage = 1.0
+        if expected is not None and effective >= expected and coverage >= self.min_coverage:
+            return TemporalResolution(
+                contract_name=self.name, effective_date=effective, expected_date=expected,
+                lag_days=0, coverage=coverage, status=STATUS_OK,
+            )
+        lag = (expected - effective).days if (effective is not None and expected is not None) else None
         status = compute_status(
             effective_date=effective,
             expected_date=expected,

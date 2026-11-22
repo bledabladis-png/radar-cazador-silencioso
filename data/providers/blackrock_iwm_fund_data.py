@@ -38,6 +38,7 @@ Los outliers únicamente afectan a la señal estadística.
 
 from __future__ import annotations
 
+import math
 import re
 from datetime import datetime
 from pathlib import Path
@@ -213,24 +214,23 @@ def extract_cell_values(row_xml: str) -> list[str]:
 
     values = []
 
-    for match in re.finditer(
-        r"<ss:Data[^>]*>(.*?)</ss:Data>",
-        row_xml,
-        flags=re.DOTALL,
-    ):
-        value = match.group(1)
-
-        # El fund file puede contener entidades/HTML.
-        value = value.replace("&amp;", "&")
-        value = value.replace("&lt;", "<")
-        value = value.replace("&gt;", ">")
-        value = value.replace("&quot;", '"')
-        value = value.replace("&#39;", "'")
-
-        # Eliminamos etiquetas HTML residuales.
-        value = re.sub(r"<[^>]+>", "", value)
-
-        values.append(value.strip())
+    def _clean(raw_val):
+        v = raw_val.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"').replace("&#39;", "'")
+        return re.sub(r"<[^>]+>", "", v).strip()
+    cells = list(re.finditer(r"<ss:Cell([^/>]*)(?:/>|>(.*?)</ss:Cell>)", row_xml, flags=re.DOTALL))
+    if cells:
+        for cm in cells:
+            idx_m = re.search(r'ss:Index="(\d+)"', cm.group(1) or "")
+            if idx_m:
+                tgt_idx = int(idx_m.group(1)) - 1
+                while len(values) < tgt_idx:
+                    values.append("")
+            body = cm.group(2) or ""
+            dm = re.search(r"<ss:Data[^>]*>(.*?)</ss:Data>", body, flags=re.DOTALL)
+            values.append(_clean(dm.group(1)) if dm else "")
+    else:
+        for match in re.finditer(r"<ss:Data[^>]*>(.*?)</ss:Data>", row_xml, flags=re.DOTALL):
+            values.append(_clean(match.group(1)))
 
     return values
 
@@ -304,17 +304,11 @@ def parse_historical_sheet(
             continue
 
         try:
-            nav = float(
-                nav_raw.replace(",", "")
-            )
+            nav = float(nav_raw.replace(",", ""))
+            shares = float(shares_raw.replace(",", ""))
         except (ValueError, TypeError):
             continue
-
-        try:
-            shares = float(
-                shares_raw.replace(",", "")
-            )
-        except (ValueError, TypeError):
+        if not (math.isfinite(nav) and math.isfinite(shares)):
             continue
 
         records.append(
@@ -364,15 +358,10 @@ def compute_primary_flow(
     # RAW validation
     # -------------------------------------------------------------------------
 
-    if (df["nav"] <= 0).any():
-        raise ValueError(
-            "Se detectaron NAV <= 0."
-        )
-
-    if (df["shares_outstanding"] <= 0).any():
-        raise ValueError(
-            "Se detectaron Shares Outstanding <= 0."
-        )
+    if not df["nav"].map(math.isfinite).all() or (df["nav"] <= 0).any():
+        raise ValueError("Se detectaron NAV no finitos o <= 0.")
+    if not df["shares_outstanding"].map(math.isfinite).all() or (df["shares_outstanding"] <= 0).any():
+        raise ValueError("Se detectaron Shares Outstanding no finitos o <= 0.")
 
     # -------------------------------------------------------------------------
     # CALCULATED

@@ -36,32 +36,34 @@ PARTICIPANT_COLS = {
 }
 
 def _download_and_cache():
-    """Descarga CSV de CFTC y lo guarda en caché si no existe o si han pasado >23h."""
+    """Descarga CSV de CFTC y lo guarda en cache; fallback a cache si falla."""
     CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    # Fix N (2026-10-01): descarga SIEMPRE. Cache solo como fallback
-    # si la descarga falla. Antes: `mtime < 23h -> cache-hit`.
-
     print('  Descargando CFTC TFF (Futures Only)...')
-    r = requests.post(
-        CFTC_TFF_URL,
-        params={'accessType': 'DOWNLOAD'},
-        headers={'User-Agent': 'Mozilla/5.0'},
-        timeout=120
-    )
-    r.raise_for_status()
-    df = pd.read_csv(StringIO(r.text), low_memory=False)
-
-    required_cols = ['Market_and_Exchange_Names', 'Report_Date_as_YYYY_MM_DD']
-    missing = [c for c in required_cols if c not in df.columns]
-    if missing:
-        raise ValueError(f'CFTC CSV no tiene columnas requeridas: {missing}')
-    if df.empty:
-        raise ValueError('CFTC CSV vacío')
-
-    df.to_csv(CACHE_PATH, index=False)
-    print(f'  CFTC TFF guardado en caché: {len(df)} filas')
-    return df
-
+    try:
+        r = requests.post(
+            CFTC_TFF_URL,
+            params={'accessType': 'DOWNLOAD'},
+            headers={'User-Agent': 'Mozilla/5.0'},
+            timeout=120
+        )
+        r.raise_for_status()
+        df = pd.read_csv(StringIO(r.text), low_memory=False)
+        required_cols = ['Market_and_Exchange_Names', 'Report_Date_as_YYYY_MM_DD']
+        missing = [c for c in required_cols if c not in df.columns]
+        if missing:
+            raise ValueError(f'CFTC CSV no tiene columnas requeridas: {missing}')
+        if df.empty:
+            raise ValueError('CFTC CSV vacio')
+        _tmp_c = CACHE_PATH.with_suffix(CACHE_PATH.suffix + '.tmp')
+        df.to_csv(_tmp_c, index=False)
+        _tmp_c.replace(CACHE_PATH)
+        print(f'  CFTC TFF guardado en cache: {len(df)} filas')
+        return df
+    except (requests.RequestException, ValueError, OSError, pd.errors.ParserError) as e:
+        if CACHE_PATH.exists():
+            print(f'  [WARN] CFTC descarga fallo ({e}). Usando cache OBSOLETA {CACHE_PATH}.')
+            return pd.read_csv(CACHE_PATH, low_memory=False)
+        raise
 def _calculate_position_flow(df):
     """Calcula flujo de posicionamiento por contrato y participante."""
     if 'Market_and_Exchange_Names' not in df.columns:
@@ -114,8 +116,8 @@ def _calculate_position_flow(df):
         # verificado 2026-10-17). El valor de CFTC se conserva como
         # fallback SOLO para la primera fila de cada contrato, donde
         # diff() es NaN por no haber observacion previa.
-        # Ordenar cronologicamente ANTES de calcular diff()
-        temp = temp.sort_values(['contract', 'date'])
+        # Ordenar cronologicamente y deduplicar ANTES de calcular diff()
+        temp = temp.sort_values(['contract', 'date']).drop_duplicates(subset=['contract', 'date'], keep='last')
 
         if chg_long in df.columns and chg_short in df.columns:
             pos_change_cftc = (df[chg_long] - df[chg_short]).values
