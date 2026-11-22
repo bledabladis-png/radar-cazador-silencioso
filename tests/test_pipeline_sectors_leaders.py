@@ -22,6 +22,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.pipeline.sectors_base import compute_sectors_base
+from tests._breadth_fixtures import make_breadth_result
 
 
 def _df_market_min():
@@ -50,7 +51,7 @@ def test_sectors_base_contract_keys(tmp_path, monkeypatch):
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
          patch("src.pipeline.sectors_base.compute_breadth",
-               return_value=(_empty_breadth_series(),) * 5), \
+               return_value=make_breadth_result()), \
          patch("indicators.sector_rank_history.update_rank_history",
                return_value=(pd.DataFrame(), pd.DataFrame())), \
          patch("indicators.sector_dispersion.compute_sector_dispersion",
@@ -81,7 +82,7 @@ def test_sectors_base_breadth_values_derivados(tmp_path, monkeypatch):
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
          patch("src.pipeline.sectors_base.compute_breadth",
-               return_value=(s, s, s, s, s)), \
+               return_value=make_breadth_result(b20=s, b50=s, b200=s, nh=s, nl=s)), \
          patch("indicators.sector_rank_history.update_rank_history",
                return_value=(pd.DataFrame(), pd.DataFrame())), \
          patch("indicators.sector_dispersion.compute_sector_dispersion",
@@ -109,7 +110,7 @@ def test_sectors_base_degrada_sub_bloque_dispersion(tmp_path, monkeypatch):
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
          patch("src.pipeline.sectors_base.compute_breadth",
-               return_value=(s, s, s, s, s)), \
+               return_value=make_breadth_result(b20=s, b50=s, b200=s, nh=s, nl=s)), \
          patch("indicators.sector_rank_history.update_rank_history",
                return_value=(pd.DataFrame(), pd.DataFrame())), \
          patch("indicators.sector_dispersion.compute_sector_dispersion",
@@ -151,7 +152,7 @@ def test_sectors_base_sd_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
          patch("src.pipeline.sectors_base.compute_breadth",
-               return_value=(_empty_breadth_series(),) * 5), \
+               return_value=make_breadth_result()), \
          patch("indicators.sector_rank_history.update_rank_history",
                return_value=(pd.DataFrame(), pd.DataFrame())), \
          patch("indicators.sector_dispersion.compute_sector_dispersion",
@@ -184,7 +185,7 @@ def test_sectors_base_cs_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
          patch("src.pipeline.sectors_base.compute_breadth",
-               return_value=(_empty_breadth_series(),) * 5), \
+               return_value=make_breadth_result()), \
          patch("indicators.sector_rank_history.update_rank_history",
                return_value=(pd.DataFrame(), pd.DataFrame())), \
          patch("indicators.sector_dispersion.compute_sector_dispersion",
@@ -217,7 +218,7 @@ def test_sectors_base_cad_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
          patch("src.pipeline.sectors_base.compute_breadth",
-               return_value=(_empty_breadth_series(),) * 5), \
+               return_value=make_breadth_result()), \
          patch("indicators.sector_rank_history.update_rank_history",
                return_value=(pd.DataFrame(), pd.DataFrame())), \
          patch("indicators.sector_dispersion.compute_sector_dispersion",
@@ -250,7 +251,7 @@ def test_sectors_base_cas_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
          patch("src.pipeline.sectors_base.compute_breadth",
-               return_value=(_empty_breadth_series(),) * 5), \
+               return_value=make_breadth_result()), \
          patch("indicators.sector_rank_history.update_rank_history",
                return_value=(pd.DataFrame(), pd.DataFrame())), \
          patch("indicators.sector_dispersion.compute_sector_dispersion",

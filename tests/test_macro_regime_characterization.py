@@ -21,6 +21,7 @@ import pytest
 import pandas as pd
 
 from regimes import macro_regime as mr
+from tests._breadth_fixtures import make_breadth_result
 
 
 def _all_signals(n=3, volatility=0.0, credit=0.0, market_strength=0.0,
@@ -278,7 +279,13 @@ def _mock_helpers(monkeypatch, series_map):
     )
     monkeypatch.setattr(
         _breadth_mod, "compute_breadth",
-        lambda df: tuple(pd.Series(0.0, index=df.index) for _ in range(5)),
+        lambda df: make_breadth_result(
+            b20=pd.Series(0.0, index=df.index),
+            b50=pd.Series(0.0, index=df.index),
+            b200=pd.Series(0.0, index=df.index),
+            nh=pd.Series(0.0, index=df.index),
+            nl=pd.Series(0.0, index=df.index),
+        ),
     )
 def test_vol_fallback_usa_vix_y_vix3m(monkeypatch):
     """Caso A: ^VIX + ^VIX3M -> 0.7*vix + 0.3*term, negado."""

@@ -75,36 +75,62 @@ def test_credit_spread_signal_deprecated_equivalente():
 def test_compute_breadth_cobertura_completa():
     sectors = MARKET_TICKERS["sectors"]
     df = _make_market_df(list(sectors), n=300)
-    b20, b50, b200, nh, nl = compute_breadth(df)
-    for s in (b20, b50, b200, nh, nl):
+    br = compute_breadth(df)
+    # 13.11: BreadthResult con denominadores dinamicos.
+    assert br.expected == len(sectors)
+    for s in (br.b20, br.b50, br.b200, br.nh, br.nl):
         assert isinstance(s, pd.Series)
         assert len(s) == 300
     # b20/b50/b200 son ratios en [0, 1].
-    assert b20.dropna().between(0, 1).all()
-    assert b50.dropna().between(0, 1).all()
-    assert b200.dropna().between(0, 1).all()
+    assert br.b20.dropna().between(0, 1).all()
+    assert br.b50.dropna().between(0, 1).all()
+    assert br.b200.dropna().between(0, 1).all()
     # nh/nl tambien.
-    assert nh.dropna().between(0, 1).all()
-    assert nl.dropna().between(0, 1).all()
+    assert br.nh.dropna().between(0, 1).all()
+    assert br.nl.dropna().between(0, 1).all()
+    # Con cobertura completa, denominadores = expected en la ultima fecha.
+    assert int(br.denom_ema20.iloc[-1]) == len(sectors)
+    assert int(br.denom_ema50.iloc[-1]) == len(sectors)
+    assert int(br.denom_ema200.iloc[-1]) == len(sectors)
+    assert int(br.denom_nhnl.iloc[-1]) == len(sectors)
 
 
 def test_compute_breadth_cobertura_parcial():
-    """Faltan sectores -> columnas NaN, sin crash."""
+    """Faltan sectores -> denominador dinamico, sin crash.
+
+    13.11: antes b20 se calculaba como X/11 (subestimaba). Ahora es X/Y
+    donde Y = sectores con datos. Este test verifica que el denominador
+    refleja el universo realmente presente y que los porcentajes no
+    se salen de [0, 1].
+    """
     sectors = MARKET_TICKERS["sectors"]
     solo_3 = sectors[:3]
     df = _make_market_df(solo_3, n=300)
-    b20, b50, b200, nh, nl = compute_breadth(df)
-    # Las series existen; con 8 sectores faltantes el b20 sera < 1.
-    assert b20.max() < 1.0
-    assert b200.dropna().empty or (b200.dropna() <= 1).all()
+    br = compute_breadth(df)
+    # expected sigue siendo el universo total (11), no lo presente (3).
+    assert br.expected == len(sectors)
+    # Denominador = 3 en la ultima fecha (solo esos tienen datos).
+    assert int(br.denom_ema20.iloc[-1]) == 3
+    assert int(br.denom_ema50.iloc[-1]) == 3
+    assert int(br.denom_ema200.iloc[-1]) == 3
+    # El % es sobre los presentes, no sobre 11.
+    assert br.b20.dropna().between(0, 1).all()
+    assert br.b200.dropna().between(0, 1).all()
 
 
 def test_compute_breadth_sin_sectores():
-    """Sin columnas de sectores -> todas NaN."""
+    """Sin columnas de sectores -> denominador 0 -> NaN, sin crash.
+
+    13.11: con denominador 0, b20 = 0/NaN = NaN (no 0 como antes).
+    El render debe mostrar N/D, no 0%.
+    """
     df = _make_market_df(["^GSPC"], n=300)
-    b20, b50, b200, nh, nl = compute_breadth(df)
-    # np.nan > ema -> False; mean de False = 0
-    assert (b20 == 0).all() or b20.isna().any()
+    br = compute_breadth(df)
+    assert br.expected == len(MARKET_TICKERS["sectors"])
+    # Sin sectores, todas las Series son NaN.
+    assert br.b20.isna().all()
+    assert br.b200.isna().all()
+    assert br.denom_ema20.isna().all()
 
 
 # ---------- fundamental_signals ----------

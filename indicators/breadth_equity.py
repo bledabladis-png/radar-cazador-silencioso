@@ -78,7 +78,7 @@ def compute_advance_decline(df_stocks, effective_meta=None):
 
     # NH/NL usando funcion comun (shift(1), Close)
 
-    nh, nl = compute_new_highs_lows(closes)
+    nh, nl, _ = compute_new_highs_lows(closes)
 
     nh_nl = nh - nl
 

@@ -16,6 +16,11 @@ def compute_new_highs_lows(prices, window=252):
     en todo el historico (289/329 tickers). Ahora cada ticker se evalua
     sobre su serie dropna y los conteos se agregan por fecha.
 
+    2026-11-21 (S39, 13.11): anade valid_count (3er return). Numero de
+    tickers con >= window sesiones validas a cada fecha. Permite al
+    caller calcular denominadores dinamicos en lugar de asumir el
+    total esperado.
+
     Args:
         prices: DataFrame con precios (columnas = tickers, indice = fechas).
         window: ventana en sesiones validas por ticker (default 252).
@@ -23,9 +28,12 @@ def compute_new_highs_lows(prices, window=252):
     Returns:
         nh: Series con el numero de nuevos maximos por fecha.
         nl: Series con el numero de nuevos minimos por fecha.
+        valid_count: Series con el numero de tickers con >= window
+            sesiones validas a esa fecha (denominador dinamico).
     """
     nh_counts = pd.Series(0, index=prices.index, dtype=int)
     nl_counts = pd.Series(0, index=prices.index, dtype=int)
+    valid_count = pd.Series(0, index=prices.index, dtype=int)
 
     for col in prices.columns:
         s = prices[col].dropna()
@@ -37,8 +45,13 @@ def compute_new_highs_lows(prices, window=252):
         is_nl = (s <= prev_low).reindex(prices.index, fill_value=False).astype(int)
         nh_counts = nh_counts + is_nh
         nl_counts = nl_counts + is_nl
+        # Ticker cuenta como valido desde el momento en que tiene
+        # >= window sesiones validas (mismo umbral que NH/NL).
+        _valid_t = (s.notna().cumsum() >= window).reindex(
+            prices.index, fill_value=False).astype(int)
+        valid_count = valid_count + _valid_t
 
-    return nh_counts, nl_counts
+    return nh_counts, nl_counts, valid_count
 
 
 def compute_advances_declines(prices):

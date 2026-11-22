@@ -113,11 +113,11 @@ def compute_macro_signals(df_market, df_macro_manual=None, liquidity_score=None,
 
     # --- Breadth ---
     from indicators.breadth import compute_breadth
-    breadth_20, breadth_50, breadth_200, nh, nl = compute_breadth(df_market)
-    market_signals['breadth'] = 0.4 * tanh_normalize(breadth_20) + \
-                                0.3 * tanh_normalize(breadth_50) + \
-                                0.2 * tanh_normalize(breadth_200) + \
-                                0.1 * tanh_normalize(nh - nl)
+    _br = compute_breadth(df_market)
+    market_signals['breadth'] = 0.4 * tanh_normalize(_br.b20) + \
+                                0.3 * tanh_normalize(_br.b50) + \
+                                0.2 * tanh_normalize(_br.b200) + \
+                                0.1 * tanh_normalize(_br.nh - _br.nl)
 
     # --- Señales fundamentales ---
     fundamental_sigs = None

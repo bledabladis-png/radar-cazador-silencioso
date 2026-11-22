@@ -11,7 +11,6 @@ from src.utils import writer_observation_date
 from src.pipeline.output_writer import persist, skip
 from regimes.sector_regime import compute_sector_rank_score, compute_price_flow_rankings
 from indicators.breadth import compute_breadth
-from config.settings import EXPECTED_SECTOR_COUNT
 
 
 def compute_sectors_base(df_market, temporal_meta=None):
@@ -130,20 +129,35 @@ def compute_sectors_base(df_market, temporal_meta=None):
         cross_asset_summary_df = None
         cross_asset_detail_df = None
 
-    # Breadth ampliado
-    b20, b50, b200, nh, nl = compute_breadth(df_market)
+    # Breadth ampliado (2026-11-21 S39, 13.11: BreadthResult con
+    # denominadores dinamicos). Cada count se calcula con SU denominador
+    # real (sectores con datos validos en la fecha), no con
+    # EXPECTED_SECTOR_COUNT. Si Y == expected, resultado identico al
+    # anterior.
+    _br = compute_breadth(df_market)
+
+    def _count(pct, denom):
+        import pandas as _pd
+        if pct is None or not _pd.notna(pct) or denom is None or not _pd.notna(denom) or denom <= 0:
+            return 0
+        return int(round(float(pct) * float(denom)))
 
     breadth_values = {
-        '% sobre EMA20': b20.iloc[-1],
-        '% sobre EMA50': b50.iloc[-1],
-        '% sobre EMA200': b200.iloc[-1],
-        'New Highs (%)': nh.iloc[-1],
-        'New Lows (%)': nl.iloc[-1],
-        'EMA20 count': int(round(b20.iloc[-1] * EXPECTED_SECTOR_COUNT)),
-        'EMA50 count': int(round(b50.iloc[-1] * EXPECTED_SECTOR_COUNT)),
-        'EMA200 count': int(round(b200.iloc[-1] * EXPECTED_SECTOR_COUNT)),
-        'New Highs count': int(round(nh.iloc[-1] * EXPECTED_SECTOR_COUNT)),
-        'New Lows count': int(round(nl.iloc[-1] * EXPECTED_SECTOR_COUNT)),
+        '% sobre EMA20': _br.b20.iloc[-1],
+        '% sobre EMA50': _br.b50.iloc[-1],
+        '% sobre EMA200': _br.b200.iloc[-1],
+        'New Highs (%)': _br.nh.iloc[-1],
+        'New Lows (%)': _br.nl.iloc[-1],
+        'EMA20 count': _count(_br.b20.iloc[-1], _br.denom_ema20.iloc[-1]),
+        'EMA50 count': _count(_br.b50.iloc[-1], _br.denom_ema50.iloc[-1]),
+        'EMA200 count': _count(_br.b200.iloc[-1], _br.denom_ema200.iloc[-1]),
+        'New Highs count': _count(_br.nh.iloc[-1], _br.denom_nhnl.iloc[-1]),
+        'New Lows count': _count(_br.nl.iloc[-1], _br.denom_nhnl.iloc[-1]),
+        'denominators_ema20': int(_br.denom_ema20.iloc[-1]) if _br.denom_ema20.iloc[-1] is not None and not (isinstance(_br.denom_ema20.iloc[-1], float) and _br.denom_ema20.iloc[-1] != _br.denom_ema20.iloc[-1]) else _br.expected,
+        'denominators_ema50': int(_br.denom_ema50.iloc[-1]) if _br.denom_ema50.iloc[-1] is not None and not (isinstance(_br.denom_ema50.iloc[-1], float) and _br.denom_ema50.iloc[-1] != _br.denom_ema50.iloc[-1]) else _br.expected,
+        'denominators_ema200': int(_br.denom_ema200.iloc[-1]) if _br.denom_ema200.iloc[-1] is not None and not (isinstance(_br.denom_ema200.iloc[-1], float) and _br.denom_ema200.iloc[-1] != _br.denom_ema200.iloc[-1]) else _br.expected,
+        'denominators_nhnl': int(_br.denom_nhnl.iloc[-1]) if _br.denom_nhnl.iloc[-1] is not None and not (isinstance(_br.denom_nhnl.iloc[-1], float) and _br.denom_nhnl.iloc[-1] != _br.denom_nhnl.iloc[-1]) else _br.expected,
+        'expected_sector_count': _br.expected,
     }
 
     return {
