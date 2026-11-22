@@ -26,6 +26,7 @@ Refs: FU-021-3D, R6, dictamen del auditor 2026-09-17.
 """
 from __future__ import annotations
 
+import time
 from io import StringIO
 from pathlib import Path
 
@@ -67,11 +68,16 @@ class CboeIndexProvider(MarketDataProvider):
                     headers={"User-Agent": "Mozilla/5.0"},
                     timeout=DEFAULT_TIMEOUT,
                 )
-            except requests.exceptions.Timeout:
-                if attempts >= 2:
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+                if attempts >= 3:
                     raise
+                time.sleep(2 * attempts)
                 continue
 
+            if 500 <= r.status_code < 600:
+                if attempts < 3:
+                    time.sleep(2 * attempts)
+                    continue
             if r.status_code >= 400:
                 raise RuntimeError(
                     "CBOE " + str(r.status_code) + ": " + r.text[:200]
@@ -165,6 +171,8 @@ def _parse_csv_to_wide(csv_text: str, ticker: str) -> pd.DataFrame:
     for required in ("Open", "High", "Low", "Close"):
         if required not in df.columns:
             df[required] = float("nan")
+        else:
+            df[required] = pd.to_numeric(df[required], errors="coerce")
 
     df["Volume"] = float("nan")
     df = df[FIELDS]

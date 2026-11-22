@@ -1,6 +1,7 @@
 ﻿import requests
 import json
 import re
+import time
 from .base import MarketDataProvider
 
 URL = "https://www.cboe.com/markets/us/options/market-statistics/daily/"
@@ -8,16 +9,17 @@ URL = "https://www.cboe.com/markets/us/options/market-statistics/daily/"
 class CboeProvider(MarketDataProvider):
     def __init__(self):
         self.name = "CBOE Official"
+        self._cached_json = None
 
     def get_name(self):
         return self.name
 
     def is_available(self):
-        try:
-            resp = requests.get(URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-            return resp.status_code == 200
-        except requests.RequestException:
-            return False
+        data = self._extract_json()
+        if data:
+            self._cached_json = data
+            return True
+        return False
 
     def _extract_json(self):
         """Extrae el JSON de optionsData del HTML del CBOE.
@@ -31,11 +33,19 @@ class CboeProvider(MarketDataProvider):
         teoria, pero funciona hoy contra el HTML real de CBOE. Rediseñar
         el parser (BeautifulSoup / json puro) es ciclo aparte.
         """
-        try:
-            html = requests.get(URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=30).text
-        except requests.RequestException as e:
-            print(f"  [WARN] cboe._extract_json: red fallo: {e}")
-            return None
+        html = None
+        for attempt in range(2):
+            try:
+                resp = requests.get(URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
+                resp.raise_for_status()
+                html = resp.text
+                break
+            except requests.RequestException as e:
+                if attempt == 0:
+                    time.sleep(1.0)
+                    continue
+                print(f"  [WARN] cboe._extract_json: red fallo: {e}")
+                return None
         pattern = r'\[1,"(.*?)"\]'
         matches = re.findall(pattern, html)
         if not matches:
@@ -76,23 +86,34 @@ class CboeProvider(MarketDataProvider):
                     return None
         return None
 
+    def _num(self, val):
+        if val is None:
+            return None
+        try:
+            return float(str(val).replace(",", "").strip())
+        except (ValueError, TypeError):
+            return None
+
     def _section(self, data, name):
-        rows = data.get(name, [])
+        rows = data.get(name) or []
         out = {}
         for r in rows:
             if r.get("name") == "VOLUME":
-                out["call_volume"] = r.get("call")
-                out["put_volume"] = r.get("put")
-                out["total_volume"] = r.get("total")
+                out["call_volume"] = self._num(r.get("call"))
+                out["put_volume"] = self._num(r.get("put"))
+                out["total_volume"] = self._num(r.get("total"))
             elif r.get("name") == "OPEN INTEREST":
-                out["call_oi"] = r.get("call")
-                out["put_oi"] = r.get("put")
-                out["total_oi"] = r.get("total")
+                out["call_oi"] = self._num(r.get("call"))
+                out["put_oi"] = self._num(r.get("put"))
+                out["total_oi"] = self._num(r.get("total"))
         return out
 
     def get_options_data(self):
         """Devuelve diccionario plano con todos los datos disponibles."""
-        data = self._extract_json()
+        data = self._cached_json
+        self._cached_json = None
+        if data is None:
+            data = self._extract_json()
         if not data:
             return None
 
@@ -101,8 +122,11 @@ class CboeProvider(MarketDataProvider):
         index = self._section(od, "INDEX OPTIONS")
         equity = self._section(od, "EQUITY OPTIONS")
         etp   = self._section(od, "EXCHANGE TRADED PRODUCTS")
-        spx   = self._section(od, "SPX + SPXW")
+        spx   = self._section(od, "SPX + SPXW + SPXO") or self._section(od, "SPX + SPXW")
         vix   = self._section(od, "CBOE VOLATILITY INDEX (VIX)")
+        spx_pcr = self._ratio(od, "SPX + SPXW + SPXO PUT/CALL RATIO")
+        if spx_pcr is None:
+            spx_pcr = self._ratio(od, "SPX + SPXW PUT/CALL RATIO")
 
         result = {
             "date": data.get("selectedDate"),
@@ -113,7 +137,7 @@ class CboeProvider(MarketDataProvider):
             "equity_pcr": self._ratio(od, "EQUITY PUT/CALL RATIO"),
             "etp_pcr": self._ratio(od, "EXCHANGE TRADED PRODUCTS PUT/CALL RATIO"),
             "vix_pcr": self._ratio(od, "CBOE VOLATILITY INDEX (VIX) PUT/CALL RATIO"),
-            "spx_pcr": self._ratio(od, "SPX + SPXW PUT/CALL RATIO"),
+            "spx_pcr": spx_pcr,
 
             # Total
             "total_call_volume": total.get("call_volume"),

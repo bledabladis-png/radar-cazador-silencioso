@@ -45,3 +45,27 @@ def test_is_available_fallo_red_devuelve_false():
     with patch("data.providers.cboe.requests.get",
                side_effect=requests.RequestException("nope")):
         assert cp.is_available() is False
+
+
+def test_spx_spxo_nuevo_esquema_y_cache_is_available():
+    cp = CboeProvider()
+    fake_payload = {
+        "selectedDate": "2026-11-20",
+        "optionsData": {
+            "ratios": [
+                {"name": "TOTAL PUT/CALL RATIO", "value": "1.13"},
+                {"name": "SPX + SPXW + SPXO PUT/CALL RATIO", "value": "1.41"},
+            ],
+            "SPX + SPXW + SPXO": [{"name": "VOLUME", "call": "1,000", "put": "1,410", "total": "2,410"}],
+        },
+    }
+    calls = {"n": 0}
+    def fake_extract():
+        calls["n"] += 1
+        return fake_payload
+    cp._extract_json = fake_extract
+    assert cp.is_available() is True
+    out = cp.get_options_data()
+    assert calls["n"] == 1
+    assert out["spx_pcr"] == pytest.approx(1.41)
+    assert out["spx_call_volume"] == pytest.approx(1000.0)

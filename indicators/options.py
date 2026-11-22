@@ -72,7 +72,7 @@ def compute_pcr_signals(persist_history=False):
 
     data = provider.get_options_data()
 
-    if not data or 'total_pcr' not in data:
+    if not data or data.get('total_pcr') is None or pd.isna(data.get('total_pcr')) or not data.get('date'):
         if persist_history:
             from src.pipeline.output_writer import skip
             skip('pcr_history', 'NO_DATA')
@@ -105,7 +105,18 @@ def compute_pcr_signals(persist_history=False):
 
 
 
-    today = pd.Timestamp(data['date'])
+    try:
+        today = pd.Timestamp(data['date'])
+    except (ValueError, TypeError):
+        if persist_history:
+            from src.pipeline.output_writer import skip
+            skip('pcr_history', 'NO_DATA')
+        return None
+    if pd.isna(today):
+        if persist_history:
+            from src.pipeline.output_writer import skip
+            skip('pcr_history', 'NO_DATA')
+        return None
 
 
 
@@ -139,8 +150,9 @@ def compute_pcr_signals(persist_history=False):
         _need_persist = False
 
     if persist_history:
+        from src.market_calendar import is_market_day
         from src.pipeline.output_writer import persist, skip
-        if _need_persist:
+        if _need_persist and is_market_day(today.date()):
             _persist_row = {**new_row, 'date': today}
             persist('pcr_history',
                     pd.DataFrame([_persist_row]),
@@ -169,11 +181,11 @@ def compute_pcr_signals(persist_history=False):
         momentum = z_series.ewm(span=5).mean().iloc[-1]
 
         from src.market_calendar import slice_last_n_sessions
-        _pcr_window = slice_last_n_sessions(pcr_ewm, window)
-        percentile = (_pcr_window < pcr_ewm.iloc[-1]).mean() * 100
+        _pcr_window = slice_last_n_sessions(pcr_ewm, window).dropna()
+        percentile = (_pcr_window < pcr_ewm.iloc[-1]).mean() * 100 if len(_pcr_window) > 0 else np.nan
         if len(pcr_ewm) >= 15:
-            _pcr_20 = slice_last_n_sessions(pcr_ewm, 20)
-            percentile_20d = (_pcr_20 < pcr_ewm.iloc[-1]).mean() * 100
+            _pcr_20 = slice_last_n_sessions(pcr_ewm, 20).dropna()
+            percentile_20d = (_pcr_20 < pcr_ewm.iloc[-1]).mean() * 100 if len(_pcr_20) > 0 else np.nan
         else:
             percentile_20d = np.nan
         state = classify_pcr(z)

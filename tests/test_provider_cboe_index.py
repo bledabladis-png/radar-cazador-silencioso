@@ -160,6 +160,22 @@ class TestRetryPolicy:
 
 # --- Interfaz provider -------------------------------------------
 
+
+
+    def test_5xx_reintenta_y_to_numeric(self, monkeypatch):
+        class R503:
+            status_code = 503
+            text = "busy"
+        class R200:
+            status_code = 200
+            text = "DATE,OPEN,HIGH,LOW,CLOSE\n2026-09-15,20.1,20.5,19.9,N/A\n"
+        seq = [R503(), R200()]
+        monkeypatch.setattr("data.providers.cboe_index.time.sleep", lambda *_: None)
+        monkeypatch.setattr("data.providers.cboe_index.requests.Session.get", lambda *a, **kw: seq.pop(0))
+        df = CboeIndexProvider().fetch_vix3m()
+        assert pd.isna(df.loc["2026-09-15", ("Close", "^VIX3M")])
+        assert df.loc["2026-09-15", ("Open", "^VIX3M")] == pytest.approx(20.1)
+
 class TestProviderInterface:
 
     def test_name(self):
