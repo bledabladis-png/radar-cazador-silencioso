@@ -414,6 +414,7 @@ class BackupProvider:
             df = df[['open','high','low','close','volume']]
             df = df.astype(float)
             df.index.name = 'Date'
+            df.sort_index(inplace=True)
             df.columns = ['Open','High','Low','Close','Volume']
             df.columns = pd.MultiIndex.from_product([df.columns, [ticker]])
             return df
