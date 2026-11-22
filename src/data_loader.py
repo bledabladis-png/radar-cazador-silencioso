@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 from datetime import datetime, timedelta
 import os
 import time
@@ -40,7 +40,8 @@ def _ticker_list():
     except Exception as e:
         print(f"  [WARN] _ticker_list: etf_holdings.csv: {e}")
 
-    return list(set(tickers))
+    from src.ticker_health import filter_eligible
+    return filter_eligible(list(set(tickers)))
 
 # Nota: sin @retry global. El bucle por lotes ya gestiona fallos
 # y BackupProvider actua como fallback por lote.
