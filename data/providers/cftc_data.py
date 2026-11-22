@@ -114,6 +114,9 @@ def _calculate_position_flow(df):
         # verificado 2026-10-17). El valor de CFTC se conserva como
         # fallback SOLO para la primera fila de cada contrato, donde
         # diff() es NaN por no haber observacion previa.
+        # Ordenar cronologicamente ANTES de calcular diff()
+        temp = temp.sort_values(['contract', 'date'])
+
         if chg_long in df.columns and chg_short in df.columns:
             pos_change_cftc = (df[chg_long] - df[chg_short]).values
             pos_change = temp.groupby('contract')['net_position'].diff()
@@ -124,8 +127,7 @@ def _calculate_position_flow(df):
         else:
             temp['position_change'] = temp.groupby('contract')['net_position'].diff()
 
-        # Calcular flow_z
-        temp = temp.sort_values(['contract', 'date'])
+        # Calcular flow_z (con fillna(0.0) para satisfacer el contrato H5 de valores finitos iniciales)
         rolling_mean = temp.groupby('contract')['position_change'].transform(
             lambda x: x.rolling(52, min_periods=10).mean()
         )
