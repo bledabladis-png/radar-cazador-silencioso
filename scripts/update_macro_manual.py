@@ -109,12 +109,21 @@ def main():
 
     for csv_name, series_list in MACRO_MANUAL_MAP.items():
         print('=== ' + csv_name + ' ===')
+        out_path = OUTPUT_DIR / csv_name
+        prev_df = None
+        if out_path.exists():
+            try:
+                prev_df = pd.read_csv(out_path, parse_dates=['date']).set_index('date')
+            except Exception:
+                prev_df = None
         data = {}
         for col_name, fred_id in series_list:
             print('  Descargando ' + col_name + ' <- ' + fred_id)
             s = download_series(fred_id)
             if s is None:
                 total_fail += 1
+                if prev_df is not None and col_name in prev_df.columns:
+                    data[col_name] = prev_df[col_name]
                 continue
             data[col_name] = s
             total_ok += 1
@@ -129,8 +138,9 @@ def main():
         # Normalizar formato de fecha
         df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
 
-        out_path = OUTPUT_DIR / csv_name
-        df.to_csv(out_path, index=False)
+        tmp_out = out_path.with_suffix(out_path.suffix + '.tmp')
+        df.to_csv(tmp_out, index=False, lineterminator='\n')
+        tmp_out.replace(out_path)
         print('  Guardado: ' + str(out_path)
               + ' (' + str(len(df)) + ' filas, '
               + str(len(df.columns) - 1) + ' series)')

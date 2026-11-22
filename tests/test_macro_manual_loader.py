@@ -96,3 +96,12 @@ def test_load_solo_ficheros_csv(tmp_path):
 
     assert result is not None
     assert "bien_v" in result.columns
+
+
+def test_load_fechas_duplicadas_no_rompe(tmp_path):
+    df1 = pd.DataFrame({"date": ["2026-01-01", "2026-01-01"], "v": [1.0, 2.0]})
+    df2 = pd.DataFrame({"date": ["2026-01-01"], "w": [9.0]})
+    df1.to_csv(tmp_path / "a.csv", index=False)
+    df2.to_csv(tmp_path / "b.csv", index=False)
+    res = load_macro_manual(data_dir=str(tmp_path))
+    assert len(res) == 1 and float(res["a_v"].iloc[0]) == 2.0

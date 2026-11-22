@@ -19,6 +19,7 @@ def load_macro_manual(data_dir='data/macro_manual'):
                     continue
                 df['date'] = pd.to_datetime(df['date'])
                 df.set_index('date', inplace=True)
+                df = df[~df.index.duplicated(keep='last')]
                 # Prefijo con el nombre del archivo (sin extension) para evitar colisiones
                 prefix = os.path.splitext(fname)[0]
                 df = df.add_prefix(f'{prefix}_')

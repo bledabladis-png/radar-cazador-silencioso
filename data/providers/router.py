@@ -3,6 +3,7 @@ from .fred import FredProvider
 from .polygon import PolygonProvider
 import pandas as pd
 import os
+import requests
 from pathlib import Path
 from config.settings import CACHE_MARKET_PATH
 
@@ -87,7 +88,7 @@ class DataRouter:
             if provider.is_available():
                 try:
                     return provider.get_treasury_yields()
-                except (RuntimeError, ValueError, KeyError, AttributeError) as e:
+                except (RuntimeError, OSError, requests.RequestException, ValueError, KeyError, AttributeError) as e:
                     print(f"  [WARN] router: {provider.get_name()} get_treasury_yields fallo: {e}")
                     continue
         return None
@@ -130,7 +131,7 @@ class DataRouter:
                     if data is not None and not data.empty:
                         print(f"Usando {provider.get_name()} para datos de liquidez.")
                         return self._apply_columns_filter(data, columns)
-                except (RuntimeError, ValueError, KeyError, AttributeError) as e:
+                except (RuntimeError, OSError, requests.RequestException, ValueError, KeyError, AttributeError) as e:
                     print(f"  [WARN] router: {provider.get_name()} get_fed_data fallo: {e}")
                     continue
 
@@ -161,6 +162,7 @@ class DataRouter:
                         continue
                     df['date'] = pd.to_datetime(df['date'])
                     df.set_index('date', inplace=True)
+                    df = df[~df.index.duplicated(keep='last')]
                     prefix = os.path.splitext(fname)[0]
                     df = df.add_prefix(f'{prefix}_')
                     dfs.append(df)
@@ -180,13 +182,15 @@ class DataRouter:
             elif col.startswith('sofr_'):
                 rename_map[col] = 'sofr'
             elif col.startswith('discount_rate_'):
-                rename_map[col] = 'fed_funds'
+                rename_map[col] = 'prime_rate'
             elif col.startswith('iorb_'):
                 rename_map[col] = 'iorb'
             elif col.startswith('effr_'):
                 rename_map[col] = 'effr'
         combined.rename(columns=rename_map, inplace=True)
-        target_cols = ['fed_balance', 'reverse_repo', 'sofr', 'fed_funds', 'iorb', 'effr']
+        if 'fed_funds' not in combined.columns and 'effr' in combined.columns:
+            combined['fed_funds'] = combined['effr']
+        target_cols = ['fed_balance', 'reverse_repo', 'sofr', 'fed_funds', 'iorb', 'effr', 'prime_rate']
         existing = [c for c in target_cols if c in combined.columns]
         if existing:
             combined = combined[existing]

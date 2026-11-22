@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 import pandas_datareader.data as web
+import requests
 from .base import MarketDataProvider
 
 
@@ -76,7 +77,7 @@ class FredProvider(MarketDataProvider):
                 _rec["last_value"] = float(s.iloc[-1]) if pd.notna(s.iloc[-1]) else None
             # Si se proporciona un índice externo, reindexar y rellenar
             if index is not None:
-                s = s.reindex(index).ffill()
+                s = s.reindex(index).ffill(limit=35)
             else:
                 # Extender el índice hasta hoy y rellenar
                 # F5.6-06: fecha de ejecucion (extremo de rejilla
@@ -91,12 +92,13 @@ class FredProvider(MarketDataProvider):
                 # date=2026-10-13 cuando el ultimo dato real de FRED
                 # era 2026-10-10. El reporte lo mostraba como 0 dias /
                 # CURRENT. Fix: preservar el indice real (end=s.index[-1]).
-                full_index = pd.date_range(start=s.index[0], end=s.index[-1], freq='D')
-                s = s.reindex(full_index).ffill()
+                if not s.empty:
+                    full_index = pd.date_range(start=s.index[0], end=s.index[-1], freq='D')
+                    s = s.reindex(full_index).ffill(limit=35)
             _rec["duration_s"] = round(time.time() - _t0, 3)
             _log_fred_download(_rec)
             return s
-        except (KeyError, ValueError, TypeError) as e:
+        except (OSError, requests.RequestException, KeyError, ValueError, TypeError) as e:
             _rec["status"] = "error"
             _rec["error"] = str(e)
             _rec["duration_s"] = round(time.time() - _t0, 3)
