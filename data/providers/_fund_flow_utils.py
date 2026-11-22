@@ -111,12 +111,17 @@ def _compute_raw_z_value(window_values: pd.Series, min_periods: int) -> float:
     values = window_values.dropna()
     if len(values) < min_periods:
         return float("nan")
+
+    latest = window_values.iloc[-1]
+    if pd.isna(latest):
+        return float("nan")
+
     s = pd.Series(values)
     median = float(s.median())
     mad = float((s - median).abs().median())
     if mad < MAD_EPSILON:
         return float("nan")
-    z = (float(s.iloc[-1]) - median) / (MAD_SCALE * mad)
+    z = (float(latest) - median) / (MAD_SCALE * mad)
     return z
 
 
