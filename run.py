@@ -288,6 +288,8 @@ def main():
     # finalize. Antes corria en compute_market_data, leyendo el CSV
     # del run anterior, y la tabla de frescura declaraba una fecha
     # con un run de desfase.
+    # Generar cobertura europea antes de data_quality para evitar lag de 1 run
+    generate_european_coverage(reference_date=reference_date)
     data_quality_df = _compute_data_quality(reference_date=reference_date)
 
     iae_section = compute_iae_section(reference_date, run_id)
@@ -411,7 +413,6 @@ def main():
                         effective_date=_equity_eff,
                         real_liq_regime=real_liq_regime)
     save_sector_rankings(sector_results)
-    generate_european_coverage(reference_date=reference_date)
 
     # Persistir receipts para auditoria post-mortem (gitignored).
     try:

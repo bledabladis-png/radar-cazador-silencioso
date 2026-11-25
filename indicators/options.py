@@ -82,17 +82,17 @@ def compute_pcr_signals(persist_history=False):
 
     # ---------- METRICAS DEL DIA ----------
 
-    ihr = institutional_hedge_ratio(data['index_pcr'], data['equity_pcr'])
+    ihr = institutional_hedge_ratio(data.get('index_pcr'), data.get('equity_pcr'))
 
-    idx_vol_share = index_volume_share(data['index_volume'], data['total_volume'])
+    idx_vol_share = index_volume_share(data.get('index_volume'), data.get('total_volume'))
 
-    p_share = put_share(data['total_put_volume'], data['total_volume'])
+    p_share = put_share(data.get('total_put_volume'), data.get('total_volume'))
 
-    c_share = call_share(data['total_call_volume'], data['total_volume'])
+    c_share = call_share(data.get('total_call_volume'), data.get('total_volume'))
 
-    vol_pcr = volume_put_call_ratio(data['total_put_volume'], data['total_call_volume'])
+    vol_pcr = volume_put_call_ratio(data.get('total_put_volume'), data.get('total_call_volume'))
 
-    oi_pcr = oi_put_call_ratio(data['total_put_oi'], data['total_call_oi'])
+    oi_pcr = oi_put_call_ratio(data.get('total_put_oi'), data.get('total_call_oi'))
 
 
 
@@ -147,13 +147,31 @@ def compute_pcr_signals(persist_history=False):
         hist.sort_index(inplace=True)
         _need_persist = True
     else:
-        _need_persist = False
+        _ex = hist.loc[today]
+        if hasattr(_ex, 'iloc') and len(_ex.shape) > 1:
+            _ex = _ex.iloc[-1]
+        _can_fill = any(
+            val is not None and pd.notna(val) and pd.isna(_ex.get(col))
+            for col, val in new_row.items()
+        )
+        if _can_fill:
+            for col, val in new_row.items():
+                if val is not None and pd.notna(val):
+                    hist.loc[today, col] = val
+            _need_persist = True
+        else:
+            _need_persist = False
 
     if persist_history:
         from src.market_calendar import is_market_day
         from src.pipeline.output_writer import persist, skip
         if _need_persist and is_market_day(today.date()):
-            _persist_row = {**new_row, 'date': today}
+            if today in hist.index:
+                _m = hist.loc[today].iloc[-1].to_dict() if len(hist.loc[today].shape) > 1 else hist.loc[today].to_dict()
+                _persist_row = {col: _m.get(col, new_row.get(col)) for col in base_cols}
+            else:
+                _persist_row = new_row
+            _persist_row['date'] = today
             persist('pcr_history',
                     pd.DataFrame([_persist_row]),
                     date_value=today, sort_by=['date'])
@@ -209,7 +227,7 @@ def compute_pcr_signals(persist_history=False):
 
         'status': 'OK',
 
-        'total_pcr': data['total_pcr'],
+        'total_pcr': data.get('total_pcr'),
 
         'pcr_ewm': pcr_ewm.iloc[-1] if pcr_ewm is not None else np.nan,
 
@@ -223,14 +241,14 @@ def compute_pcr_signals(persist_history=False):
 
         'percentile': percentile,
         'percentile_20d': percentile_20d,
-        'index_pcr': data['index_pcr'],
-        'equity_pcr': data['equity_pcr'],
+        'index_pcr': data.get('index_pcr'),
+        'equity_pcr': data.get('equity_pcr'),
 
-        'etp_pcr': data['etp_pcr'],
+        'etp_pcr': data.get('etp_pcr'),
 
-        'spx_pcr': data['spx_pcr'],
+        'spx_pcr': data.get('spx_pcr'),
 
-        'vix_pcr': data['vix_pcr'],
+        'vix_pcr': data.get('vix_pcr'),
 
         'ihr': ihr,
 

@@ -61,3 +61,10 @@ def test_build_temporal_meta_en_run():
 def test_resolve_all_contracts_en_run():
     calls = _find_calls(_tree(), "resolve_all_contracts")
     assert len(calls) >= 1, "falta llamada a resolve_all_contracts"
+
+
+def test_generate_european_coverage_antes_de_data_quality():
+    src = RUN_PY.read_text(encoding="utf-8-sig")
+    i_eu = src.index("generate_european_coverage(reference_date=reference_date)")
+    i_dq = src.index("data_quality_df = _compute_data_quality(reference_date=reference_date)")
+    assert i_eu < i_dq, "generate_european_coverage debe ejecutarse antes de _compute_data_quality"

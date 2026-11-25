@@ -27,7 +27,7 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     # =========================================================================
     out.append("## Resumen de Regimenes\n")
     from src.report._temporal_annotation import format_effective_date_line
-    _date_line = format_effective_date_line(temporal_meta, "FRED_MACRO")
+    _date_line = format_effective_date_line(temporal_meta, "EQUITY_EOD")
     if _date_line:
         out.append(_date_line)
     try:
@@ -91,6 +91,9 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     
     if real_liquidity_regime is not None:
         out.append(f"- **Liquidez Real (FRED):** {real_liquidity_regime} (Signal Consistency: {real_liquidity_conf:.0%})\n")
+        _fred_date_line = format_effective_date_line(temporal_meta, "FRED_MACRO")
+        if _fred_date_line:
+            out.append(f"  - {_fred_date_line}")
         # Fix 2026-10-30: exponer severidad_cruda y diff_bp cuando no son
         # OK. El state (outputs/state/liquidity_state.json) tiene
         # v2.severidad_cruda = TENSION_ELEVADA y v2.diff_bp = 6.0 hoy, pero

@@ -566,7 +566,7 @@ def compute_data_quality(reference_date=None):
             })
 
     # --- Fuentes europeas: Euronext, Xetra, BME ---
-    # Lee european_coverage.csv del run anterior (lag 1 dia).
+    # Lee european_coverage.csv actualizado por generate_european_coverage().
     # Agrega por source: fecha mas reciente, status global.
     _eu_path = Path('outputs/history/european_coverage.csv')
     for _eu_source in ('Euronext', 'Xetra', 'BME'):

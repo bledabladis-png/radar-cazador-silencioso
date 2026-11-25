@@ -105,6 +105,8 @@ def validate_weights():
         'SECTOR_SCORE_WEIGHTS': SECTOR_SCORE_WEIGHTS,
         'TACTICAL_WEIGHTS': TACTICAL_WEIGHTS,
         'STRUCTURAL_WEIGHTS': STRUCTURAL_WEIGHTS,
+        'WLS_WEIGHTS': WLS_WEIGHTS,
+        'FLOW_PROXY_WEIGHTS': FLOW_PROXY_WEIGHTS,
     }
     
     for name, weights in groups.items():

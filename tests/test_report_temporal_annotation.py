@@ -383,3 +383,19 @@ def test_integracion_iae_section_con_reference_date():
         temporal_meta=tm,
     )
     assert "antig\u00fcedad 140d" in "".join(out)
+
+
+def test_render_regimenes_separa_fecha_mercado_de_fred_macro():
+    import pandas as pd
+    from src.report.header import render_regimenes
+    meta = _tm({
+        "EQUITY_EOD": {"effective_date": date(2026, 11, 23), "lag_days": 0},
+        "FRED_MACRO": {"effective_date": date(2026, 11, 20), "lag_days": 3},
+    })
+    s = pd.Series([0.5])
+    out = "".join(render_regimenes(
+        s, "RECESSION", 0.4, s, "EXTREME_STRESS", 0.5, s, "STRESS", 1.0,
+        "NEUTRAL", 0.9, s, None, "ROTATIONAL", temporal_meta=meta,
+    ))
+    assert "*Datos al 2026-11-23.*\n" in out
+    assert "  - *Datos al 2026-11-20 (lag 3d).*\n" in out

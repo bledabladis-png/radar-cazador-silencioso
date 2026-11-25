@@ -24,9 +24,10 @@ def compute_structural_score(df_market, sector_etf, flow_structure=0.0, persiste
     rs = close_sector / close_bench
 
     def rs_momentum(window):
-        if len(rs) < window:
+        # Corregido: indice -1 a -(window + 1) mide exactamente window sesiones (evita desfase de 1 periodo)
+        if len(rs) < window + 1:
             return 0.0
-        return (rs.iloc[-1] / rs.iloc[-window] - 1) if rs.iloc[-window] != 0 else 0.0
+        return (rs.iloc[-1] / rs.iloc[-(window + 1)] - 1) if rs.iloc[-(window + 1)] != 0 else 0.0
 
     rs63 = rs_momentum(settings.RS_MEDIUM_WINDOW)
     rs126 = rs_momentum(settings.MOMENTUM_LONG_WINDOW)

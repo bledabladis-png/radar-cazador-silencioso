@@ -75,3 +75,28 @@ def test_index_pcr_coincide_con_equity_y_otros():
                 'vix_pcr', 'spx_pcr'):
         assert key in result, f"Falta clave {key}"
         assert result[key] is not None
+
+def test_compute_pcr_signals_rellena_nan_existente_en_csv(tmp_path, monkeypatch):
+    from unittest.mock import patch
+    import indicators.options as opt
+    import pandas as pd
+    fake_hist = pd.DataFrame([{
+        'date': pd.Timestamp('2026-11-20'),
+        'total_pcr': 1.13,
+        'spx_pcr': float('nan'),
+    }]).set_index('date')
+    monkeypatch.setattr(opt.pd, 'read_csv', lambda *a, **k: fake_hist.copy())
+    with patch('indicators.options.CboeProvider') as MockProvider,          patch('src.pipeline.output_writer.persist') as mock_persist,          patch('src.market_calendar.is_market_day', return_value=True):
+        inst = MockProvider.return_value
+        inst.is_available.return_value = True
+        inst.get_options_data.return_value = {
+            'date': '2026-11-20', 'total_pcr': 1.13, 'spx_pcr': 1.41,
+            'index_pcr': 1.0, 'equity_pcr': 1.0, 'index_volume': 100,
+            'total_volume': 200, 'total_put_volume': 100, 'total_call_volume': 100,
+            'total_put_oi': 100, 'total_call_oi': 100,
+        }
+        res = opt.compute_pcr_signals(persist_history=True)
+        assert res is not None
+        mock_persist.assert_called_once()
+        df_saved = mock_persist.call_args[0][1]
+        assert float(df_saved['spx_pcr'].iloc[0]) == 1.41
