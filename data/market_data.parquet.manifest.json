@@ -2,14 +2,14 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/market_data.parquet",
-    "sha256": "7b99e0982d30d7b5a0403fe516902b8f1c95c559d96789e18334bc8393930e9a",
-    "bytes": 56822568,
-    "written_at": "2026-11-26T05:15:48.654215"
+    "sha256": "16792f1d113df27f7587d5344e9111ea824ee4a39ee5b2246be9933c08f0dafd",
+    "bytes": 56822086,
+    "written_at": "2026-11-26T12:39:27.033776"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20261126_061029",
+    "run_id": "20261126_133447",
     "source": "yahoo"
   },
   "content": {
