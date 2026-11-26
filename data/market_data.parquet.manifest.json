@@ -2,38 +2,38 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/market_data.parquet",
-    "sha256": "2bf118de865975ad152a6b28aa5ae23824e021b9f86b597a4f984383a2e648fa",
-    "bytes": 56824635,
-    "written_at": "2026-11-25T13:01:05.304064"
+    "sha256": "7b99e0982d30d7b5a0403fe516902b8f1c95c559d96789e18334bc8393930e9a",
+    "bytes": 56822568,
+    "written_at": "2026-11-26T05:15:48.654215"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20261125_135619",
+    "run_id": "20261126_061029",
     "source": "yahoo"
   },
   "content": {
-    "rows": 2604,
+    "rows": 2605,
     "cols": 2810,
     "n_tickers": 562,
     "date_min": "2016-11-25",
-    "date_max": "2026-11-24"
+    "date_max": "2026-11-25"
   },
   "temporal": {
     "contract": null
   },
   "quality": {
-    "last_date": "2026-11-24",
-    "expected_session": "2026-11-24",
+    "last_date": "2026-11-25",
+    "expected_session": "2026-11-25",
     "last_date_is_expected_session": true,
-    "pct_dup_last": 0.003578,
+    "pct_dup_last": 0.005367,
     "close_nan_last": 3,
     "n_tickers_expected_last": 562,
     "n_tickers_with_close_last": 559,
     "n_tickers_missing_close_last": 3,
     "coverage_pct_last": 0.994662,
     "last_row_is_partial": true,
-    "effective_session": "2026-11-24",
+    "effective_session": "2026-11-25",
     "coverage_pct_effective": 0.994662,
     "effective_session_is_fallback": false,
     "status": "VALID_WITH_MISSING",
@@ -58,7 +58,7 @@
       },
       "US_EQUITY": {
         "n": 562,
-        "last_closed_session": "2026-11-24",
+        "last_closed_session": "2026-11-25",
         "coverage_at_session": 0.994662,
         "status": "VALID"
       },
