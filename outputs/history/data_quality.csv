@@ -1155,7 +1155,7 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-11-25,CFTC Position Flow,2026-11-17,8.0,cftc,CURRENT,108.0,108.0,1.0,Frescura CFTC (semanal); umbrales en config/settings.FRESHNESS_CFTC,
 2026-11-25,SEC N-PORT (posiciones),2026-06-30,148.0,sec,RECENT,26203.0,26203.0,1.0,Posiciones N-PORT. Origen: mensual (SEC); ingesta: trimestral (ZIPs). Latencia ~60d entre cierre y filing. Fecha observacion = cierre trimestre; fecha presentacion = dia del filing,
 2026-11-25,SEC N-PORT-P QQQ (flujos),2026-06-30,148.0,sec,RECENT,3.0,3.0,1.0,Flujos trimestrales N-PORT-P QQQ (Item B.6),
-2026-11-25,Macro FRED,2026-11-24,1.0,fred,CURRENT,90.0,83.0,0.9222222222222223,Datos macro manuales,1.0
+2026-11-25,Macro FRED,2026-11-24,1.0,fred,CURRENT,90.0,83.0,0.9222222222222224,Datos macro manuales,1.0
 2026-11-25,Sector Concentration,2026-11-25,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión,1.0
 2026-11-25,Sector Breadth Momentum,2026-11-25,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud,1.0
 2026-11-25,Volatility Structure,2026-11-25,0.0,daily,CURRENT,54.0,54.0,1.0,Estructura volatilidad,1.0
@@ -1173,3 +1173,28 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-11-25,Euronext,2026-11-25,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK),
 2026-11-25,Xetra,2026-11-25,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK),
 2026-11-25,BME,2026-11-25,0.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK),
+2026-11-27,Yahoo Finance,2026-11-27,0.0,yahoo,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales,
+2026-11-27,SSGA ETF Flow,2026-11-25,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario,
+2026-11-27,CBOE PCR,2026-11-27,0.0,cboe,CURRENT,85.0,85.0,1.0,Put/Call ratio,1.0
+2026-11-27,FINRA Dark Pool,2026-11-02,25.0,finra,RECENT,120.0,120.0,1.0,Retraso regulatorio 2-4 semanas,
+2026-11-27,CFTC Position Flow,2026-11-17,10.0,cftc,CURRENT,108.0,108.0,1.0,Frescura CFTC (semanal); umbrales en config/settings.FRESHNESS_CFTC,
+2026-11-27,SEC N-PORT (posiciones),2026-06-30,150.0,sec,RECENT,26203.0,26203.0,1.0,Posiciones N-PORT. Origen: mensual (SEC); ingesta: trimestral (ZIPs). Latencia ~60d entre cierre y filing. Fecha observacion = cierre trimestre; fecha presentacion = dia del filing,
+2026-11-27,SEC N-PORT-P QQQ (flujos),2026-06-30,150.0,sec,RECENT,3.0,3.0,1.0,Flujos trimestrales N-PORT-P QQQ (Item B.6),
+2026-11-27,Macro FRED,2026-11-25,2.0,fred,CURRENT,90.0,83.0,0.9222222222222223,Datos macro manuales,1.0
+2026-11-27,Sector Concentration,2026-11-25,2.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión,1.0
+2026-11-27,Sector Breadth Momentum,2026-11-25,2.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud,1.0
+2026-11-27,Volatility Structure,2026-11-27,0.0,daily,CURRENT,55.0,55.0,1.0,Estructura volatilidad,1.0
+2026-11-27,Cross Asset Context,2026-11-27,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset,1.0
+2026-11-27,Evidence Matrix,2026-11-25,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia,1.0
+2026-11-27,Sector Breadth,2026-11-25,2.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial,1.0
+2026-11-27,Sector Persistence,2026-11-27,0.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial,1.0
+2026-11-27,Sector Regime Matrix,2026-11-25,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial,3.0
+2026-11-27,Sector Wyckoff Distribution,2026-11-25,2.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial,2.0
+2026-11-27,RS Internal,2026-11-27,0.0,daily,CURRENT,11.0,11.0,1.0,Liderazgo relativo interno,1.0
+2026-11-27,Sector Rank History,2026-11-27,0.0,daily,CURRENT,11.0,11.0,1.0,Rotacion sectorial historica,
+2026-11-27,Sector Dispersion,2026-11-27,0.0,daily,CURRENT,11.0,11.0,1.0,Dispersion entre sectores,1.0
+2026-11-27,Sector Correlation Summary,2026-11-27,0.0,daily,CURRENT,11.0,55.0,0.9944341372912802,Correlacion entre sectores,1.0
+2026-11-27,Sector Flow Characteristics,2026-11-25,2.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial,1.0
+2026-11-27,Euronext,2026-11-27,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK),
+2026-11-27,Xetra,2026-11-27,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK),
+2026-11-27,BME,2026-11-27,0.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK),
